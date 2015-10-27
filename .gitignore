@@ -41,3 +41,19 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Files or Directories to be ignored
+0_Old/
+1-click_Dev/.Rproj.user/
+1-click_Dev/0_Old/
+1-click_Dev/cache/
+1-click_Dev/figure/
+SA_Reference/figure/
+SA_Reference/Ref_gares_cache/
+SA_Reference/Ref_gares_files/
+Documentation/Old/
+Qt/
+*.xlsx
+*.xls
+*.csv
+*.RData
