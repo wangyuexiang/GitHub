@@ -1,6 +1,3 @@
-library(ggplot2)
-library(gridExtra)
-
 ###########
 ### 20151023
 
@@ -22,9 +19,6 @@ temp.result$Diff[temp.result$TDiff > 4] <- "6 Nul"
 
 temp.result$WE[temp.result$WE == TRUE] <- "Weekend"
 temp.result$WE[temp.result$WE == FALSE] <- "Weedday"
-
-
-
 
 ggplot(temp.result) + geom_point(aes(Tmin,Tmax, col = as.factor(Diff)))+
   geom_abline(slope = 1, intercept = 2) +
@@ -87,6 +81,9 @@ t <- count(result.final,ID,OD, Tmax <12)
 t <- t %>% rename(WeekPattern = n)
 t1 <- t %>% group_by(ID,OD) %>% summarise(AMPM = n())
 
+
+###########
+### 20151020
 # find taxi driver
 
 temp <- transaction2
