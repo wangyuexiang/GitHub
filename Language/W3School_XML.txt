@@ -1,0 +1,36 @@
+Tree
+	root structure
+		XML declaration			<?xml version="1.0" encoding="UTF-8"?>
+		root element
+			child elements
+syntac rules		
+	must have closing tag
+	tages are case sensitive
+	elements must be properly nested
+	must have a root element
+	attribute values must be quoted
+	entity references
+		&lt		<
+		&gt		>
+		&amp	&
+		&apos	'
+		&quot	"
+	Comments <!--	-->
+	white space is preserved
+	new lines as LF
+elements
+attributes: metadata should be stored as attributes and data should be stored as elements
+namespaces
+Ecoding
+	Unicode Consortium: develops the Unicode Standard; replaces the existing character sets with Unicode Transformation Format
+		UTF-8: web standard
+		UTF-16
+Doctypes
+	Well formed XML documents
+	valid XML documents
+		must be well formed
+		rules
+			DTD: Document Type Definitions
+			XML Schema
+DTD
+Schema
