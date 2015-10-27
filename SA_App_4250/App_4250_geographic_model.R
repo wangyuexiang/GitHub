@@ -80,33 +80,3 @@ t.Chain.summary <- t.Chain %>%
 ggplot(t.Chain.summary) + geom_point(aes(Date, last)) + geom_path(aes(Date, last))
 ggplot(t.Chain.summary) + geom_point(aes(Date, last, col = as.factor(DOW ))) + geom_path(aes(Date, last)) + facet_wrap(~DOW)
 
-ggplot(t.Chain.summary) + 
-  geom_point(aes(Date, last, col = as.factor(DOW))) + 
-  geom_point(data = t.Chain.summary %>% filter(DOW == 6 | DOW == 0), aes(Date, last, size = 2)) +
-  geom_path(aes(Date, last)) 
-
-
-ggplot(t) + geom_tile(aes(WOY,DOW))
-
-
-k <- 4^5
-
-getDrink <- function(k){
-  Item <- data.frame(Drink = k, Head = k, Bottle = k, Round = 1)
-  while(Item$Drink[nrow(Item)] > 0){
-    n <- nrow(Item)
-    
-    last <- Item[n, ]
-    new <- last %>% mutate(Drink = Head %/% 4 + Bottle %/% 2,
-                           Head = Drink + Head %% 4,
-                           Bottle = Drink + Bottle %% 2,
-                           Round = n + 1
-    )
-    Item <- rbind(Item, new)
-  }
-  return sum(Item$Drink)
-}
-
-for( i = 1:10){
-  
-}

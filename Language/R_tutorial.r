@@ -3,24 +3,6 @@ source('~/SVN/1-click_Dev/SA_function.R', encoding = 'UTF-8', echo=FALSE)
 
 stringr::str_split_fixed(result$OD,"-", 5) %>% as.data.frame() %>% tbl_df
 
-#####
-### little project
-getDrink <- function(k){
-  Item <- data.frame(Drink = k, Head = k, Bottle = k, Round = 1)
-  while(Item$Drink[nrow(Item)] > 0){
-    n <- nrow(Item)
-    
-    last <- Item[n, ]
-    new <- last %>% mutate(Drink = Head %/% 4 + Bottle %/% 2,
-                           Head = Drink + Head %% 4,
-                           Bottle = Drink + Bottle %% 2,
-                           Round = n + 1
-    )
-    Item <- rbind(Item, new)
-  }
-  return (sum(Item$Drink))
-}
-#####
 
 BO - 20151022
 25004901446700003;25004815815900011
