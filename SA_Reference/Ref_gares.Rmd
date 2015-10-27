@@ -1,0 +1,159 @@
+---
+title: "Référence - gares de péage"
+author: "WANG Yuexiang"
+date: "23 septembre 2015"
+output: 
+  html_document: 
+    fig_height: 6
+    fig_width: 8
+    theme: cosmo
+    toc: yes
+---
+
+```{r, echo=FALSE, cache=TRUE, message=FALSE, warning=FALSE}
+#preparation
+
+library(dplyr)
+library(ggplot2)
+
+##########
+### LngLat
+gares.LngLat <- read.table("garesLngLat.csv", header = T, sep = ",") %>% tbl_df()
+names(gares.LngLat)[1] <- "Ste"
+
+GetLngLat <- function(transaction) {
+  # Add longitude and lattitude to the transaction
+  # Args:
+  #	  tansaction:	Entr, Sor, ...
+  # Returns:
+  #	  tansaction:	Entr, Sor, ..., ELng, ELat, SLng, SLat
+  
+  ### !!! to be removed
+  #   transaction$Entr <- as.numeric(transaction$Entr)
+  #   transaction$Sor <- as.numeric(transaction$Sor)
+  cde <- gares.LngLat %>% transmute(Entr = Cde, ELng = Lng, ELat = Lat)
+  transaction <- left_join(transaction, cde, by = "Entr")
+  names(cde) <- c("Sor", "SLng", "SLat")
+  transaction <- left_join(transaction, cde, by = "Sor")
+  return(transaction)	
+}
+
+```
+
+## **1. Général: Tous les gares aux réseaux Vinci Autoroutes**
+(Source: tous les gares avec leur code, libellé, Autoroute, PK, Longitude, Latitude en csv)
+* ASF: 227
+* Cofiroute: 78
+* ESCOTA: 51
+
+```{r, echo=FALSE, cache=TRUE, message=FALSE, warning=FALSE}
+print(count(gares.LngLat, Ste) %>% transmute(Societe = Ste, Nombre_des_gares = n) %>% as.data.frame())
+```
+
+```{r, echo=FALSE, cache=TRUE, message=FALSE, warning=FALSE}
+ggplot(gares.LngLat) + geom_point(aes(Lng,Lat,col=as.factor(Ste))) +
+  theme(plot.title = element_text(size=20, face="bold", vjust=2),
+        legend.position = "right",
+        legend.title = element_blank()) +
+  ggtitle("Figure 1.1 Tous les gares")
+```
+
+## **2. Gares dans ESCOTA**
+### **2.1 Système F/O et Autoroute**
+(Source: tous les trajets possibles avec le tarif correspondant en csv )
+
+* Système Fermé(25): Entrée et Sortie
+* Système Ouvert(23)
+
+
+```{r, echo=FALSE, cache=TRUE, message=FALSE, warning=FALSE}
+### référence avec les voies
+g4 <- read.table("Gares_ESCOTA_ref.csv", header = T, sep = ";") %>% tbl_df()
+names(g4)[2] <- "ES"
+g4 <- g4 %>% filter(ES %in% c("E", "S"))
+
+t4 <- g4 %>% distinct(gare, ES) %>% transmute(gare, ES, Cde = 25006000 + gare)
+
+### identifier le système du gare
+SF <-  read.table("SF_2014.csv", header = T,  sep = ";", dec = ".") %>% tbl_df()
+tSF.E <- SF %>% distinct(Entr) %>% transmute(gare = Entr, Lib = Entree, ES = "E" , Cde = 25006000 + Entr) 
+tSF.S <- SF %>% distinct(Sor) %>% transmute(gare = Sor, Lib = Sortie, ES = "S" , Cde = 25006000 + Sor) 
+tSF <- rbind(tSF.E, tSF.S)
+# ggplot(tSF) + geom_bar(aes(gare, fill = as.factor(ES)), binwidth = 1)
+tSF$Sys <- "F"
+
+SO <-  read.table("SO_2014.csv", header = T,  sep = ";", dec = ".") %>% tbl_df()
+tSO <- SO %>% transmute(gare = Cde, Lib, Cde = 25006000 + gare)
+tSO$ES <- "O"
+tSO$Sys <-"O"
+
+tTarif <- rbind(tSF, tSO)
+temp <- tTarif %>% distinct(gare) %>% select(gare, Lib, Cde, Sys)
+t4 <- left_join(t4, temp) # get Sys
+
+# ggplot(t4) + geom_tile(aes(gare,ES, fill = ES)) + facet_wrap(~Sys, ncol = 1)
+
+t4$es <- 1
+t4$es[t4$ES == "S"] <- 10
+t4 <- t4 %>% group_by(Cde, gare, Lib, Sys) %>% summarise(es = sum(es))
+
+t4$ES <- "ES"
+t4$ES[t4$es == 1] <- "E"
+t4$ES[t4$es == 10] <- "S"
+
+rm(tSF, tSF.E, tSF.S, tSO, tTarif)
+
+temp <- gares.LngLat %>% filter(Ste == 6) %>% select(Autoroute, Cde, PK, Lng, Lat) 
+t4 <- left_join(t4, temp)
+```
+
+```{r, echo=FALSE, cache=TRUE, fig.width=12}
+library(gridExtra)
+g1 <- ggplot(t4) + geom_point(aes(Lng,Lat,col=as.factor(Sys))) +
+  theme(plot.title = element_text(size=20, face="bold", vjust=2),
+        legend.position = "right",
+        legend.title = element_blank()) +
+  ggtitle("Figure 2.1 Système Fermé(F) ou Ouvert(O)")
+g2 <- ggplot(t4) + geom_point(aes(Lng,Lat,col=as.factor(Autoroute))) +
+  theme(plot.title = element_text(size=20, face="bold", vjust=2),
+        legend.position = "right",
+        legend.title = element_blank()) +
+  ggtitle("Figure 2.2 Autoroute")
+grid.arrange(g1,g2,ncol = 2)
+```
+
+### **2.2 Gares spéciaux**
+* 3 Gares dans le système ouvert n'ont qu'un sens:
+    * Entrée, seulement(2): Cagnes Ouest Sud(17), Sophia(24)
+    * Sortie, seulement(1): Cagnes Ouest Nord(15)
+* 3 Gares Virtuels (existent dans le référence mais pas dans la liste de tarif)
+    * La Barque Entree(80)
+    * Antibes PV Nord(22)
+    * Antibes Est Sortie(23)
+    
+```{r, echo=FALSE, cache=TRUE, message=FALSE, warning=FALSE, fig.width=12}
+t4 <- t4 %>% ungroup() %>% select(-es)
+
+temp <- gares.LngLat %>% filter(Ste == 6) %>% mutate(Virtuel = FALSE)
+temp1 <- t4 %>% ungroup() %>% select(Cde)
+temp2 <- anti_join(temp,temp1) 
+temp$in.Tarif[temp$Cde %in% temp2$Cde] <- TRUE
+
+print( temp2 %>% select(Lib, Autoroute, Cde, PK) %>% as.data.frame)
+
+g1 <- ggplot(t4) + geom_point(aes(Lng,Lat,col=as.factor(ES))) +
+  theme(plot.title = element_text(size=20, face="bold", vjust=2),
+        legend.position = "right") +
+  ggtitle("Figure 2.3 Entrée ou Sortie seulement")
+
+g2 <- ggplot(temp) + geom_point(aes(Lng,Lat,col=as.factor(in.Tarif))) +
+  theme(plot.title = element_text(size=20, face="bold", vjust=2),
+        legend.position = "right") +
+  ggtitle("Figure 2.4 Gares virtuels")
+
+grid.arrange(g1,g2,ncol=2)
+```
+
+### **2.3 Ajouter Sens pour les trajets**
+
+
