@@ -54,15 +54,30 @@ Ref$Seg[Ref$Inactive == TRUE] <- "1_inactive"
 ggplot(Ref) + geom_bar(aes(ord, fill = as.factor(Seg)), binwidth = 200)
 ggplot(Ref) + geom_bar(aes(noPsg, fill = as.factor(Seg)), binwidth = 100)
 
+ggplot(Ref %>% filter(noPsg < 100)) + geom_bar(aes(noPsg, fill = as.factor(Seg)), binwidth = 20)
 
+ggplot(Ref) + geom_bar(aes(noPsg), binwidth = 100) + facet_wrap(~Seg)
+ggplot(Ref  %>% filter(noPsg < 100)) + geom_bar(aes(noPsg), binwidth = 20) + facet_wrap(~Seg)
 
-t <- Ref %>%
-  filter(Inactive == FALSE,
-         Small == FALSE,
-         GoodTrx == FALSE)
-
+t <- Ref %>%  filter(Seg == "5_high_potential")
 t <- t %>% arrange(desc(noPsg))
 
+
+### link Ref temp.noGare
+
+t <- left_join(Ref, temp.noGare)
+
+ggplot(t) +
+  geom_density(aes(maxPerS, col = "1")) +
+  geom_density(aes(maxPerS + secPerS, col = "1+2")) +
+  geom_density(aes(maxPerS + secPerS + thrPerS, col = "1+2+3")) +
+  xlab("Per") +
+  facet_wrap(~Seg)
+
+
+
+
+###########
 ###########
 ### 20151027
 # geographic model
@@ -142,3 +157,126 @@ t.Chain.summary <- t.Chain %>%
 ggplot(t.Chain.summary) + geom_point(aes(Date, last)) + geom_path(aes(Date, last))
 ggplot(t.Chain.summary) + geom_point(aes(Date, last, col = as.factor(DOW ))) + geom_path(aes(Date, last)) + facet_wrap(~DOW)
 
+
+###########
+###########
+### 20151020
+# temp.Gare
+# temp.noGare
+
+temp <- transaction2
+
+temp.ID <- temp %>%
+  group_by(ID) %>%
+  summarise(n = n()) %>%
+  arrange(desc(n))
+
+temp.E <- temp %>%
+  group_by(ID, Entr) %>% 
+  summarise(noE = n()) %>%
+  filter(Entr != 0)
+
+temp.E <- temp.E %>%
+  ungroup() %>%
+  group_by(ID) %>%
+  arrange(desc(noE)) %>%
+  mutate(ord = row_number())
+
+temp.S <- transaction2 %>%
+  group_by(ID, Sor) %>% 
+  summarise(noS = n()
+  ) 
+
+temp.S <- temp.S %>%
+  ungroup() %>%
+  group_by(ID) %>%
+  arrange(desc(noS)) %>%
+  mutate(ord = row_number())
+
+names(temp.E) <- c("ID","Gare","noE","ordE")
+temp.E <- inner_join(temp.E, temp.ID)
+temp.E <- temp.E %>% mutate(perE = noE/n)
+
+names(temp.S) <- c("ID","Gare","noS","ordS")
+temp.S <- inner_join(temp.S, temp.ID)
+temp.S <- temp.S %>% mutate(perS = noS/n)
+
+temp.Gare <- full_join(temp.E,temp.S)
+
+
+# analyse no of Entr
+temp.noGE <- temp.E %>%
+  group_by(ID) %>%
+  arrange(ordE) %>%
+  summarise(noGE = n(),
+            maxPerE = max(perE),
+            secPerE = nth(perE, 2),
+            thrPerE = nth(perE, 3)
+  )
+
+temp.noGS <- temp.S %>%
+  group_by(ID) %>%
+  arrange(ordS) %>%
+  summarise(noGS = n(),
+            maxPerS = max(perS),
+            secPerS = nth(perS, 2),
+            thrPerS = nth(perS, 3)
+  )
+
+
+temp.noGare <- full_join(temp.noGE,temp.noGS)
+
+
+ggplot(temp.noGare) + 
+  geom_point(aes(maxPerS,secPerS, col = "Sor", alpha = .2)) +
+  geom_point(aes(maxPerE,secPerE, col = "Entr", alpha = .2)) +
+  #   geom_segment(aes(x= maxPerE, y = secPerE,
+  #                    xend=maxPerS, yend = secPerS)) +
+  scale_y_continuous(limits = c(0,1))
+
+ggplot(temp.noGare) + geom_point(aes(maxPerS,secPerS, size = noGS))
+
+ggplot(temp.noGare) + 
+  geom_segment(aes(x= maxPerE, y = secPerE + maxPerE,
+                   xend=maxPerS, yend = secPerS + maxPerS, alpha = .1)) +
+  geom_point(aes(maxPerS, secPerS + maxPerS, col = "Sor", alpha = .2 )) +
+  geom_point(aes(maxPerE, secPerE + maxPerE, col = "Entr", alpha = .2 )) 
+
+
+
+ggplot(temp.noGare) + geom_point(aes(maxPerS, secPerS + maxPerS))
+ggplot(temp.noGare) + geom_point(aes(maxPerS, secPerS + maxPerS, size = noGS))
+
+ggplot(temp.noGare) + geom_bar(aes( maxPerS))
+ggplot(temp.noGare) + geom_bar(aes(secPerS + maxPerS))
+
+
+temp.result <- count(result.final, ID) %>%
+  transmute(ID, result = (n>=1))
+
+t <- full_join(temp.result, temp.noGare)
+t$result <- !is.na(t$result)
+ggplot(t) + geom_point(aes(maxPerS, secPerS + maxPerS, col = as.factor(result), alpha = .2))
+
+
+ggplot(temp.Gare) + geom_point(aes(ordE,ordS))
+ggplot(temp.Gare) + geom_point(aes(noE,noS))
+
+
+
+
+t1 <- temp.noGare %>% filter(maxPerS == secPerS) %>%
+  select(ID, maxPerS)
+t1.1 <- left_join(t1 %>% rename(perS = maxPerS), temp.Gare)
+
+
+### useful graph
+
+ggplot(temp.noGare) + geom_point(aes(maxPerS,maxPerS + secPerS))
+
+
+ggplot(temp.noGare) + 
+  geom_density(aes(maxPerS, col = "1")) +
+  geom_density(aes(maxPerS + secPerS, col = "1+2")) +
+  geom_density(aes(maxPerS + secPerS + thrPerS, col = "1+2+3")) +
+  xlab("Per")

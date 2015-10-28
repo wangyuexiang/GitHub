@@ -1,7 +1,10 @@
 ### Analyse 1 person
 
 # get all transaction of the person
-for(k in c(142,181,201))
+
+# 4: 79,142,181,201
+# 5: 33,43,61,73,89
+for(k in c(33,43,61,73,89))
 {  
   temp <- transaction2 %>% filter(ID == k)
   
@@ -26,11 +29,11 @@ for(k in c(142,181,201))
   g4 <- ggplot(temp2) + geom_bar(aes(TimeSor, fill = as.factor(ord)), binwidth = 1, position = "dodge") + theme(legend.position = "none")
   
   g5 <- ggplot(temp2) + geom_tile(aes(WOY,DOW, fill = as.factor(ord))) + facet_wrap(~ord, ncol = 1) + theme(legend.position = "none")
-  # grid.arrange(g1,g2,g3,g4, g5, ncol = 2, main = "ID = 79") 
+  # grid.arrange(g1,g2,g3,g4, g5, ncol = 2, main = paste0("ID = ", k)) 
   
   # Notice that A4: width=11.69, height=8.27
   png(file = paste("ID_",k, '.png', sep=""), width = 1000, height = 1000)
-  print(grid.arrange(g1,g2,g3,g4, g5, ncol = 2, main = "ID = 79") )
+  print(grid.arrange(g1,g2,g3,g4, g5, ncol = 2, main = paste0("ID = ", k) )) 
   dev.off()
   
   temp.OD
