@@ -2,6 +2,68 @@ library(ggplot2)
 library(gridExtra)
 
 ###########
+### 20151028
+# Segmentation
+
+t <- ID
+t <- t %>%
+  arrange(Dmin, Dmax) %>%
+  mutate(ord = row_number())
+
+# get Small/Inactive
+t1 <- ID2 %>% select(ID, Small,Inactive)
+t <- left_join(t, t1)
+
+ggplot(t) + geom_segment(aes(x=Dmin, xend = Dmax, y = ord, yend = ord, col = as.factor(Inactive))) + facet_wrap(~Small)
+
+# get Result
+t1 <- result.final %>% select(ID) %>% distinct(ID)
+t1$Result <- TRUE
+t <- left_join(t,t1)
+t$Result[is.na(t$Result)] <- FALSE
+
+# get Recent
+t$Recent <- FALSE
+t$Recent[t$Dmin > as.Date("2015-8-15")] <- TRUE
+
+# get GoodTrx
+t1 <- ID.OD4 %>% select(ID) %>% distinct(ID)
+t1$GoodTrx <- TRUE
+t <- left_join(t,t1)
+t$GoodTrx[is.na(t$GoodTrx)] <- FALSE
+
+Ref <- t
+count(Ref,Result, Recent, GoodTrx, Small, Inactive)
+
+# construct Seg
+Ref$Seg <- 4
+
+Ref$Seg[Ref$Result == TRUE] <- "6_with_result"
+Ref$Seg[is.na(Ref$Small)] <- "0_out_range"
+
+Ref$Seg[Ref$Result == FALSE &
+        Ref$GoodTrx] <- "5_high_potential"
+
+Ref$Seg[Ref$Small == TRUE] <- 2
+Ref$Seg[Ref$Small == TRUE&
+        Ref$Recent == TRUE] <- "3_new"
+
+Ref$Seg[Ref$Inactive == TRUE] <- "1_inactive"
+
+# display segmentation
+ggplot(Ref) + geom_bar(aes(ord, fill = as.factor(Seg)), binwidth = 200)
+ggplot(Ref) + geom_bar(aes(noPsg, fill = as.factor(Seg)), binwidth = 100)
+
+
+
+t <- Ref %>%
+  filter(Inactive == FALSE,
+         Small == FALSE,
+         GoodTrx == FALSE)
+
+t <- t %>% arrange(desc(noPsg))
+
+###########
 ### 20151027
 # geographic model
 
