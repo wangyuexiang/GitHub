@@ -1,6 +1,130 @@
+library(dplyr)
 library(ggplot2)
 library(gridExtra)
 
+transaction2 <- read.table("transaction2.csv", sep= ";", header = TRUE)
+ID <- read.table("ID.csv", sep= ";", header = TRUE)
+result.final <- read.table("result.final.csv", sep= ";", header = TRUE)
+
+###########
+###########
+### 20151020
+# temp.Gare
+# temp.noGare
+
+temp <- transaction2
+
+temp.ID <- temp %>%
+  group_by(ID) %>%
+  summarise(n = n()) %>%
+  arrange(desc(n))
+
+temp.E <- temp %>%
+  group_by(ID, Entr) %>% 
+  summarise(noE = n()) %>%
+  filter(Entr != 0)
+
+temp.E <- temp.E %>%
+  ungroup() %>%
+  group_by(ID) %>%
+  arrange(desc(noE)) %>%
+  mutate(ord = row_number())
+
+temp.S <- transaction2 %>%
+  group_by(ID, Sor) %>% 
+  summarise(noS = n()
+  ) 
+
+temp.S <- temp.S %>%
+  ungroup() %>%
+  group_by(ID) %>%
+  arrange(desc(noS)) %>%
+  mutate(ord = row_number())
+
+names(temp.E) <- c("ID","Gare","noE","ordE")
+temp.E <- inner_join(temp.E, temp.ID)
+temp.E <- temp.E %>% mutate(perE = noE/n)
+
+names(temp.S) <- c("ID","Gare","noS","ordS")
+temp.S <- inner_join(temp.S, temp.ID)
+temp.S <- temp.S %>% mutate(perS = noS/n)
+
+temp.Gare <- full_join(temp.E,temp.S)
+
+# analyse no of Entr
+temp.noGE <- temp.E %>%
+  group_by(ID) %>%
+  arrange(ordE) %>%
+  summarise(noGE = n(),
+            maxPerE = max(perE),
+            secPerE = nth(perE, 2),
+            thrPerE = nth(perE, 3),
+            fouPerE = nth(perE, 4)
+  )
+
+temp.noGS <- temp.S %>%
+  group_by(ID) %>%
+  arrange(ordS) %>%
+  summarise(noGS = n(),
+            maxPerS = max(perS),
+            secPerS = nth(perS, 2),
+            thrPerS = nth(perS, 3),
+            fouPerS = nth(perS, 4)
+  )
+
+temp.noGare <- full_join(temp.noGE,temp.noGS)
+
+ggplot(temp.noGare) + 
+  geom_point(aes(maxPerS,secPerS, col = "Sor", alpha = .2)) +
+  geom_point(aes(maxPerE,secPerE, col = "Entr", alpha = .2)) +
+  #   geom_segment(aes(x= maxPerE, y = secPerE,
+  #                    xend=maxPerS, yend = secPerS)) +
+  scale_y_continuous(limits = c(0,1))
+
+# ggplot(temp.noGare) + geom_point(aes(maxPerS,secPerS, size = noGS))
+
+# ggplot(temp.noGare) + 
+#   geom_segment(aes(x= maxPerE, y = secPerE + maxPerE,
+#                    xend=maxPerS, yend = secPerS + maxPerS, alpha = .1)) +
+#   geom_point(aes(maxPerS, secPerS + maxPerS, col = "Sor", alpha = .2 )) +
+#   geom_point(aes(maxPerE, secPerE + maxPerE, col = "Entr", alpha = .2 )) 
+
+ggplot(temp.noGare) + geom_point(aes(maxPerS, secPerS + maxPerS)) + ggtitle("1st & 2nd most frequented Transactions")
+ggplot(temp.noGare) + geom_point(aes(maxPerS, secPerS + maxPerS, size = noGS)) + ggtitle("1st & 2nd most frequented Transactions with noPassage")
+
+temp.result <- count(result.final, ID) %>%
+  transmute(ID, result = (n>=1))
+
+t <- full_join(temp.result, temp.noGare)
+t$result <- !is.na(t$result)
+ggplot(t) + geom_point(aes(maxPerS, secPerS + maxPerS, col = as.factor(result), alpha = .2)) + ggtitle("1st & 2nd most frequented Transactions with Result")
+
+# ggplot(temp.Gare) + geom_point(aes(ordE,ordS))
+# ggplot(temp.Gare) + geom_point(aes(noE,noS))
+
+t1 <- temp.noGare %>% filter(maxPerS == secPerS) %>%
+  select(ID, maxPerS)
+# t1.1 <- left_join(t1 %>% rename(perS = maxPerS), temp.Gare)
+
+### useful graph
+
+ggplot(temp.noGare) + geom_point(aes(maxPerS,maxPerS + secPerS))
+
+ggplot(temp.noGare) + 
+  geom_density(aes(maxPerE, col = "1")) +
+  geom_density(aes(maxPerE + secPerE, col = "1+2")) +
+  geom_density(aes(maxPerE + secPerE + thrPerE, col = "1+2+3")) +
+  geom_density(aes(maxPerE + secPerE + thrPerE + fouPerE, col = "1+2+3+4")) +
+  xlab("Per")
+
+ggplot(temp.noGare) + 
+  geom_density(aes(maxPerS, col = "1")) +
+  geom_density(aes(maxPerS + secPerS, col = "1+2")) +
+  geom_density(aes(maxPerS + secPerS + thrPerS, col = "1+2+3")) +
+  geom_density(aes(maxPerS + secPerS + thrPerS + fouPerS, col = "1+2+3+4")) +
+  xlab("Per")
+
+	
 ###########
 ### 20151028
 # Segmentation
@@ -36,7 +160,7 @@ Ref <- t
 count(Ref,Result, Recent, GoodTrx, Small, Inactive)
 
 # construct Seg
-Ref$Seg <- 4
+Ref$Seg <- "4_no_important_trajet"
 
 Ref$Seg[Ref$Result == TRUE] <- "6_with_result"
 Ref$Seg[is.na(Ref$Small)] <- "0_out_range"
@@ -44,7 +168,7 @@ Ref$Seg[is.na(Ref$Small)] <- "0_out_range"
 Ref$Seg[Ref$Result == FALSE &
         Ref$GoodTrx] <- "5_high_potential"
 
-Ref$Seg[Ref$Small == TRUE] <- 2
+Ref$Seg[Ref$Small == TRUE] <- "2_Small_but_not_Recent"
 Ref$Seg[Ref$Small == TRUE&
         Ref$Recent == TRUE] <- "3_new"
 
@@ -59,12 +183,7 @@ ggplot(Ref %>% filter(noPsg < 100)) + geom_bar(aes(noPsg, fill = as.factor(Seg))
 ggplot(Ref) + geom_bar(aes(noPsg), binwidth = 100) + facet_wrap(~Seg)
 ggplot(Ref  %>% filter(noPsg < 100)) + geom_bar(aes(noPsg), binwidth = 20) + facet_wrap(~Seg)
 
-t <- Ref %>%  filter(Seg == "5_high_potential")
-t <- t %>% arrange(desc(noPsg))
-
-
 ### link Ref temp.noGare
-
 t <- left_join(Ref, temp.noGare)
 
 g2 <- ggplot(t) +
@@ -74,7 +193,6 @@ g2 <- ggplot(t) +
   geom_density(aes(maxPerS + secPerS + thrPerS + fouPerS, col = "1+2+3+4")) +
   xlab("Per") +
   facet_wrap(~Seg, ncol = 1)
-
 
 g1 <- ggplot(t) +
   geom_density(aes(maxPerE, col = "1")) +
@@ -86,92 +204,7 @@ g1 <- ggplot(t) +
 
 grid.arrange(g1,g2, ncol = 2)
 
-
-
 t %>% filter(Result == FALSE & maxPerS > .5)
-
-
-###########
-###########
-### 20151028
-# First Entr
-# Last Sor
-
-t <- transaction2
-
-t0 <- t %>%
-  group_by(ID, Date) %>%
-  summarise(noByDay = n()) 
-
-t1 <- t %>%
-  group_by(ID, Date) %>%
-  arrange(TimeSor) %>%
-  mutate(ord = row_number())
-
-t2 <- inner_join(t0,t1)
-# it's possible that a person has only 1 trx one day
-t2 <- t2 %>% mutate(Tag = ifelse(noByDay == 1,
-                                 "FL",
-                                 ifelse(ord == 1,
-                                        "First",
-                                        ifelse(ord == noByDay,
-                                               "Last",
-                                               "irrelevant")
-                                        )
-                                 )
-                    )
-
-t2 <- t1 %>% filter(Tag == "First" | Tag == "Last")
-
-t3 <- t2 %>%
-  mutate(Gare = ifelse(Tag == "Last",
-                       Sor,
-                       ifelse(Entr == 0,
-                              Sor,
-                              Entr))) %>%
-  select(ID, Date, DOW, Tag, Gare)
-
-  
-# first & last
-t.FL <- t3 %>%
-  group_by(ID, Tag, Gare) %>%
-  summarise(n = n())
-
-t.FL <- t.FL %>%
-  group_by(ID, Tag) %>%
-  arrange(desc(n)) %>%
-  mutate(ord = row_number())
-
-# get per
-t <- Ref %>% select(ID, Day, Seg)
-
-t.FL <- inner_join(t.FL, t)
-t.FL <- t.FL %>% mutate(per = n/Day)
-
-t.noFL <- t.FL %>%
-  group_by(ID, Tag, Seg) %>%
-  arrange(n) %>%
-  summarise(noFL = n(),
-            maxPer = max(per),
-            secPer = nth(per, 2),
-            thrPer = nth(per, 3),
-            fouPer = nth(per, 4))
-
-ggplot(t.noFL) +  geom_density(aes(maxPer, col = "1")) + facet_wrap(~Tag)
-         
-ggplot(t.noFL) +
-  geom_density(aes(maxPer, col = "1")) +
-  geom_density(aes(maxPer + secPer, col = "1+2")) +
-  geom_density(aes(maxPer + secPer + thrPer, col = "1+2+3")) +
-  geom_density(aes(maxPer + secPer + thrPer + fouPer, col = "1+2+3+4")) +
-  xlab("Per")+
-  facet_grid(Seg~Tag)              
-            
-t4 <- t3 %>%
-  group_by(ID,Tag) %>%
-  summarise(newDay = n_distinct(Date))
-
-t5 <- left_join(t, t4)
 
 ###########
 ###########
@@ -256,132 +289,126 @@ ggplot(t.Chain.summary) + geom_point(aes(Date, last, col = as.factor(DOW ))) + g
 
 ###########
 ###########
-### 20151020
-# temp.Gare
-# temp.noGare
+### 20151028
+# First Entr
+# Last Sor
 
-temp <- transaction2
+t <- transaction2
 
-temp.ID <- temp %>%
-  group_by(ID) %>%
-  summarise(n = n()) %>%
-  arrange(desc(n))
+t0 <- t %>%
+  group_by(ID, Date) %>%
+  summarise(noByDay = n()) 
 
-temp.E <- temp %>%
-  group_by(ID, Entr) %>% 
-  summarise(noE = n()) %>%
-  filter(Entr != 0)
+ggplot(t0) + geom_bar(aes(noByDay), binwidth = 1)
+ggplot(t0) + geom_bar(aes(x=noByDay, y=(..count..)/sum(..count..)), binwidth = 1)
 
-temp.E <- temp.E %>%
-  ungroup() %>%
-  group_by(ID) %>%
-  arrange(desc(noE)) %>%
+t.DailyPassage <- count(t0,noByDay) %>%
+  tbl_df %>%
+  mutate(per = n / nrow(t0))
+# 31% : 1 trx during the day
+# 38% : 2 trx during the 
+t.DailyPassage <- t0 %>% mutate(no = noByDay)
+t.DailyPassage$no[t.DailyPassage$noByDay > 5] <- "DailyPassage > 5"
+ggplot(t.DailyPassage) + 
+  geom_bar(aes(x = noByDay,y= (..count..)/sum(..count..),
+                                      fill=as.factor(no)),binwidth = 32) +
+  ylab("Percentage") + ggtitle("Distribution of number of passages by Day")
+
+ggplot(t.DailyPassage) + 
+  geom_bar(aes(x = noByDay,y= (..count..)/sum(..count..),
+               fill=as.factor(no)),binwidth = 1) +
+  ylab("Percentage") + ggtitle("Distribution of number of passages by Day") +
+  facet_wrap(~Seg)
+
+
+t.segment <- Ref %>% select(ID, Seg)
+t.DailyPassage <- inner_join(t.DailyPassage, t.segment)
+ggplot(t.DailyPassage) + 
+  geom_bar(aes(x = noByDay,y= (..count..)/sum(..count..),
+                                      fill=as.factor(no)),binwidth = 32) +
+  facet_wrap(~Seg)
+
+t <- count(transaction2,ID)
+t <- inner_join(t,t.segment)
+ggplot(t) + geom_bar(aes(n, fill = as.factor(Seg)),binwidth = 50) 
+
+
+
+t1 <- t %>%
+  group_by(ID, Date) %>%
+  arrange(TimeSor) %>%
   mutate(ord = row_number())
 
-temp.S <- transaction2 %>%
-  group_by(ID, Sor) %>% 
-  summarise(noS = n()
-  ) 
+t2 <- inner_join(t0,t1)
+# it's possible that a person has only 1 trx one day
+t2 <- t2 %>% mutate(Tag = ifelse(noByDay == 1,
+                                 "FL",
+                                 ifelse(ord == 1,
+                                        "First",
+                                        ifelse(ord == noByDay,
+                                               "Last",
+                                               "irrelevant")
+                                        )
+                                 )
+                    )
 
-temp.S <- temp.S %>%
-  ungroup() %>%
-  group_by(ID) %>%
-  arrange(desc(noS)) %>%
+count(t2,Tag)
+#          Tag     n
+# 1         FL 17678
+# 2      First 39048
+# 3       Last 39048
+# 4 irrelevant 41613
+
+
+t2 <- t1 %>% filter(Tag == "First" | Tag == "Last")
+
+t3 <- t2 %>%
+  mutate(Gare = ifelse(Tag == "Last",
+                       Sor,
+                       ifelse(Entr == 0,
+                              Sor,
+                              Entr))) %>%
+  select(ID, Date, DOW, Tag, Gare)
+
+  
+# first & last
+t.FL <- t3 %>%
+  group_by(ID, Tag, Gare) %>%
+  summarise(n = n())
+
+t.FL <- t.FL %>%
+  group_by(ID, Tag) %>%
+  arrange(desc(n)) %>%
   mutate(ord = row_number())
 
-names(temp.E) <- c("ID","Gare","noE","ordE")
-temp.E <- inner_join(temp.E, temp.ID)
-temp.E <- temp.E %>% mutate(perE = noE/n)
+# get per
+t <- Ref %>% select(ID, Day, Seg)
 
-names(temp.S) <- c("ID","Gare","noS","ordS")
-temp.S <- inner_join(temp.S, temp.ID)
-temp.S <- temp.S %>% mutate(perS = noS/n)
+t.FL <- inner_join(t.FL, t)
+t.FL <- t.FL %>% mutate(per = n/Day)
 
-temp.Gare <- full_join(temp.E,temp.S)
+t.noFL <- t.FL %>%
+  group_by(ID, Tag, Seg) %>%
+  arrange(n) %>%
+  summarise(noFL = n(),
+            maxPer = max(per),
+            secPer = nth(per, 2),
+            thrPer = nth(per, 3),
+            fouPer = nth(per, 4))
 
+ggplot(t.noFL) +  geom_density(aes(maxPer, col = "1")) + facet_wrap(~Tag)
+         
+ggplot(t.noFL) +
+  geom_density(aes(maxPer, col = "1")) +
+  geom_density(aes(maxPer + secPer, col = "1+2")) +
+  geom_density(aes(maxPer + secPer + thrPer, col = "1+2+3")) +
+  geom_density(aes(maxPer + secPer + thrPer + fouPer, col = "1+2+3+4")) +
+  xlab("Per")+
+  facet_grid(Seg~Tag)              
+            
+t4 <- t3 %>%
+  group_by(ID,Tag) %>%
+  summarise(newDay = n_distinct(Date))
 
-# analyse no of Entr
-temp.noGE <- temp.E %>%
-  group_by(ID) %>%
-  arrange(ordE) %>%
-  summarise(noGE = n(),
-            maxPerE = max(perE),
-            secPerE = nth(perE, 2),
-            thrPerE = nth(perE, 3),
-            fouPerE = nth(perE, 4)
-  )
+t5 <- left_join(t, t4)
 
-temp.noGS <- temp.S %>%
-  group_by(ID) %>%
-  arrange(ordS) %>%
-  summarise(noGS = n(),
-            maxPerS = max(perS),
-            secPerS = nth(perS, 2),
-            thrPerS = nth(perS, 3),
-            fouPerS = nth(perS, 4)
-  )
-
-
-temp.noGare <- full_join(temp.noGE,temp.noGS)
-
-
-ggplot(temp.noGare) + 
-  geom_point(aes(maxPerS,secPerS, col = "Sor", alpha = .2)) +
-  geom_point(aes(maxPerE,secPerE, col = "Entr", alpha = .2)) +
-  #   geom_segment(aes(x= maxPerE, y = secPerE,
-  #                    xend=maxPerS, yend = secPerS)) +
-  scale_y_continuous(limits = c(0,1))
-
-ggplot(temp.noGare) + geom_point(aes(maxPerS,secPerS, size = noGS))
-
-ggplot(temp.noGare) + 
-  geom_segment(aes(x= maxPerE, y = secPerE + maxPerE,
-                   xend=maxPerS, yend = secPerS + maxPerS, alpha = .1)) +
-  geom_point(aes(maxPerS, secPerS + maxPerS, col = "Sor", alpha = .2 )) +
-  geom_point(aes(maxPerE, secPerE + maxPerE, col = "Entr", alpha = .2 )) 
-
-
-
-ggplot(temp.noGare) + geom_point(aes(maxPerS, secPerS + maxPerS))
-ggplot(temp.noGare) + geom_point(aes(maxPerS, secPerS + maxPerS, size = noGS))
-
-ggplot(temp.noGare) + geom_bar(aes( maxPerS))
-ggplot(temp.noGare) + geom_bar(aes(secPerS + maxPerS))
-
-
-temp.result <- count(result.final, ID) %>%
-  transmute(ID, result = (n>=1))
-
-t <- full_join(temp.result, temp.noGare)
-t$result <- !is.na(t$result)
-ggplot(t) + geom_point(aes(maxPerS, secPerS + maxPerS, col = as.factor(result), alpha = .2))
-
-
-ggplot(temp.Gare) + geom_point(aes(ordE,ordS))
-ggplot(temp.Gare) + geom_point(aes(noE,noS))
-
-
-
-
-t1 <- temp.noGare %>% filter(maxPerS == secPerS) %>%
-  select(ID, maxPerS)
-t1.1 <- left_join(t1 %>% rename(perS = maxPerS), temp.Gare)
-
-
-### useful graph
-
-ggplot(temp.noGare) + geom_point(aes(maxPerS,maxPerS + secPerS))
-
-ggplot(temp.noGare) + 
-  geom_density(aes(maxPerE, col = "1")) +
-  geom_density(aes(maxPerE + secPerE, col = "1+2")) +
-  geom_density(aes(maxPerE + secPerE + thrPerE, col = "1+2+3")) +
-  geom_density(aes(maxPerE + secPerE + thrPerE + fouPerE, col = "1+2+3+4")) +
-  xlab("Per")
-
-ggplot(temp.noGare) + 
-  geom_density(aes(maxPerS, col = "1")) +
-  geom_density(aes(maxPerS + secPerS, col = "1+2")) +
-  geom_density(aes(maxPerS + secPerS + thrPerS, col = "1+2+3")) +
-  geom_density(aes(maxPerS + secPerS + thrPerS + fouPerS, col = "1+2+3+4")) +
-  xlab("Per")

@@ -2,6 +2,10 @@
 
 # get all transaction of the person
 
+t <- Ref %>%  filter(Seg == "5_high_potential")
+t <- t %>% arrange(desc(noPsg))
+
+
 # 4: 79,142,181,201
 # 5: 33,43,61,73,89
 for(k in c(33,43,61,73,89))
