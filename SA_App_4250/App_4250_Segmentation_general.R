@@ -391,68 +391,94 @@ t2 <- t2 %>% mutate(Tag = ifelse(noByDay == 1,
                                  )
                     )
 
+t.Tag <- t2
 
 
-
-count(t2,Tag)
+count(t.Tag,Tag)
 #          Tag     n
 # 1         FL 17678
 # 2      First 39048
 # 3       Last 39048
 # 4 irrelevant 41613
 
-t.FL <-  t2 %>% filter(Tag == "FL")
-  
-  
-t. <- t2 %>% filter(Tag == "First" | Tag == "Last")
+count(Ref, (HHI_E > .25| HHI_S > .25), Seg)
 
-t3 <- t2 %>%
-  mutate(Gare = ifelse(Tag == "Last",
+# # first & last
+# t.FL <- t3 %>%
+#   group_by(ID, Tag, Gare) %>%
+#   summarise(n = n())
+# 
+# t.FL <- t.FL %>%
+#   group_by(ID, Tag) %>%
+#   arrange(desc(n)) %>%
+#   mutate(ord = row_number())
+
+# # get per
+# t <- Ref %>% select(ID, Day, Seg)
+# 
+# t.FL <- inner_join(t.FL, t)
+# t.FL <- t.FL %>% mutate(per = n/Day)
+# 
+# t.noFL <- t.FL %>%
+#   group_by(ID, Tag, Seg) %>%
+#   arrange(n) %>%
+#   summarise(noFL = n(),
+#             maxPer = max(per),
+#             secPer = nth(per, 2),
+#             thrPer = nth(per, 3),
+#             fouPer = nth(per, 4))
+# 
+# ggplot(t.noFL) +  geom_density(aes(maxPer, col = "1")) + facet_wrap(~Tag)
+#          
+# ggplot(t.noFL) +
+#   geom_density(aes(maxPer, col = "1")) +
+#   geom_density(aes(maxPer + secPer, col = "1+2")) +
+#   geom_density(aes(maxPer + secPer + thrPer, col = "1+2+3")) +
+#   geom_density(aes(maxPer + secPer + thrPer + fouPer, col = "1+2+3+4")) +
+#   xlab("Per")+
+#   facet_grid(Seg~Tag)              
+#             
+# t4 <- t3 %>%
+#   group_by(ID,Tag) %>%
+#   summarise(newDay = n_distinct(Date))
+# 
+# t5 <- left_join(t, t4)
+
+
+
+t.FL <- t.Tag %>% filter(Tag == "FL")
+
+t.First <- t.Tag %>% 
+  filter(Tag == "FL" | Tag == "First") %>%
+  mutate(Tag = "First",
+         Gare = ifelse(Entr == 0,
                        Sor,
-                       ifelse(Entr == 0,
-                              Sor,
-                              Entr))) %>%
-  select(ID, Date, DOW, Tag, Gare)
+                       Entr)
+  )
 
-  
-# first & last
-t.FL <- t3 %>%
+t.Last <- t.Tag %>% 
+  filter(Tag == "FL" | Tag == "Last") %>%
+  mutate(Tag = "Last",
+         Gare = Sor
+  )
+
+t.FirstLast <- rbind(t.First, t.Last) %>%
+  select(ID, Date, DOW, WOY, Sens, JF, ord, Tag, Gare)
+
+t <- t.FirstLast %>% group_by(ID, Tag) %>% summarise(total = n())
+t1 <- t.FirstLast %>% 
   group_by(ID, Tag, Gare) %>%
-  summarise(n = n())
+  summarise(n = n()) %>% inner_join(t)
 
-t.FL <- t.FL %>%
+t1 <- t1 %>% mutate(per = n/total,
+                  s = per * per)
+
+t2 <- t1 %>%
   group_by(ID, Tag) %>%
-  arrange(desc(n)) %>%
-  mutate(ord = row_number())
+  summarise(HHI = sum(s))
 
-# get per
-t <- Ref %>% select(ID, Day, Seg)
+t2 <- t2 %>% inner_join(t.segment)
+ggplot(t2) + geom_density(aes(HHI, col = Tag))
+ggplot(t2) + geom_density(aes(HHI, col = Tag)) + facet_wrap(~Seg)
 
-t.FL <- inner_join(t.FL, t)
-t.FL <- t.FL %>% mutate(per = n/Day)
-
-t.noFL <- t.FL %>%
-  group_by(ID, Tag, Seg) %>%
-  arrange(n) %>%
-  summarise(noFL = n(),
-            maxPer = max(per),
-            secPer = nth(per, 2),
-            thrPer = nth(per, 3),
-            fouPer = nth(per, 4))
-
-ggplot(t.noFL) +  geom_density(aes(maxPer, col = "1")) + facet_wrap(~Tag)
-         
-ggplot(t.noFL) +
-  geom_density(aes(maxPer, col = "1")) +
-  geom_density(aes(maxPer + secPer, col = "1+2")) +
-  geom_density(aes(maxPer + secPer + thrPer, col = "1+2+3")) +
-  geom_density(aes(maxPer + secPer + thrPer + fouPer, col = "1+2+3+4")) +
-  xlab("Per")+
-  facet_grid(Seg~Tag)              
-            
-t4 <- t3 %>%
-  group_by(ID,Tag) %>%
-  summarise(newDay = n_distinct(Date))
-
-t5 <- left_join(t, t4)
 

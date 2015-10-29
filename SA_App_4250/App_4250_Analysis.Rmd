@@ -28,14 +28,53 @@ ggplot(t.DailyPassage) +
   facet_wrap(~Seg)
 ```
 
-### 1.1 Most and Second most frequented Sor
+### 1.1 Herfindahl Index (HHI)
 
 ```{r, echo = FALSE, cache = TRUE, fig.width = 10, fig.height = 4, warning = FALSE}
 
+g1 <- ggplot(Ref %>% filter(Seg != "0_out_range")) + 
+  geom_density(aes(HHI_E, col ="HHI_E")) +
+  geom_density(aes(HHI_S, col ="HHI_S")) +
+  ggtitle("All Entr & Sor")
+
+### HHI for t.FirstLast
+t <- t.FirstLast %>% group_by(ID, Tag) %>% summarise(total = n())
+t1 <- t.FirstLast %>% 
+  group_by(ID, Tag, Gare) %>%
+  summarise(n = n()) %>% inner_join(t)
+t1 <- t1 %>% mutate(per = n/total,
+                  s = per * per)
+t2 <- t1 %>%
+  group_by(ID, Tag) %>%
+  summarise(HHI = sum(s))
+t2 <- t2 %>% inner_join(t.segment)
+
+g2 <- ggplot(t2) + 
+  geom_density(aes(HHI, col = Tag)) + 
+  ggtitle("First Entr & Last Sor")
+
+grid.arrange(g1,g2, ncol = 2, main = "HHI for all")
+```
+
+```{r, echo = FALSE, cache = TRUE, fig.width = 10, fig.height = 10, warning = FALSE}
+
+g1 <- ggplot(Ref %>% filter(Seg != "0_out_range")) + 
+  geom_density(aes(HHI_E, col ="HHI_E")) +
+  geom_density(aes(HHI_S, col ="HHI_S"))  + 
+  facet_wrap(~Seg, ncol = 1) +
+  ggtitle("All Entr & Sor")
+
+g2 <- ggplot(t2) + 
+  geom_density(aes(HHI, col = Tag)) + 
+  facet_wrap(~Seg, ncol = 1) +
+  ggtitle("First Entr & Last Sor")
+
+grid.arrange(g1,g2, ncol = 2, main = "HHI by segment")
 ```
 
 
-### 1.2 Most and Second most frequented Sor
+### 1.4
+### 1.4.1 Most and Second most frequented Sor
 
 ```{r, echo = FALSE, cache = TRUE, fig.width = 10, fig.height = 4, warning = FALSE}
 ggplot(temp.noGare) + geom_point(aes(maxPerS, secPerS + maxPerS)) + ggtitle("1st & 2nd most frequented Transactions")
@@ -50,7 +89,7 @@ ggplot(temp.noGare) +
   ggtitle("1st & 2nd most frequented Transactions with Segmentation")
 ```
 
-### 1.3 Most frequented Entr & Sor
+### 1.4.2 Most frequented Entr & Sor
 
 ```{r, echo = FALSE, cache = TRUE, fig.width = 10, fig.height = 4, warning = FALSE}
 ggplot(temp.noGare) + 
