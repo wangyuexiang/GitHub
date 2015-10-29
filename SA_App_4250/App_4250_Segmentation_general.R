@@ -133,7 +133,28 @@ ggplot(temp.noGare) +
   xlab("Per") +
   ggtitle("Distribution of most frequent Sor")
 
-	
+
+###########
+### 20151029
+# Herfindahl index
+t <- temp.E
+t <- t %>% mutate(s = perE ^ 2)
+t <- t %>%
+  group_by(ID) %>%
+  summarise(HHI_E = sum(s))
+
+t1 <- temp.S
+t1 <- t1 %>% mutate(s = perS ^ 2)
+t1 <- t1 %>%
+  group_by(ID) %>%
+  summarise(HHI_S = sum(s))
+
+Ref <-left_join(Ref,t)
+Ref <-left_join(Ref,t1)
+
+ggplot(Ref) + geom_bar(aes(HHI_E),binwidth = .1) + facet_wrap(~Seg)
+ggplot(Ref) + geom_bar(aes(HHI_S),binwidth = .1) + facet_wrap(~Seg)
+
 ###########
 ### 20151028
 # Segmentation
@@ -342,6 +363,16 @@ ggplot(t.DailyPassage) +
                                       fill=as.factor(no)),binwidth = 32) +
   facet_wrap(~Seg)
 
+
+t.noDP <- t.DailyPassage %>%
+  group_by(ID, no, Seg) %>%
+  summarise(noDay = n() )
+
+temp <- t.noDP %>% arrange(desc(noDay)) %>% slice(1:1)
+
+ggplot(temp) + geom_bar(aes(no, fill = as.factor(Seg)))
+ggplot(temp) + geom_bar(aes(Seg, fill = as.factor(no)))
+
 t1 <- t %>%
   group_by(ID, Date) %>%
   arrange(TimeSor) %>%
@@ -360,6 +391,9 @@ t2 <- t2 %>% mutate(Tag = ifelse(noByDay == 1,
                                  )
                     )
 
+
+
+
 count(t2,Tag)
 #          Tag     n
 # 1         FL 17678
@@ -367,8 +401,10 @@ count(t2,Tag)
 # 3       Last 39048
 # 4 irrelevant 41613
 
-
-t2 <- t1 %>% filter(Tag == "First" | Tag == "Last")
+t.FL <-  t2 %>% filter(Tag == "FL")
+  
+  
+t. <- t2 %>% filter(Tag == "First" | Tag == "Last")
 
 t3 <- t2 %>%
   mutate(Gare = ifelse(Tag == "Last",

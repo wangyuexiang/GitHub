@@ -8,9 +8,7 @@ output: html_document
 ## 0 Segmentation
 ```{r, echo = FALSE, cache = TRUE, fig.width = 10, fig.height = 4, warning = FALSE}
 ggplot(Ref) + geom_bar(aes(ord, fill = as.factor(Seg)), binwidth = 200) + ggtitle("Distribution of Segment by User")
-
 ggplot(Ref) + geom_bar(aes(noPsg, fill = as.factor(Seg)), binwidth = 100) + ggtitle("Distribution of Segment by Number of passage")
-
 ```
 
 ## 1 Geographic Model
@@ -45,7 +43,7 @@ ggplot(temp.noGare) + geom_point(aes(maxPerS, secPerS + maxPerS, size = noGS)) +
 ggplot(temp.noGare) + 
   geom_point(aes(maxPerS, secPerS + maxPerS, col = as.factor(result), alpha = .2)) +
   ggtitle("1st & 2nd most frequented Transactions with Result")
-
+ 
 ggplot(temp.noGare) + 
   geom_point(aes(maxPerS, secPerS + maxPerS, col = as.factor(result), alpha = .2)) +
   facet_wrap(~Seg) +
@@ -55,7 +53,6 @@ ggplot(temp.noGare) +
 ### 1.3 Most frequented Entr & Sor
 
 ```{r, echo = FALSE, cache = TRUE, fig.width = 10, fig.height = 4, warning = FALSE}
-  
 ggplot(temp.noGare) + 
   geom_density(aes(maxPerE, col = "1")) +
   geom_density(aes(maxPerE + secPerE, col = "1+2")) +
@@ -81,7 +78,7 @@ g2 <- ggplot(temp.noGare) +
   geom_density(aes(maxPerS + secPerS + thrPerS + fouPerS, col = "1+2+3+4")) +
   xlab("Per") +
   facet_wrap(~Seg, ncol = 1)
-
+ 
 g1 <- ggplot(temp.noGare) +
   geom_density(aes(maxPerE, col = "1")) +
   geom_density(aes(maxPerE + secPerE, col = "1+2")) +

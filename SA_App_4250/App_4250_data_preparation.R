@@ -85,17 +85,10 @@ temp <- ID %>% select(ID, Badge)
 transaction1 <- inner_join(temp,transaction1)
 rm(temp)
 
-write.table(ID,"ID.csv",sep=";",row.name=FALSE,quote=FALSE)
-write.table(ID2,"ID2.csv",sep=";",row.name=FALSE,quote=FALSE)
-write.table(ID.OD4,"ID.OD4.csv",sep=";",row.name=FALSE,quote=FALSE)
-write.table(result.final,"result.final.csv",sep=";",row.name=FALSE,quote=FALSE)
-
 ##########
 ### transaction 2 <- period
 ##########
 transaction2 <- transaction1 %>% filter(Date >= train.start)
-
-write.table(transaction2,"transaction2.csv",sep=";",row.name=FALSE,quote=FALSE)
 
 # period <- data.frame(Date = seq(train.start, test.end, "day"))
 t1 <- data.frame(Date = seq(train.start, test.end, "day")) %>% transmute(Dmin = Date, t=1)
@@ -268,3 +261,19 @@ ID.OD4 <- t %>%
   select(ID,Entr,Sor,Sens)
 
 transaction4 <- inner_join(transaction3,ID.OD4)
+
+##########
+### extraction
+##########
+write.table(transaction2,"transaction2.csv",sep=";",row.name=FALSE,quote=FALSE)
+write.table(ID,"ID.csv",sep=";",row.name=FALSE,quote=FALSE)
+write.table(ID2,"ID2.csv",sep=";",row.name=FALSE,quote=FALSE)
+write.table(ID.OD4,"ID.OD4.csv",sep=";",row.name=FALSE,quote=FALSE)
+write.table(result.final,"result.final.csv",sep=";",row.name=FALSE,quote=FALSE)
+
+t <- transaction2
+t1 <- inner_join(t,t.segment)
+t1 <- t1 %>% filter(Seg == "5_high_potential")
+t1$Seg <- NULL
+write.table(t1,"Hihg_potential.csv",sep=";",row.name=FALSE,quote=FALSE)
+
