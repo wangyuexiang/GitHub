@@ -3,6 +3,18 @@ source('~/SVN/1-click_Dev/SA_function.R', encoding = 'UTF-8', echo=FALSE)
 
 stringr::str_split_fixed(result$OD,"-", 5) %>% as.data.frame() %>% tbl_df
 
+ExportPlot <- function(gplot, filename, width=2, height=1.5) {
+    # Export plot in PDF and EPS.
+    # Notice that A4: width=11.69, height=8.27
+    ggsave(paste(filename, '.pdf', sep=""), gplot, width = width, height = height)
+    postscript(file = paste(filename, '.eps', sep=""), width = width, height = height)
+    print(gplot)
+    dev.off()
+    png(file = paste(filename, '_.png', sep=""), width = width * 100, height = height * 100)
+    print(gplot)
+    dev.off()
+}
+
 
 BO - 20151022
 25004901446700003;25004815815900011

@@ -67,15 +67,111 @@ t <- t %>% arrange(desc(noPsg))
 
 t <- left_join(Ref, temp.noGare)
 
-ggplot(t) +
+g2 <- ggplot(t) +
   geom_density(aes(maxPerS, col = "1")) +
   geom_density(aes(maxPerS + secPerS, col = "1+2")) +
   geom_density(aes(maxPerS + secPerS + thrPerS, col = "1+2+3")) +
+  geom_density(aes(maxPerS + secPerS + thrPerS + fouPerS, col = "1+2+3+4")) +
   xlab("Per") +
-  facet_wrap(~Seg)
+  facet_wrap(~Seg, ncol = 1)
+
+
+g1 <- ggplot(t) +
+  geom_density(aes(maxPerE, col = "1")) +
+  geom_density(aes(maxPerE + secPerE, col = "1+2")) +
+  geom_density(aes(maxPerE + secPerE + thrPerE, col = "1+2+3")) +
+  geom_density(aes(maxPerE + secPerE + thrPerE + fouPerE, col = "1+2+3+4")) +
+  xlab("Per")+
+  facet_wrap(~Seg, ncol = 1)
+
+grid.arrange(g1,g2, ncol = 2)
 
 
 
+t %>% filter(Result == FALSE & maxPerS > .5)
+
+
+###########
+###########
+### 20151028
+# First Entr
+# Last Sor
+
+t <- transaction2
+
+t0 <- t %>%
+  group_by(ID, Date) %>%
+  summarise(noByDay = n()) 
+
+t1 <- t %>%
+  group_by(ID, Date) %>%
+  arrange(TimeSor) %>%
+  mutate(ord = row_number())
+
+t2 <- inner_join(t0,t1)
+# it's possible that a person has only 1 trx one day
+t2 <- t2 %>% mutate(Tag = ifelse(noByDay == 1,
+                                 "FL",
+                                 ifelse(ord == 1,
+                                        "First",
+                                        ifelse(ord == noByDay,
+                                               "Last",
+                                               "irrelevant")
+                                        )
+                                 )
+                    )
+
+t2 <- t1 %>% filter(Tag == "First" | Tag == "Last")
+
+t3 <- t2 %>%
+  mutate(Gare = ifelse(Tag == "Last",
+                       Sor,
+                       ifelse(Entr == 0,
+                              Sor,
+                              Entr))) %>%
+  select(ID, Date, DOW, Tag, Gare)
+
+  
+# first & last
+t.FL <- t3 %>%
+  group_by(ID, Tag, Gare) %>%
+  summarise(n = n())
+
+t.FL <- t.FL %>%
+  group_by(ID, Tag) %>%
+  arrange(desc(n)) %>%
+  mutate(ord = row_number())
+
+# get per
+t <- Ref %>% select(ID, Day, Seg)
+
+t.FL <- inner_join(t.FL, t)
+t.FL <- t.FL %>% mutate(per = n/Day)
+
+t.noFL <- t.FL %>%
+  group_by(ID, Tag, Seg) %>%
+  arrange(n) %>%
+  summarise(noFL = n(),
+            maxPer = max(per),
+            secPer = nth(per, 2),
+            thrPer = nth(per, 3),
+            fouPer = nth(per, 4))
+
+ggplot(t.noFL) +  geom_density(aes(maxPer, col = "1")) + facet_wrap(~Tag)
+         
+ggplot(t.noFL) +
+  geom_density(aes(maxPer, col = "1")) +
+  geom_density(aes(maxPer + secPer, col = "1+2")) +
+  geom_density(aes(maxPer + secPer + thrPer, col = "1+2+3")) +
+  geom_density(aes(maxPer + secPer + thrPer + fouPer, col = "1+2+3+4")) +
+  xlab("Per")+
+  facet_grid(Seg~Tag)              
+            
+t4 <- t3 %>%
+  group_by(ID,Tag) %>%
+  summarise(newDay = n_distinct(Date))
+
+t5 <- left_join(t, t4)
 
 ###########
 ###########
@@ -211,7 +307,8 @@ temp.noGE <- temp.E %>%
   summarise(noGE = n(),
             maxPerE = max(perE),
             secPerE = nth(perE, 2),
-            thrPerE = nth(perE, 3)
+            thrPerE = nth(perE, 3),
+            fouPerE = nth(perE, 4)
   )
 
 temp.noGS <- temp.S %>%
@@ -220,7 +317,8 @@ temp.noGS <- temp.S %>%
   summarise(noGS = n(),
             maxPerS = max(perS),
             secPerS = nth(perS, 2),
-            thrPerS = nth(perS, 3)
+            thrPerS = nth(perS, 3),
+            fouPerS = nth(perS, 4)
   )
 
 
@@ -274,9 +372,16 @@ t1.1 <- left_join(t1 %>% rename(perS = maxPerS), temp.Gare)
 
 ggplot(temp.noGare) + geom_point(aes(maxPerS,maxPerS + secPerS))
 
+ggplot(temp.noGare) + 
+  geom_density(aes(maxPerE, col = "1")) +
+  geom_density(aes(maxPerE + secPerE, col = "1+2")) +
+  geom_density(aes(maxPerE + secPerE + thrPerE, col = "1+2+3")) +
+  geom_density(aes(maxPerE + secPerE + thrPerE + fouPerE, col = "1+2+3+4")) +
+  xlab("Per")
 
 ggplot(temp.noGare) + 
   geom_density(aes(maxPerS, col = "1")) +
   geom_density(aes(maxPerS + secPerS, col = "1+2")) +
   geom_density(aes(maxPerS + secPerS + thrPerS, col = "1+2+3")) +
+  geom_density(aes(maxPerS + secPerS + thrPerS + fouPerS, col = "1+2+3+4")) +
   xlab("Per")
