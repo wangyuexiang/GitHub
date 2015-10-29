@@ -1,4 +1,5 @@
 library(dplyr)
+library(knitr)
 library(ggplot2)
 library(gridExtra)
 
@@ -96,10 +97,14 @@ ggplot(temp.noGare) + geom_point(aes(maxPerS, secPerS + maxPerS, size = noGS)) +
 
 temp.result <- count(result.final, ID) %>%
   transmute(ID, result = (n>=1))
-
-t <- full_join(temp.result, temp.noGare)
+t <- full_join(temp.result,temp.noGare)
 t$result <- !is.na(t$result)
-ggplot(t) + geom_point(aes(maxPerS, secPerS + maxPerS, col = as.factor(result), alpha = .2)) + ggtitle("1st & 2nd most frequented Transactions with Result")
+
+temp.noGare <- inner_join(t.segment, t)
+ggplot(temp.noGare) + 
+  geom_point(aes(maxPerS, secPerS + maxPerS, col = as.factor(result), alpha = .2)) +
+  facet_wrap(~Seg)
+  ggtitle("1st & 2nd most frequented Transactions with Result")
 
 # ggplot(temp.Gare) + geom_point(aes(ordE,ordS))
 # ggplot(temp.Gare) + geom_point(aes(noE,noS))
@@ -117,14 +122,16 @@ ggplot(temp.noGare) +
   geom_density(aes(maxPerE + secPerE, col = "1+2")) +
   geom_density(aes(maxPerE + secPerE + thrPerE, col = "1+2+3")) +
   geom_density(aes(maxPerE + secPerE + thrPerE + fouPerE, col = "1+2+3+4")) +
-  xlab("Per")
+  xlab("Per") +
+  ggtitle("Distribution of most frequent Entr")
 
 ggplot(temp.noGare) + 
   geom_density(aes(maxPerS, col = "1")) +
   geom_density(aes(maxPerS + secPerS, col = "1+2")) +
   geom_density(aes(maxPerS + secPerS + thrPerS, col = "1+2+3")) +
   geom_density(aes(maxPerS + secPerS + thrPerS + fouPerS, col = "1+2+3+4")) +
-  xlab("Per")
+  xlab("Per") +
+  ggtitle("Distribution of most frequent Sor")
 
 	
 ###########
@@ -177,19 +184,22 @@ Ref$Seg[Ref$Small == TRUE&
 
 Ref$Seg[Ref$Inactive == TRUE] <- "1_inactive"
 
+t.segment <- Ref %>% select(ID, Seg)
+
+
 # display segmentation
 ggplot(Ref) + geom_bar(aes(ord, fill = as.factor(Seg)), binwidth = 200)
 ggplot(Ref) + geom_bar(aes(noPsg, fill = as.factor(Seg)), binwidth = 100)
 
 ggplot(Ref %>% filter(noPsg < 100)) + geom_bar(aes(noPsg, fill = as.factor(Seg)), binwidth = 20)
 
-ggplot(Ref) + geom_bar(aes(noPsg), binwidth = 100) + facet_wrap(~Seg)
-ggplot(Ref  %>% filter(noPsg < 100)) + geom_bar(aes(noPsg), binwidth = 20) + facet_wrap(~Seg)
+# ggplot(Ref) + geom_bar(aes(noPsg), binwidth = 100) + facet_wrap(~Seg)
+# ggplot(Ref  %>% filter(noPsg < 100)) + geom_bar(aes(noPsg), binwidth = 20) + facet_wrap(~Seg)
 
 ### link Ref temp.noGare
 t <- left_join(Ref, temp.noGare)
 
-g2 <- ggplot(t) +
+g2 <- ggplot(temp.noGare) +
   geom_density(aes(maxPerS, col = "1")) +
   geom_density(aes(maxPerS + secPerS, col = "1+2")) +
   geom_density(aes(maxPerS + secPerS + thrPerS, col = "1+2+3")) +
@@ -197,7 +207,7 @@ g2 <- ggplot(t) +
   xlab("Per") +
   facet_wrap(~Seg, ncol = 1)
 
-g1 <- ggplot(t) +
+g1 <- ggplot(temp.noGare) +
   geom_density(aes(maxPerE, col = "1")) +
   geom_density(aes(maxPerE + secPerE, col = "1+2")) +
   geom_density(aes(maxPerE + secPerE + thrPerE, col = "1+2+3")) +
@@ -312,10 +322,13 @@ t.DailyPassage <- count(t0,noByDay) %>%
 # 38% : 2 trx during the 
 t.DailyPassage <- t0 %>% mutate(no = noByDay)
 t.DailyPassage$no[t.DailyPassage$noByDay > 5] <- "DailyPassage > 5"
+
 ggplot(t.DailyPassage) + 
   geom_bar(aes(x = noByDay,y= (..count..)/sum(..count..),
                                       fill=as.factor(no)),binwidth = 32) +
   ylab("Percentage") + ggtitle("Distribution of number of passages by Day")
+
+t.DailyPassage <- inner_join(t.DailyPassage, t.segment)
 
 ggplot(t.DailyPassage) + 
   geom_bar(aes(x = noByDay,y= (..count..)/sum(..count..),
@@ -324,18 +337,10 @@ ggplot(t.DailyPassage) +
   facet_wrap(~Seg)
 
 
-t.segment <- Ref %>% select(ID, Seg)
-t.DailyPassage <- inner_join(t.DailyPassage, t.segment)
 ggplot(t.DailyPassage) + 
   geom_bar(aes(x = noByDay,y= (..count..)/sum(..count..),
                                       fill=as.factor(no)),binwidth = 32) +
   facet_wrap(~Seg)
-
-t <- count(transaction2,ID)
-t <- inner_join(t,t.segment)
-ggplot(t) + geom_bar(aes(n, fill = as.factor(Seg)),binwidth = 50) 
-
-
 
 t1 <- t %>%
   group_by(ID, Date) %>%
