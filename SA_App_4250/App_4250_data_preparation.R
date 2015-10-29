@@ -86,7 +86,9 @@ transaction1 <- inner_join(temp,transaction1)
 rm(temp)
 
 write.table(ID,"ID.csv",sep=";",row.name=FALSE,quote=FALSE)
-
+write.table(ID2,"ID2.csv",sep=";",row.name=FALSE,quote=FALSE)
+write.table(ID.OD4,"ID.OD4.csv",sep=";",row.name=FALSE,quote=FALSE)
+write.table(result.final,"result.final.csv",sep=";",row.name=FALSE,quote=FALSE)
 
 ##########
 ### transaction 2 <- period

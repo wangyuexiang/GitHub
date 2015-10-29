@@ -4,6 +4,8 @@ library(gridExtra)
 
 transaction2 <- read.table("transaction2.csv", sep= ";", header = TRUE)
 ID <- read.table("ID.csv", sep= ";", header = TRUE)
+ID2 <- read.table("ID2.csv", sep= ";", header = TRUE)
+ID.OD4 <- read.table("ID.OD4.csv", sep= ";", header = TRUE)
 result.final <- read.table("result.final.csv", sep= ";", header = TRUE)
 
 ###########
@@ -135,6 +137,7 @@ t <- t %>%
   mutate(ord = row_number())
 
 # get Small/Inactive
+
 t1 <- ID2 %>% select(ID, Small,Inactive)
 t <- left_join(t, t1)
 
@@ -283,8 +286,8 @@ t.Chain <- t %>%
 t.Chain.summary <- t.Chain %>%
   summarise(last = n())
 
-ggplot(t.Chain.summary) + geom_point(aes(Date, last)) + geom_path(aes(Date, last))
-ggplot(t.Chain.summary) + geom_point(aes(Date, last, col = as.factor(DOW ))) + geom_path(aes(Date, last)) + facet_wrap(~DOW)
+ggplot(t.Chain.summary) + geom_point(aes(Date, last)) + geom_path(aes(Date, last)) + ggtitle("ID = 1")
+ggplot(t.Chain.summary) + geom_point(aes(Date, last, col = as.factor(DOW ))) + geom_path(aes(Date, last)) + facet_wrap(~DOW)+ ggtitle("ID = 1")
 
 
 ###########
