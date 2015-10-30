@@ -483,5 +483,142 @@ t2 <- t2 %>% inner_join(t.segment)
 ggplot(t2) + geom_density(aes(HHI, col = Tag))
 ggplot(t2) + geom_density(aes(HHI, col = Tag)) + facet_wrap(~Seg)
 
-t1 <- 
-  t1 %>% arrange(desc(n))
+##########
+### 20151030
+### Day Model
+t <- transaction2 %>% group_by(ID) %>% summarise(Day = n_distinct(Date))
+t1 <- t.DailyPassage %>% group_by(ID) %>% summarise(DayDP = n_distinct(Date))
+t2 <- inner_join(t,t1)
+
+t2 <- inner_join(t,t.noDP)
+t2 <- t2 %>% 
+  mutate(per = noDay / Day,
+         s = per^2)
+t3 <- t2 %>% group_by(ID) %>% summarise(HHI = sum(s))
+ggplot(t3) + geom_density(aes(HHI))
+t4 <- left_join(t3, t.segment)
+ggplot(t4) + geom_density(aes(HHI)) + facet_wrap(~Seg)
+
+##########
+### 20151030
+### HP - high_potential
+# HP <- t2 %>% filter(Seg == "5_high_potential")
+# 
+# ID.HP <- Ref %>% filter(Seg == "5_high_potential") 
+# 
+# ggplot(ID.HP) + geom_point(aes(Ddiff, Day))
+# ggplot(ID.HP) + geom_point(aes(Dmin, Dmax))
+# 
+# ggplot(ID.HP) + geom_point(aes(Day, noPsg))t
+# 
+# t <- count(HP, ID) %>% rename(no = n)
+# t <- count(HP, ID) %>% filter(n == 2)
+
+
+t <- transaction2 %>% 
+  group_by(ID) %>% 
+  summarise(ActiveDay = n_distinct(Date)) %>%
+  inner_join(t.segment)
+
+### OD
+t1 <- transaction2 %>%
+  group_by(ID, Entr, Sor) %>%
+  summarise(noPsg = n(), Day = n_distinct(Date) ) %>%
+  inner_join(t)
+### find OD that one does more than 50% of his active day
+t2 <- t1 %>% filter(Day * 2 > ActiveDay )
+t3 <- count(t2, ID) %>% rename(noOD = n)
+### add noOD
+temp.ID <- left_join(t,t3)
+
+### Entr
+t1 <- transaction2 %>%
+  group_by(ID, Entr) %>%
+  summarise(noPsg = n(), Day = n_distinct(Date) ) %>%
+  inner_join(t)
+t2 <- t1 %>% filter(Day * 2 > ActiveDay )
+t3 <- count(t2, ID) %>% rename(noEntr = n)
+### add noEntr
+temp.ID <- temp.ID %>% left_join(t3)
+
+### Sor
+t1 <- transaction2 %>%
+  group_by(ID, Sor) %>%
+  summarise(noPsg = n(), Day = n_distinct(Date) ) %>%
+  inner_join(t)
+t2 <- t1 %>% filter(Day * 2 > ActiveDay )
+t3 <- count(t2, ID) %>% rename(noSor = n)
+### add noSor
+temp.ID <- temp.ID %>% left_join(t3)
+
+### First & Last
+t1 <- t.FirstLast %>%
+  group_by(ID, Tag, Gare) %>%
+  summarise(noPsg = n(), Day = n_distinct(Date) ) %>%
+  inner_join(t)
+t2 <- t1 %>% filter(Day * 2 > ActiveDay )
+t3 <- count(t2, ID, Tag) %>% rename(no = n)
+
+t4 <- t3 %>% filter(Tag == "First") %>% rename(noFirst = no) %>% select(ID, noFirst)
+t5 <- t3 %>% filter(Tag == "Last") %>% rename(noLast = no) %>% select(ID, noLast)
+### add noFirst & noLast
+temp.ID <- temp.ID %>% left_join(t4) %>% left_join(t5)
+
+t <- temp.ID %>% filter(Seg == "5_high_potential")
+
+
+t <- temp.ID %>% filter(Seg != "6_with_result")
+ggplot(t) + geom_bar(aes(ActiveDay),binwidth = 10)
+
+t1 <- temp.ID %>% filter(! (is.na(noOD) &
+                      is.na(noEntr) &
+                      is.na(noSor) &
+                      is.na(noFirst) &
+                      is.na(noLast)
+                      )
+                   )
+count(t1, Seg)
+
+ggplot(t1) + geom_density(aes(ActiveDay))
+ggplot(t1) + geom_density(aes(ActiveDay)) + facet_wrap(~Seg)
+ggplot(t1 %>% filter(Seg != "6_with_result")) + geom_density(aes(ActiveDay)) + facet_wrap(~Seg)
+
+
+ggplot(t1) + 
+  geom_density(aes(noOD, col = "OD")) +
+  geom_density(aes(noEntr, col = "Entr")) +
+  geom_density(aes(noSor, col = "Sor")) +
+  geom_density(aes(noFirst, col = "First")) +
+  geom_density(aes(noLast, col = "Last")) +
+  xlim(c(0,12))
+
+ggplot(t1) + 
+  geom_density(aes(noOD, col = "OD")) +
+  geom_density(aes(noEntr, col = "Entr")) +
+  geom_density(aes(noSor, col = "Sor")) +
+  geom_density(aes(noFirst, col = "First")) +
+  geom_density(aes(noLast, col = "Last")) +
+  xlim(c(0,12)) +
+  facet_wrap(~Seg)
+
+t2 <- t1 %>% 
+  group_by(Seg) %>%
+  arrange(desc(ActiveDay, noOD))
+
+t3 <- t1 %>% filter(noOD > 4 |
+                    noEntr >4 |
+                    noSor > 4 |
+                    noFirst > 4 |
+                    noLast > 4)
+
+
+temp <- count(t1, Seg) %>% rename(nPotential = n)
+
+temp <- t1 %>% transmute(ID, Potential = TRUE)
+temp.ID <- left_join(temp.ID, temp)
+temp.ID$Potential[is.na(temp.ID$Potential)] <- FALSE
+temp.ID <- temp.ID %>% mutate(Potential = as.factor(Potential))
+
+ggplot(temp.ID) + geom_bar(aes(Seg, fill = Potential))
+
+count(temp.ID, Seg, Potential)
