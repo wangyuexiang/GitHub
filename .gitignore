@@ -45,12 +45,13 @@ Temporary Items
 # Files or Directories to be ignored
 
 0_Old/
-1-click_Dev/.Rproj.user/
-1-click_Dev/0_Old/
-1-click_Dev/cache/
-1-click_Dev/figure/
+SA_1_click/.Rproj.user/
+SA_1_click</0_Old/
+SA_1_click/cache/
+SA_1_click/figure/
+SA_1_click/.svn/
+
 Documentation/Old/
-Qt/
 
 SA_App_4250/.Rproj.user/
 SA_App_4250/cache/

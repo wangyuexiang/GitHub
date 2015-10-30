@@ -473,6 +473,8 @@ t1 <- t.FirstLast %>%
 t1 <- t1 %>% mutate(per = n/total,
                   s = per * per)
 
+t1 <- t1 %>% inner_join(t.segment)
+
 t2 <- t1 %>%
   group_by(ID, Tag) %>%
   summarise(HHI = sum(s))
@@ -481,4 +483,5 @@ t2 <- t2 %>% inner_join(t.segment)
 ggplot(t2) + geom_density(aes(HHI, col = Tag))
 ggplot(t2) + geom_density(aes(HHI, col = Tag)) + facet_wrap(~Seg)
 
-
+t1 <- 
+  t1 %>% arrange(desc(n))
