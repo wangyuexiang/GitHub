@@ -679,3 +679,191 @@ Model <- function(transaction, model.decades, model.units) {
 	}
   return(result )
 } # end of fuction Model
+
+GetCharacters <- function(transaction){
+  # Get the necessary characters for each client
+  # Args:
+  #   transaction: ID, Entr, Sor, Date, ...
+  # Returns:
+  #   result:
+  #     ID
+  #     Dmin: first transaction date
+  #     Dmax: last transaction date
+  #     Day: number of active days
+  #     Ddiff: span between the 1st & last trx = Dmax - Dmin + 1
+  #     noPsg: total number of passages
+    result <- transaction %>%
+    group_by(ID) %>%
+    summarise(
+      Dmin = min(Date),
+      Dmax = max(Date),
+      Day = n_distinct(Date),
+      Ddiff = Dmax - Dmin,
+      noPsg = n()
+    )
+    return(result)
+}
+
+GetNoEntr <- function(transaction, inf = .5){
+  # Get the number of passage for each Gare as Entr for each ID
+  # and among all his active days, how many did he travail at this Gare as Entr
+  # Args:
+  #   transaction: ID, Entr, SensEntr, Date, ...
+  #   inf = .5  // lower limit of percentage, e.x. inf = .5, we return all Entre that this ID does more than 50% of all his active day
+  # Returns:
+  #   result: 
+  #     ID
+  #     noPsg: number of passage
+  #     Day: number of day when this ID does this Entr
+  #     ActiveDay: number of active day of this ID
+  #     Per = Day / ActiveDay
+  #     Ord: importance of this Entr, e.x. Ord = 1 means this is the most frequent Entr of this ID
+
+  t1 <- transaction %>%
+    group_by(ID) %>%
+    summarise(ActiveDay = n_distinct(Date)) # get the number of active day for each ID
+  
+  t2 <- transaction %>%
+    filter(Entr != 0) %>%
+    group_by(ID, Entr, SensEntr) %>%
+    summarise(noPsg = n(),            # get the number of passage of this ID at this Gare as Entr
+              Day = n_distinct(Date)) # get the number of day at which this ID passes this Gare as Entr
+  
+  t3 <- inner_join(t2,t1) %>%
+    mutate(Per = Day / ActiveDay) %>%
+    ungroup %>%
+    group_by(ID) %>%
+    arrange(desc(noPsg)) %>%
+    mutate(Ord = row_number())
+  
+  result <- t3 %>% filter(Per > inf)
+  return (result)
+}
+
+GetNoSor <- function(transaction, inf = .5){
+  # Get the number of passage for each Gare as Sor for each ID
+  # and among all his active days, how many did he travail at this Gare as Sor
+  # Args:
+  #   transaction: ID, Sor, SensSor, Date, ...
+  #   inf = .5  // lower limit of percentage, e.x. inf = .5, we return all Sor that this ID does more than 50% of all his active day
+  # Returns:
+  #   result: 
+  #     ID
+  #     noPsg: number of passage
+  #     Day: number of day when this ID does this Sor
+  #     ActiveDay: number of active day of this ID
+  #     Per = Day / ActiveDay
+  #     Ord: importance of this Sor, e.x. Ord = 1 means this is the most frequent Sor of this ID
+  t1 <- transaction %>%
+    group_by(ID) %>%
+    summarise(ActiveDay = n_distinct(Date)) # get the number of active day for each ID
+  
+  t2 <- transaction %>%
+    filter(Sor != 0) %>%
+    group_by(ID, Sor, SensSor) %>%
+    summarise(noPsg = n(),             # get the number of passage of this ID at this Gare as Sor
+              Day = n_distinct(Date))  # get the number of day at which this ID passes this Gare as Sor
+  
+  t3 <- inner_join(t2,t1) %>%
+    mutate(Per = Day / ActiveDay) %>%
+    ungroup %>%
+    group_by(ID) %>%
+    arrange(desc(noPsg)) %>%
+    mutate(Ord = row_number())
+  
+  return (t3 %>% filter(Per > inf))
+}
+
+TagFirstLast <- function(transaction){
+  # Tag each transaction of a ID as:
+  # Args:
+  #   transaction: ID, Date, TimeSor, ...
+  # Returns:
+  #   result: 
+  #     ID... 
+  #     ord: order of this transaction for this ID at this Date
+  #     Tag: type of transaction for this ID at this Date
+  #       - First: first passage of this person at that date
+  #       - Last : last passage of this person at that date
+  #       - FL: the only passage of this person at that date
+  #       - Others
+  
+  t0 <- transaction %>%
+    group_by(ID, Date) %>%
+    summarise(noByDay = n())  # get the number of passage of this ID at this Date
+  
+  t1 <- transaction %>%
+    group_by(ID, Date) %>%
+    arrange(TimeSor) %>%
+    mutate(ord = row_number()) # order the passages of this ID at this Date by TimeSor
+  
+  t2 <- inner_join(t0,t1)
+  # it's possible that a person has only 1 trx one day
+  result <- t2 %>% mutate(Tag = ifelse(noByDay == 1,
+                                   "FL",
+                                   ifelse(ord == 1,
+                                          "First",
+                                          ifelse(ord == noByDay,
+                                                 "Last",
+                                                 "Others")
+                                          )
+                                  )
+                      )
+  return (result)
+}
+
+GetNoFirstLast <- function(transaction, inf = .5){
+  # Get the number of passage for each Gare as the First Entr or the Last Sor for each ID
+  # and among all his active days, how many did he travail at this Gare
+  # Args:
+  #   transaction: ID, Entr, Sor, SensEntr,SensSor, Date, Tag, ...
+  # Returns:
+  #   result: ID, Tag, Gare, Sens, ...
+  #     noPsg: number of passage
+  #     Day: number of day when this ID does this Sor
+  #     ActiveDay: number of active day of this ID
+  #     Per = Day / ActiveDay
+  #     Ord: importance of this Gare, e.x. Ord = 1 means this is the most frequent Gare of this ID
+  
+  t1 <- transaction %>%
+    group_by(ID) %>%
+    summarise(ActiveDay = n_distinct(Date)) # get the number of active day for each ID
+  
+  t.First <- transaction %>% 
+    filter(Tag == "FL" | Tag == "First") %>%
+    mutate(Tag = "First",
+           Gare = ifelse(Entr == 0,
+                         Sor,
+                         Entr),
+           Sens = ifelse(Entr == 0,
+                         SensSor,
+                         SensEntr)
+          )
+  
+  t.Last <- transaction %>% 
+    filter(Tag == "FL" | Tag == "Last") %>%
+    mutate(Tag = "Last",
+           Gare = Sor,
+           Sens = SensSor
+          )
+  
+  t.FirstLast <- rbind(t.First, t.Last) %>%
+    select(ID, Date, Tag, Gare, Sens)
+
+  t2 <- t.FirstLast %>%
+    group_by(ID, Tag, Gare, Sens) %>%
+    summarise(noPsg = n(), 
+              Day = n_distinct(Date) 
+              )
+
+  t3 <- inner_join(t2,t1) %>%
+    mutate(Per = Day / ActiveDay) %>%
+    ungroup %>%
+    group_by(ID) %>%
+    arrange(desc(noPsg)) %>%
+    mutate(Ord = row_number())
+  
+  result <- t3 %>% filter(Per > inf)
+  
+  return (result)
+}

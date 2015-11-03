@@ -127,7 +127,17 @@ t0 <- inner_join(t,ref.temp)
 BDD.temp <- rbind(BDD,t0)
 
 
-write.table(ref.temp, file="Ref.ID.v20151029.csv", sep = ";", row.names = F, quote = F)
+##########
+### change EVA number
+ref$EVA[ref$N == 23] <- 2629771 
+ref$EVA[ref$N == 19] <- 2424144
+ref$EVA[ref$N == 38] <- 598771
+
+result$EVA[result$N == 23] <- 2629771 
+result$EVA[result$N == 19] <- 2424144
+result$EVA[result$N == 38] <- 598771
+
+write.table(ref, file="Ref.ID.v20151102.csv", sep = ";", row.names = F, quote = F)
 write.table(BDD.temp, file="BDD.old.v20151022.csv", sep = ";", row.names = F, quote = F)
 
 
@@ -139,5 +149,5 @@ r <- read.table(file="Result.v20151026.csv", sep = ";", header = TRUE) %>% tbl_d
 rbind(r,t1)
 result <- rbind(r,t1)
 
-write.table(result, file="Result.v20151029.csv", sep = ";", row.names = F, quote = F)
+write.table(result, file="Result.v20151102.csv", sep = ";", row.names = F, quote = F)
 

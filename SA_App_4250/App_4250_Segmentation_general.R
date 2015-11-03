@@ -9,6 +9,12 @@ ID2 <- read.table("ID2.csv", sep= ";", header = TRUE)
 ID.OD4 <- read.table("ID.OD4.csv", sep= ";", header = TRUE)
 result.final <- read.table("result.final.csv", sep= ";", header = TRUE)
 
+
+rm(temp.E,temp.S)
+rm(t,t1,t2,t3,t4,t5)
+rm(t.First,t.Last,t.FirstLast)
+rm(t.OD)
+
 ###########
 ###########
 ### 20151020
@@ -207,7 +213,6 @@ Ref$Seg[Ref$Inactive == TRUE] <- "1_inactive"
 
 t.segment <- Ref %>% select(ID, Seg)
 
-
 # display segmentation
 ggplot(Ref) + geom_bar(aes(ord, fill = as.factor(Seg)), binwidth = 200)
 ggplot(Ref) + geom_bar(aes(noPsg, fill = as.factor(Seg)), binwidth = 100)
@@ -288,16 +293,13 @@ t <- inner_join(t,t1)
 
 ggplot(t) + geom_point(aes(Date, TimeSor, col = as.factor(ord))) + theme(legend.position = "none")
 ggplot(t %>% filter(ord < 8)) + geom_point(aes(Date, TimeSor, col = as.factor(ord)))
-
 ggplot(t %>% filter(ord < 9)) + geom_point(aes(Date, TimeSor, col = as.factor(ord))) + facet_grid(Entr~Sor)
-
 
 t3 <- t %>% filter(ord <3)
 ggplot(t3) + geom_bar(aes(DOW, fill = as.factor(ord)), binwidth = 1, position = "dodge") + theme(legend.position = "none")
 ggplot(t3) + geom_bar(aes(TimeSor, fill = as.factor(ord)), binwidth = 1, position = "dodge") + theme(legend.position = "none")
 
 ggplot(t3) + geom_tile(aes(WOY,DOW, fill = as.factor(ord))) + facet_wrap(~ord, ncol = 1) + theme(legend.position = "none")
-
 
 ### gares
 t.G <- temp.Gare %>% filter(ID == 1)
@@ -320,13 +322,11 @@ t.Chain.summary <- t.Chain %>%
 ggplot(t.Chain.summary) + geom_point(aes(Date, last)) + geom_path(aes(Date, last)) + ggtitle("ID = 1")
 ggplot(t.Chain.summary) + geom_point(aes(Date, last, col = as.factor(DOW ))) + geom_path(aes(Date, last)) + facet_wrap(~DOW)+ ggtitle("ID = 1")
 
-
 ###########
 ###########
 ### 20151028
 # First Entr
 # Last Sor
-
 t <- transaction2
 
 t0 <- t %>%
@@ -363,7 +363,6 @@ ggplot(t.DailyPassage) +
                                       fill=as.factor(no)),binwidth = 32) +
   facet_wrap(~Seg)
 
-
 t.noDP <- t.DailyPassage %>%
   group_by(ID, no, Seg) %>%
   summarise(noDay = n() )
@@ -392,7 +391,6 @@ t2 <- t2 %>% mutate(Tag = ifelse(noByDay == 1,
                     )
 
 t.Tag <- t2
-
 
 count(t.Tag,Tag)
 #          Tag     n
@@ -443,8 +441,6 @@ count(Ref, (HHI_E > .25| HHI_S > .25), Seg)
 #   summarise(newDay = n_distinct(Date))
 # 
 # t5 <- left_join(t, t4)
-
-
 
 t.FL <- t.Tag %>% filter(Tag == "FL")
 
@@ -622,3 +618,37 @@ temp.ID <- temp.ID %>% mutate(Potential = as.factor(Potential))
 ggplot(temp.ID) + geom_bar(aes(Seg, fill = Potential))
 
 count(temp.ID, Seg, Potential)
+
+### noFirst == noLast
+t <- temp.ID %>% filter(noFirst == noLast) %>% select(ID)
+
+t1 <- t.FirstLast %>% 
+  group_by(ID,Tag, Gare) %>%
+  summarise(n = n()) %>%
+  arrange(desc(n)) %>%
+  slice(1)
+
+t2 <- t1 %>% filter(Tag == "First") %>% ungroup %>% rename(First = Gare, noFirst = n) %>% select(ID, First, noFirst)
+t3 <- t1 %>% filter(Tag == "Last") %>% ungroup %>% rename(Last = Gare, noLast = n) %>% select(ID, Last, noLast)
+t4 <- inner_join(t2,t3)
+
+t5 <- inner_join(t,t4)
+
+
+## testing for GetCharacters and GetNoEntr
+
+t <- transaction2
+t1 <- GetCharacters(t)
+
+t <- t %>% mutate(Voie = ifelse(Entr == 0, Voie, 0))
+t2 <- t %>% left_join(sens)
+t2 <- t2 %>% mutate(SensEntr = ifelse(is.na(SensEntr), 0, SensEntr),
+                      SensSor = ifelse(is.na(SensSor), 0, SensSor))
+
+t3 <- GetNoEntr(t2)
+t3 <- GetNoSor(t2)
+
+t3 <- TagFirstLast(t2)
+t4 <- GetNoFirstLast(t3)
+
+
