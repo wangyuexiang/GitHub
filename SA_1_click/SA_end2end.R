@@ -18,8 +18,8 @@ library(dplyr)
 library(cluster)
 library(ggplot2)
 library(zoo)
-  library(gridExtra)
-  library(knitr)
+library(gridExtra)
+library(knitr)
 
 ##########
 ##########
