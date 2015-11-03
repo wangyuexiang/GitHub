@@ -680,6 +680,7 @@ Model <- function(transaction, model.decades, model.units) {
   return(result )
 } # end of fuction Model
 
+### 20151102
 GetCharacters <- function(transaction){
   # Get the necessary characters for each client
   # Args:
@@ -866,4 +867,45 @@ GetNoFirstLast <- function(transaction, inf = .5){
   result <- t3 %>% filter(Per > inf)
   
   return (result)
+}
+
+Dashboard <- function(transaction, t = "Dashboard of 1 client", saveImage = FALSE){
+  # Display 1 client's frequent passage and pattern
+  # Return all his passage ordered by number of passages
+  temp <- transaction
+  
+  # order his OD
+  temp.OD <- temp %>%
+    group_by(Entr, Sor) %>%
+    summarise(n = n()) %>%
+    ungroup() %>%
+    arrange(desc(n)) %>%
+    mutate(ord = row_number())
+  
+  # add ord
+  t1 <- temp.OD %>% select(-n)
+  temp1 <- inner_join(temp,t1)
+  
+  # ggplot(temp1) + geom_point(aes(Date, TimeSor))
+  g1 <- ggplot(temp1) + geom_point(aes(Date, TimeSor, col = as.factor(ord))) + theme(legend.position = "none")
+  g2 <- ggplot(temp1 %>% filter(ord < 3)) + geom_point(aes(Date, TimeSor, col = as.factor(ord)))
+  
+  temp2 <- temp1 %>% filter(ord <3)
+  g3 <- ggplot(temp2) + geom_bar(aes(DOW, fill = as.factor(ord)), binwidth = 1, position = "dodge") + theme(legend.position = "none")
+  g4 <- ggplot(temp2) + geom_bar(aes(TimeSor, fill = as.factor(ord)), binwidth = 1, position = "dodge") + theme(legend.position = "none")
+  
+  g5 <- ggplot(temp2) + geom_tile(aes(WOY,DOW, fill = as.factor(ord))) + facet_wrap(~ord, ncol = 1) + theme(legend.position = "none")
+  # grid.arrange(g1,g2,g3,g4, g5, ncol = 2, main = paste0("ID = ", k)) 
+
+
+  if(saveImage == FALSE){
+    grid.arrange(g1,g2,g3,g4, g5, ncol = 2, main = t ) 
+  } else{
+    # Notice that A4: width=11.69, height=8.27
+    png(file = paste("Geo_Frequent_OD_ID_",k, '.png', sep=""), width = 1000, height = 1000)
+    print(grid.arrange(g1,g2,g3,g4, g5, ncol = 2, main = title )) 
+    dev.off()
+  }
+  
+  return (temp.OD)
 }
