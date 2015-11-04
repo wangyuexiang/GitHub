@@ -14,6 +14,7 @@ rm(temp.E,temp.S)
 rm(t,t1,t2,t3,t4,t5)
 rm(t.First,t.Last,t.FirstLast)
 rm(t.OD)
+rm(t.Chain, t.Chain.summary, t.E, t.FL, t.new,t.G,t.S,t.noFL,t.noDP,t.Tag)
 
 ###########
 ###########
@@ -645,10 +646,161 @@ t2 <- t %>% left_join(sens)
 t2 <- t2 %>% mutate(SensEntr = ifelse(is.na(SensEntr), 0, SensEntr),
                       SensSor = ifelse(is.na(SensSor), 0, SensSor))
 
-t3 <- GetNoEntr(t2)
-t3 <- GetNoSor(t2)
+t.E <- GetNoEntr(t2)
+t.S <- GetNoSor(t2)
 
 t3 <- TagFirstLast(t2)
 t4 <- GetNoFirstLast(t3)
 
 
+temp <- GetTimeFirstLast(t3)
+
+temp1 <- temp %>% filter(SD < 1.5 & noPsg > 5)
+temp2 <- count(temp1, ID)
+temp3 <- inner_join(temp2,t.segment)
+
+ggplot(temp) + geom_bar(aes(SD),binwidth = 1) + facet_grid(DOW~Tag)
+ggplot(temp) + geom_bar(aes(Tmoy),binwidth = 1) + facet_grid(DOW~Tag)
+
+ggplot(temp) + geom_density(aes(Tmoy, col = as.factor(Tag) ),binwidth = 1) + facet_wrap(~DOW)
+
+
+t <- temp.ID %>% filter( !(is.na(noEntr) & is.na(noSor)))
+
+t <- temp.ID %>% arrange(as.numeric(ID)) %>% filter(Seg == "4_no_important_trajet" & Potential == TRUE)
+Dashboard(transaction2 %>% filter(ID == 980))
+
+
+### get ID with a First, find the distance
+t <- temp.ID %>% filter( !is.na(noFirst) )
+t <- t %>% select(ID,Seg)
+t1 <- transaction2 %>% inner_join(t)
+
+t1 <- t1 %>% 
+  mutate(Voie = ifelse(Entr == 0, Voie, 0)) %>% 
+  left_join(sens) %>% 
+  mutate(SensEntr = ifelse(is.na(SensEntr), 0, SensEntr),
+                    SensSor = ifelse(is.na(SensSor), 0, SensSor))
+
+t2 <- TagFirstLast(t1)
+t3 <- GetNoFirstLast(t2, .4) %>% filter(Tag == "First")
+
+### distance
+t <- transaction2
+# t1 <- GetCharacters(t)
+
+t <- t %>% 
+  mutate(Voie = ifelse(Entr == 0, Voie, 0)) %>%
+  left_join(sens) %>%
+  mutate(SensEntr = ifelse(is.na(SensEntr), 0, SensEntr),
+         SensSor = ifelse(is.na(SensSor), 0, SensSor))
+
+t <- TagFirstLast(t)
+
+t1 <- gares %>% transmute(Entr = Cde, Elng = Lng, Elat = Lat)
+t <- left_join(t, t1)
+t1 <- gares %>% transmute(Sor = Cde, Slng = Lng, Slat = Lat)
+t <- left_join(t, t1)
+
+# ### 20151103
+# t1 <- t %>% filter(Tag == 'First' & !is.na(Slng))
+# t2 <- t1 %>% filter(is.na(Elng)) %>% ungroup %>% transmute(ID, Date, Lng = Slng, Lat = Slat)
+# t3 <- t1 %>% filter(!is.na(Elng)) %>% ungroup %>% transmute(ID, Date, Lng = Elng, Lat = Elat)
+# 
+# t2 <- rbind(t2,t3)
+# t3 <- left_join(t, t2) %>% select(-c(Badge, EVA, Voie, Sens, SensEntr, SensSor))
+# 
+# t4 <- t3 %>% 
+#   mutate(
+#     E = sqrt((Elng - Lng)^2 + (Elat - Lat)^2),
+#     S = sqrt((Slng - Lng)^2 + (Slat - Lat)^2),
+#     dist = (E + S + abs(E - S))/2
+#     )
+# 
+# t5 <- t4 %>%
+#   group_by(ID,Date) %>%
+#   filter(!is.na(dist)) %>%
+#   summarise(dist = max(dist))
+# 
+# t6 <- t5 %>% 
+#   group_by(ID) %>%
+#   summarise(
+#     dMax = max(dist),
+#     dMin = min(dist),
+#     dMoy = mean(dist),
+#     dSD = sd(dist)
+#     )
+# 
+# t6 <- t6 %>% inner_join(t.segment)
+
+# u: up
+# d: down
+# l: left
+# r: right
+
+
+t <- transaction2
+t1 <- gares %>% transmute(Entr = Cde, Elng = Lng, Elat = Lat)
+t <- left_join(t, t1)
+t1 <- gares %>% transmute(Sor = Cde, Slng = Lng, Slat = Lat)
+t <- left_join(t, t1)
+
+delta.Lat = .1
+delta.Lng = .1
+
+t1 <- t %>% 
+  filter(is.na(Elat) & !is.na(Slat)) %>%
+  mutate(u=Slat + delta.Lat ,
+         d=Slat - delta.Lat,
+         r=Slng + delta.Lng, 
+         l=Slng - delta.Lng)
+
+t2 <- t %>% 
+  filter(!is.na(Elat) & is.na(Slat)) %>%
+  mutate(u=Elat + delta.Lat,
+         d=Elat - delta.Lat,
+         r=Elng + delta.Lng,
+         l=Elng - delta.Lng)
+
+t3 <- t %>%
+  filter(!is.na(Elat) & !is.na(Slat)) %>%
+  mutate(
+    u = ( Elat + Slat + abs(Elat - Slat) )/2,
+    d = ( Elat + Slat - abs(Elat - Slat) )/2,
+    r = ( Elng + Slng + abs(Elng - Slng) )/2,
+    l = ( Elng + Slng - abs(Elng - Slng) )/2
+      )
+
+tRect <- rbind(t1,t2,t3)
+temp <- tRect %>% filter(ID == 1)
+temp
+ggplot(temp) +geom_rect(aes(xmin=l, xmax=r, ymin=d, ymax=u, alpha = .1))
+ggplot(temp) +geom_rect(aes(xmin=l, xmax=r, ymin=d, ymax=u, alpha = .1)) + facet_wrap(~DOW)
+
+ggplot(temp) +
+  geom_rect(aes(xmin=l, xmax=r, ymin=d, ymax=u, alpha = .1)) +
+  theme(
+    scale_y_continuous( breaks = seq(40, 50, 1))
+    # scale_y_continuous(minor_breaks = seq(42 , 49, 0.5), breaks = seq(42, 49, 1))
+    )
+
+t4 <- t3 %>%
+  group_by(ID, u,d,r,l) %>%
+  summarise(n = n()) %>%
+  ungroup %>%
+  group_by(ID) %>%
+  arrange(desc(n))
+
+temp <- t4 %>% filter(ID == 1)
+temp
+ggplot(t4) + geom_tile(aes(x=l, xend=r, y=d, yend=u, alpha = n))
+ggplot(temp) + geom_segment(aes(x=l, xend=r, y=d, yend=u))
+ggplot(temp) + geom_rect(aes(xmin=l, xmax=r, ymin=d, ymax=u, alpha =n))
+
+ggplot(t3 %>% filter(ID == 1)) + geom_rect(aes(xmin=l, xmax=r, ymin=d, ymax=u, alpha =.1)) + facet_wrap(~DOW)
+
+temp1 <- t4 %>% filter(as.numeric(ID) < 20)
+ggplot(temp1) + geom_rect(aes(xmin=l, xmax=r, ymin=d, ymax=u, alpha =n)) + facet_wrap(~ID)
+
+
+t5 <- count(t4, ID) %>% left_join(t.segment)

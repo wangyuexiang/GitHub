@@ -909,3 +909,33 @@ Dashboard <- function(transaction, t = "Dashboard of 1 client", saveImage = FALS
   
   return (temp.OD)
 }
+
+GetTimeFirstLast <- function(transaction, inf = .5){
+  # Get the Mean and SD for the First Entr or the Last Sor for each ID during the day
+  # Args:
+  #   transaction: ID, Entr, Sor, SensEntr,SensSor, Date, Tag, ...
+  # Returns:
+  #   result: ID, Tag,  ...
+  #     Tmoy: mean of TimeSor
+  #     SD: SD of TimeSor
+  
+  t.First <- transaction %>% 
+    filter(Tag == "FL" | Tag == "First") %>%
+    mutate(Tag = "First")
+  
+  t.Last <- transaction %>% 
+    filter(Tag == "FL" | Tag == "Last") %>%
+    mutate(Tag = "Last")
+  
+  t.FirstLast <- rbind(t.First, t.Last) %>%
+    select(ID, Date, Tag, DOW, TimeSor)
+  
+  result <- t.FirstLast %>%
+    group_by(ID, Tag, DOW) %>%
+    summarise( Tmoy = mean(TimeSor),
+               SD = sd(TimeSor),
+               noPsg = n()
+            )
+
+  return (result)
+}
