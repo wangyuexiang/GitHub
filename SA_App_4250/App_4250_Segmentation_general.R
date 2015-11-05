@@ -874,3 +874,35 @@ ggplot(t2) + geom_tile(aes(Col, Row),alpha = 0.1)
 
 t2 <- inner_join(transaction2,Grid)
 ggplot(t2 %>% filter(as.numeric(ID) < 10)) + geom_tile(aes(Col, Row),alpha = 0.1) + facet_wrap(~ID)
+
+##########
+### 20151105 - ActiveGrid Grid
+##########
+t1 <- trx %>%
+  group_by(ID) %>%
+  summarise(ActiveDay = n_distinct(Date))
+
+t2 <- trx %>%
+  group_by(ID, OD) %>%
+  summarise(Day = n_distinct(Date))
+
+t <- inner_join(t1,t2) %>% mutate(Per = Day / ActiveDay)
+
+t.Active <- t %>% 
+  filter(Per > .5) %>%
+  inner_join(grid.display)
+
+temp <- t.Active %>% filter(as.numeric(ID) < 10)
+ggplot(temp) + geom_tile(aes(l,d, alpha = Per)) + xlim(c(-2,8)) + ylim(c(42,49)) + facet_wrap(~ID) +
+  geom_point(data= gares, aes(Lng, Lat, col = as.factor(Societe)))
+
+t2 <- t.Active %>% count(ID) %>% right_join(t.segment)
+
+t2 %>% 
+  filter(ResultTS == FALSE,
+         ResultGeo == FALSE,
+         !is.na(n)) %>%
+  arrange(desc(n) ,as.numeric(ID))
+k = c(3967,3710,3465,2598)
+ggplot(t.Active %>% filter(ID %in% k)) + geom_tile(aes(l,d, alpha = Per)) + xlim(c(-2,8)) + ylim(c(42,49)) + facet_wrap(~ID) +
+  geom_point(data= gares, aes(Lng, Lat, col = as.factor(Societe)))

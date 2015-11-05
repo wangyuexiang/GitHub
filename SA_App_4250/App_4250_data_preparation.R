@@ -355,3 +355,56 @@ for(i in 1:nrow(temp1)){
 }
 
 Grid <- Grid %>% tbl_df %>% slice(-1)
+grid.display <- t.grid %>% mutate(OD = paste0(Row,"-",Col))
+
+##########
+### Segmentation
+##########
+result.TS <- read.table(file = "result.final.TimeSpace.v20151029.csv", header = TRUE, sep = ";") %>% tbl_df %>% mutate(ID = as.character(ID))
+result.Geo <- read.table(file = "result.treated.Geographic.v20151105.csv", header = TRUE, sep = ";") %>% tbl_df %>% mutate(ID = as.character(ID))
+
+t <- GetCharacters(transaction1)
+
+### by TimeSpace Model
+t1 <- result.TS %>% select(ID) %>% distinct(ID)
+t1$ResultTS <- TRUE
+t <- left_join(t,t1)
+t$ResultTS[is.na(t$ResultTS)] <- FALSE
+
+### by Geographic Model
+t1 <- result.Geo %>% select(ID) %>% distinct(ID)
+t1$ResultGeo <- TRUE
+t <- left_join(t,t1)
+t$ResultGeo[is.na(t$ResultGeo)] <- FALSE
+
+# get Recent
+t$Recent <- FALSE
+t$Recent[t$Dmin > as.Date("2015-8-15")] <- TRUE
+
+# get GoodTrx
+t1 <- ID.OD4 %>% select(ID) %>% distinct(ID)
+t1$GoodTrx <- TRUE
+t <- left_join(t,t1)
+t$GoodTrx[is.na(t$GoodTrx)] <- FALSE
+
+# get Small
+t$Small <- FALSE
+t$Small[t$Day < 5 | t$noPsg < 20 | t$Ddiff < 5] <- TRUE
+
+# get Inactive
+t$Inactive <- FALSE
+t$Inactive[t$Dmax < as.Date("2015-8-1")] <- TRUE
+
+Ref <- t 
+count(Ref,ResultTS, ResultGeo, Recent, GoodTrx, Small, Inactive)
+
+# construct Seg
+Ref$Seg <- "Impropable"
+Ref$Seg[Ref$GoodTrx] <- "Propable"
+
+Ref$Seg[Ref$Small == TRUE] <- "Small"
+
+Ref$Seg[Ref$Recent == TRUE] <- "Recent"
+Ref$Seg[Ref$Inactive == TRUE] <- "Inactive"
+
+t.segment <- Ref %>% select(ID, ResultTS, ResultGeo, Seg)
