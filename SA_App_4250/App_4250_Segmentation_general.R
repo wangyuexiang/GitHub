@@ -804,3 +804,106 @@ ggplot(temp1) + geom_rect(aes(xmin=l, xmax=r, ymin=d, ymax=u, alpha =n)) + facet
 
 
 t5 <- count(t4, ID) %>% left_join(t.segment)
+
+### add grid
+t.lat <- data.frame(
+  d = seq(42  , 48.9,.5),
+  u = seq(42.1, 49  ,.5),
+  Row = seq(1, 14)
+)
+
+t.lng <- data.frame(
+  l = seq(-2  , 7.9, .5),
+  r = seq(-1.9, 8  , .5),
+  Col = seq(1,20)
+)
+
+t.lat$temp <- 1
+t.lng$temp <- 1
+t.grid <- inner_join(t.lat, t.lng) %>% tbl_df
+t.grid$temp <- NULL
+
+temp <- sens %>% select(Entr, Sor) %>% distinct %>% tbl_df
+t1 <- gares %>% transmute(Entr = Cde, Elng = Lng, Elat = Lat)
+temp <- left_join(temp, t1)
+t1 <- gares %>% transmute(Sor = Cde, Slng = Lng, Slat = Lat)
+temp <- left_join(temp, t1)
+
+
+t1 <- temp %>% 
+  filter(is.na(Elat) & !is.na(Slat)) %>%
+  mutate(u=Slat + delta.Lat ,
+       d=Slat - delta.Lat,
+       r=Slng + delta.Lng, 
+       l=Slng - delta.Lng)
+
+t2 <- temp %>% 
+  filter(!is.na(Elat) & is.na(Slat)) %>%
+  mutate(u=Elat + delta.Lat,
+       d=Elat - delta.Lat,
+       r=Elng + delta.Lng,
+       l=Elng - delta.Lng)
+
+t3 <- temp %>%
+  filter(!is.na(Elat) & !is.na(Slat)) %>%
+  mutate(
+  u = ( Elat + Slat + abs(Elat - Slat) )/2,
+  d = ( Elat + Slat - abs(Elat - Slat) )/2,
+  r = ( Elng + Slng + abs(Elng - Slng) )/2,
+  l = ( Elng + Slng - abs(Elng - Slng) )/2
+  )
+
+temp1 <- rbind(t1,t2,t3) %>% rename(U=u, D=d, L=l, R=r)
+temp1 <- temp1 %>%
+  mutate(t = 1) %>%
+  select(- c(Elng,Elat,Slng,Slat))
+
+t.grid$t <- 1
+
+t.start <- Sys.time()
+Grid <- data.frame(Entr = 0, Sor = 0, Row = 0, Col = 0)
+
+for(i in 1:nrow(temp1)){
+ t1 <- temp1 %>% slice(i)
+ t2 <- inner_join(t.grid, t1) %>%
+   filter(u > D,
+          d < U,
+          r > L,
+          l < R) %>%
+   select(Entr,Sor,Row,Col)
+ 
+ Grid <- rbind(Grid,t2)   
+}
+
+t.end <- Sys.time()
+
+Grid <- Grid %>% tbl_df %>% slice(-1)
+
+t1 <- transaction2 %>% filter(ID == 1)
+t2 <- inner_join(t1,Grid)
+ggplot(t2) + geom_tile(aes(Col, Row),alpha = 0.1)
+
+t2 <- inner_join(transaction2,Grid)
+ggplot(t2 %>% filter(as.numeric(ID) < 10)) + geom_tile(aes(Col, Row),alpha = 0.1) + facet_wrap(~ID)
+
+
+t3 <- t2 %>%
+  filter(TimeSor < 12 ) %>%
+  group_by(ID, Row, Col) %>%
+  summarise(noPsg = n(), T = mean(TimeSor), SD = sd(TimeSor), Tmin = T -SD, Tmax = T + SD)
+
+
+t3 <- t2 %>%
+  filter(TimeSor < 12 ) %>%
+  group_by(ID, Row, Col) %>%
+  summarise(noPsg = n(), T = mean(TimeSor), SD = sd(TimeSor), Tmin = T -SD, Tmax = T + SD)
+
+t4 <- t2 %>%
+  filter(TimeSor < 12 ) %>%
+  group_by(ID, Row, Col) %>%
+  summarise(noPsg = n(), T = mean(TimeSor), SD = sd(TimeSor), Tmin = T -SD, Tmax = T + SD)
+
+
+
+
+
