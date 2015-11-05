@@ -1,26 +1,23 @@
 ##########
 ### 4250 abonnes app VA
 ##########
-
 library(dplyr)
-library(ggplot2)
 
 ##########
-### BDD
+### BDD Ref
 ##########
 sens = read.table("Ref_sens.csv",sep = ";", header=TRUE)
 JF = read.table("Ref_JF.csv",sep = ";", header=TRUE)
 
 ##########
-### DOW
+### start/end date
 ##########
 train.start <- as.Date("2015-5-1")
 test.start <- as.Date("2015-8-1")
 test.end <- as.Date("2015-8-31")
 
-
 ##########
-### input
+### input -> transaction -> transaction1
 ##########
 transaction <- read.table("BDD.csv", header = T, sep = ";")
 transaction <- tbl_df(transaction)
@@ -68,6 +65,7 @@ transaction1 <- transaction1 %>% filter(Date >= as.Date("2015-1-1"))
 transaction1 <- transaction1 %>% mutate(Sens = ifelse(Entr == 0,
                                                       ifelse(Voie <=20, 1,2),
                                                       0))
+
 ##########
 ### ID
 ##########
@@ -113,7 +111,6 @@ t1 <- t1[-1,]
 period <- cbind(t, t1 ) %>% tbl_df
 rm(t,t1,t2)
 
-
 ##########
 ### ID2 <- period
 ##########
@@ -145,7 +142,7 @@ ID2$Inactive <- FALSE
 ID2$Inactive[ID2$Dmax < as.Date("2015/8/1")] <- TRUE
 
 ##########
-### ID3 --> transaction3 --> ID.OD3
+### ID3 -> transaction3 -> ID.OD3
 ##########
 ID3 <- ID2 %>%
   filter(Small == FALSE, Inactive == FALSE) %>%
@@ -193,8 +190,9 @@ t <- transaction3 %>%
             )
 
 t <- t %>% mutate(ActiveW = Week/ Wdiff)
+
 ##########
-### ID.OD3 --> 
+### ID.OD3 -> 
 ##########
 t1 <- ID.OD3 %>%
   summarise(
@@ -238,10 +236,9 @@ ggplot(ID.OD3) +
 ID.Entr3
 
 ##########
-### test
+### Get transaction4 
 ##########
 t <- ID.OD3 
-##########
 ### t
 ### add small =
 #   F:  history interesting
@@ -263,7 +260,7 @@ ID.OD4 <- t %>%
 transaction4 <- inner_join(transaction3,ID.OD4)
 
 ##########
-### extraction
+### extraction - save intermediate results
 ##########
 write.table(transaction2,"transaction2.csv",sep=";",row.name=FALSE,quote=FALSE)
 write.table(ID,"ID.csv",sep=";",row.name=FALSE,quote=FALSE)
@@ -277,3 +274,84 @@ t1 <- t1 %>% filter(Seg == "5_high_potential")
 t1$Seg <- NULL
 write.table(t1,"Hihg_potential.csv",sep=";",row.name=FALSE,quote=FALSE)
 
+##########
+### construct Grid
+##########
+### construct t.grid system
+### !!! parameter step = .5
+step <- .5
+t.lat <- data.frame(
+  d = seq(42, 49 - step, step),
+  u = seq(42 + step, 49, step)
+) %>% 
+  tbl_df %>%
+  mutate(Row = row_number())
+
+t.lng <- data.frame(
+  l = seq(-2, 8 - step, step),
+  r = seq(-2 + step, 8, step)
+) %>% 
+  tbl_df %>%
+  mutate(Col = row_number())
+
+t.lat$t <- 1
+t.lng$t <- 1
+t.grid <- inner_join(t.lat, t.lng) %>% tbl_df %>% select(Row, Col, u, d, l, r)
+rm(t.lat,t.lng)
+
+### get all the trajectory possible
+t <- sens %>% select(Entr, Sor) %>% distinct %>% tbl_df
+t1 <- gares %>% transmute(Entr = Cde, Elng = Lng, Elat = Lat)
+t <- left_join(temp, t1)
+t1 <- gares %>% transmute(Sor = Cde, Slng = Lng, Slat = Lat)
+t <- left_join(temp, t1)
+
+### !!! parameter delta.Lat = delta.Lng = .1
+delta.Lat = .1
+delta.Lng = .1
+
+### Convert (Entr,Sor) to rectangle(U,D,L,R)
+t1 <- t %>% 
+  filter(is.na(Elat) & !is.na(Slat)) %>%
+  mutate(u=Slat + delta.Lat ,
+         d=Slat - delta.Lat,
+         r=Slng + delta.Lng, 
+         l=Slng - delta.Lng)
+
+t2 <- t %>% 
+  filter(!is.na(Elat) & is.na(Slat)) %>%
+  mutate(u=Elat + delta.Lat,
+         d=Elat - delta.Lat,
+         r=Elng + delta.Lng,
+         l=Elng - delta.Lng)
+
+t3 <- t %>%
+  filter(!is.na(Elat) & !is.na(Slat)) %>%
+  mutate(
+    u = ( Elat + Slat + abs(Elat - Slat) )/2,
+    d = ( Elat + Slat - abs(Elat - Slat) )/2,
+    r = ( Elng + Slng + abs(Elng - Slng) )/2,
+    l = ( Elng + Slng - abs(Elng - Slng) )/2
+  )
+
+temp <- rbind(t1,t2,t3) %>% rename(U=u, D=d, L=l, R=r)
+temp <- temp %>%
+  mutate(t = 1) %>%
+  select(- c(Elng,Elat,Slng,Slat))
+
+### Link Rectangle to small rectangle in t.grid
+Grid <- data.frame(Entr = 0, Sor = 0, Row = 0, Col = 0) %>% tbl_df
+
+for(i in 1:nrow(temp1)){
+  t1 <- temp %>% slice(i)
+  t2 <- inner_join(t.grid, t1, by = "t") %>%
+    filter(u > D,
+           d < U,
+           r > L,
+           l < R) %>%
+    select(Entr,Sor,Row,Col)
+  
+  Grid <- rbind(Grid,t2)   
+}
+
+Grid <- Grid %>% tbl_df %>% slice(-1)

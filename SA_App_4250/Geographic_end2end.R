@@ -20,20 +20,9 @@ param.days <- GetNumberDays(train.period)
 # !!! get running time
 start.time <- Sys.time()
 
-trx <- transaction4 %>% filter(Date >= train.start & Date < test.end)
+trx <- inner_join(transaction2, Grid) %>% filter(Date >= train.start & Date < test.end)
 
-# add SensEntr, SensSor
-trx <- trx %>% mutate(Voie = ifelse(Entr == 0, Voie, 0))
-trx <- trx %>% left_join(sens)
-trx <- trx %>% mutate(SensEntr = ifelse(is.na(SensEntr), 0, SensEntr),
-                      SensSor = ifelse(is.na(SensSor), 0, SensSor))
-
-# combine OD to create trajet
-# trx <- Sens(trx)
-# trx <- SO(trx)
-trx <- inverse.after.SO(trx)
-
-trx <- trx %>% mutate(OD = paste0(Entr,"-",Sor,"-",SensEntr,"-",SensSor))
+trx <- trx %>% mutate(OD = paste0(Row,"-",Col))
 
 # construct train & test set
 train <- trx %>% filter(Date < test.start)
@@ -84,7 +73,6 @@ test.model.2$ModelDecade <- 2
 ind.model.2 <- GetInd(test.model.2, result.model.decade.2)
 ind.model.2$ModelDecade <- 2
 
-
 ##########
 # compare model results
 ##########
@@ -119,7 +107,6 @@ temp <- inner_join(ID.list, temp)
 # output: csv file
 write.table(temp, file="result.treated.csv", sep = ";", row.names = F, quote = F)
 
-
 # !!! get running time
 end.time <- Sys.time()
 
@@ -128,4 +115,6 @@ time.taken.model.0 <- end.time.model.0 -  end.time.preparation
 time.taken <- end.time - end.time.model.0
 time.taken.preparation 
 time.taken.model.0     
-time.taken  # 11.54938 mins
+time.taken  
+# 11.54938 mins for Time-Space Model
+# 1.286145 hours for geographic one

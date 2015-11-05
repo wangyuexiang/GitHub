@@ -3,25 +3,24 @@ library(knitr)
 library(ggplot2)
 library(gridExtra)
 
+rm(temp, temp.E,temp.S)
+rm(g1,g2,g3,g4,g5,g6,g7)
+rm(t,t1,t2,t3,t4,t5)
+rm(t.First,t.Last,t.FirstLast)
+rm(t.Chain, t.Chain.summary, t.E, t.FL, t.new, t.OD, t.G,t.S,t.noFL,t.noDP,t.Tag)
+
+###########
+### 20151020 - get intermediate data frame from saved files
+###########
 transaction2 <- read.table("transaction2.csv", sep= ";", header = TRUE)
 ID <- read.table("ID.csv", sep= ";", header = TRUE)
 ID2 <- read.table("ID2.csv", sep= ";", header = TRUE)
 ID.OD4 <- read.table("ID.OD4.csv", sep= ";", header = TRUE)
 result.final <- read.table("result.final.csv", sep= ";", header = TRUE)
 
-
-rm(temp.E,temp.S)
-rm(t,t1,t2,t3,t4,t5)
-rm(t.First,t.Last,t.FirstLast)
-rm(t.OD)
-rm(t.Chain, t.Chain.summary, t.E, t.FL, t.new,t.G,t.S,t.noFL,t.noDP,t.Tag)
-
 ###########
-###########
-### 20151020
-# temp.Gare
-# temp.noGare
-
+### 20151020 - temp.Gare, temp.noGare
+##########
 temp <- transaction2
 
 temp.ID <- temp %>%
@@ -92,7 +91,6 @@ ggplot(temp.noGare) +
   scale_y_continuous(limits = c(0,1))
 
 # ggplot(temp.noGare) + geom_point(aes(maxPerS,secPerS, size = noGS))
-
 # ggplot(temp.noGare) + 
 #   geom_segment(aes(x= maxPerE, y = secPerE + maxPerE,
 #                    xend=maxPerS, yend = secPerS + maxPerS, alpha = .1)) +
@@ -140,10 +138,9 @@ ggplot(temp.noGare) +
   xlab("Per") +
   ggtitle("Distribution of most frequent Sor")
 
-
 ###########
-### 20151029
-# Herfindahl index
+### 20151029 - Herfindahl index (HHI)
+###########
 t <- temp.E
 t <- t %>% mutate(s = perE ^ 2)
 t <- t %>%
@@ -163,9 +160,8 @@ ggplot(Ref) + geom_bar(aes(HHI_E),binwidth = .1) + facet_wrap(~Seg)
 ggplot(Ref) + geom_bar(aes(HHI_S),binwidth = .1) + facet_wrap(~Seg)
 
 ###########
-### 20151028
-# Segmentation
-
+### 20151028 - Segmentation
+###########
 t <- ID
 t <- t %>%
   arrange(Dmin, Dmax) %>%
@@ -247,10 +243,8 @@ grid.arrange(g1,g2, ncol = 2)
 t %>% filter(Result == FALSE & maxPerS > .5)
 
 ###########
+### 20151027 - geographic model (test)
 ###########
-### 20151027
-# geographic model
-
 ### reference: gares
 gares <- read.table("garesLngLat.csv", sep =",", header = TRUE) %>% tbl_df
 ggplot(gares) + geom_point(aes(Lng,Lat, col = as.factor(Societe)))
@@ -324,9 +318,8 @@ ggplot(t.Chain.summary) + geom_point(aes(Date, last)) + geom_path(aes(Date, last
 ggplot(t.Chain.summary) + geom_point(aes(Date, last, col = as.factor(DOW ))) + geom_path(aes(Date, last)) + facet_wrap(~DOW)+ ggtitle("ID = 1")
 
 ###########
+### 20151028 - First, Last, Entr, Sor
 ###########
-### 20151028
-# First Entr
 # Last Sor
 t <- transaction2
 
@@ -480,9 +473,7 @@ t2 <- t2 %>% inner_join(t.segment)
 ggplot(t2) + geom_density(aes(HHI, col = Tag))
 ggplot(t2) + geom_density(aes(HHI, col = Tag)) + facet_wrap(~Seg)
 
-##########
-### 20151030
-### Day Model
+### 20151030 - Day Model
 t <- transaction2 %>% group_by(ID) %>% summarise(Day = n_distinct(Date))
 t1 <- t.DailyPassage %>% group_by(ID) %>% summarise(DayDP = n_distinct(Date))
 t2 <- inner_join(t,t1)
@@ -496,9 +487,7 @@ ggplot(t3) + geom_density(aes(HHI))
 t4 <- left_join(t3, t.segment)
 ggplot(t4) + geom_density(aes(HHI)) + facet_wrap(~Seg)
 
-##########
-### 20151030
-### HP - high_potential
+### 20151030 - HP - high_potential
 # HP <- t2 %>% filter(Seg == "5_high_potential")
 # 
 # ID.HP <- Ref %>% filter(Seg == "5_high_potential") 
@@ -510,7 +499,6 @@ ggplot(t4) + geom_density(aes(HHI)) + facet_wrap(~Seg)
 # 
 # t <- count(HP, ID) %>% rename(no = n)
 # t <- count(HP, ID) %>% filter(n == 2)
-
 
 t <- transaction2 %>% 
   group_by(ID) %>% 
@@ -635,9 +623,9 @@ t4 <- inner_join(t2,t3)
 
 t5 <- inner_join(t,t4)
 
-
-## testing for GetCharacters and GetNoEntr
-
+###########
+### 20151103 - testing for GetCharacters and GetNoEntr
+###########
 t <- transaction2
 t1 <- GetCharacters(t)
 
@@ -733,11 +721,13 @@ t <- left_join(t, t1)
 # 
 # t6 <- t6 %>% inner_join(t.segment)
 
+##########
+### 20151104 - Test for Grid system
+##########
 # u: up
 # d: down
 # l: left
 # r: right
-
 
 t <- transaction2
 t1 <- gares %>% transmute(Entr = Cde, Elng = Lng, Elat = Lat)
@@ -829,7 +819,6 @@ temp <- left_join(temp, t1)
 t1 <- gares %>% transmute(Sor = Cde, Slng = Lng, Slat = Lat)
 temp <- left_join(temp, t1)
 
-
 t1 <- temp %>% 
   filter(is.na(Elat) & !is.na(Slat)) %>%
   mutate(u=Slat + delta.Lat ,
@@ -885,25 +874,3 @@ ggplot(t2) + geom_tile(aes(Col, Row),alpha = 0.1)
 
 t2 <- inner_join(transaction2,Grid)
 ggplot(t2 %>% filter(as.numeric(ID) < 10)) + geom_tile(aes(Col, Row),alpha = 0.1) + facet_wrap(~ID)
-
-
-t3 <- t2 %>%
-  filter(TimeSor < 12 ) %>%
-  group_by(ID, Row, Col) %>%
-  summarise(noPsg = n(), T = mean(TimeSor), SD = sd(TimeSor), Tmin = T -SD, Tmax = T + SD)
-
-
-t3 <- t2 %>%
-  filter(TimeSor < 12 ) %>%
-  group_by(ID, Row, Col) %>%
-  summarise(noPsg = n(), T = mean(TimeSor), SD = sd(TimeSor), Tmin = T -SD, Tmax = T + SD)
-
-t4 <- t2 %>%
-  filter(TimeSor < 12 ) %>%
-  group_by(ID, Row, Col) %>%
-  summarise(noPsg = n(), T = mean(TimeSor), SD = sd(TimeSor), Tmin = T -SD, Tmax = T + SD)
-
-
-
-
-
