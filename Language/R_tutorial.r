@@ -15,7 +15,6 @@ ExportPlot <- function(gplot, filename, width=2, height=1.5) {
     dev.off()
 }
 
-
 BO - 20151022
 25004901446700003;25004815815900011
 
@@ -28,7 +27,6 @@ BO - première vague
 	
 ### get function run time
 start.time <- Sys.time()
-
 end.time <- Sys.time()
 time.taken <- end.time - start.time
 time.taken
@@ -37,7 +35,6 @@ time.taken
 #############
 # useful functions
 # http://www.analyticsvidhya.com/blog/2015/04/comprehensive-guide-data-exploration-r/
-
 library(reshape)
 melt()
 #
@@ -49,8 +46,6 @@ histinfo
 # dplyr
 #############
 #############
-
-
 
 #############
 http://cran.r-project.org/web/packages/dplyr/vignettes/introduction.html
@@ -161,32 +156,7 @@ flights %>%
 flights %>%
     select(UniqueCarrier, DepDelay) %>%
     arrange(desc(DepDelay))
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
 	
 save.image()
 save(, file="")
@@ -458,7 +428,6 @@ for (i in 1: nrow(temp_In_365)){
     }
   }
 }
-
 
 ###############################
 knit2html("VIP_overall.Rmd")

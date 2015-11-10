@@ -16,7 +16,6 @@ JF <- JF %>% select(Date,DOW, JF)
 JF$Date <- as.Date(as.character(JF$Date))
 save(JF, file="JF.RData")
 
-
 ##########
 ### Old
 # g1 <- read.table("Gares_1.csv", header = T, sep = ";", dec = ",") %>% tbl_df()
@@ -193,12 +192,14 @@ t4 <- t %>%
 
 ##########
 ### SF
+##########
 temp.sens <- rbind(temp.sens,t1,t2,t3,t4)
 ESCOTA.sens.SF <- temp.sens
 rm(t, tSF, t1,t2,t3,t4,temp.sens, temp)
 
 ##########
 ### SO
+##########
 tSO <- ESCOTA.SO %>% transmute(gare = Cde, Lib) 
 tSO <- left_join(tSO, ESCOTA %>% select(Cde, gare, Autoroute))
 
@@ -240,6 +241,7 @@ rm(t,t1,t2,t3,t4, tSO)
 
 ##########
 ### ESCOTA.sens
+##########
 t1 <- ESCOTA.sens.SF %>%
   select(Entr, Sor, SensEntr, SensSor) %>%
   mutate(Voie = 0)
@@ -248,10 +250,11 @@ t2 <- ESCOTA.sens.SO %>%
   transmute (Entr = 0, Sor = Cde, Voie = voie, SensEntr = 0, SensSor = Sens)
 
 ESCOTA.sens <- rbind(t1,t2)
-rm(t1,t2)
+rm(t1,t2, ESCOTA.sens.SF, ESCOTA.sens.SO)
          
 ##########
 ### ASF.sens
+##########
 temp <- read.table("export_trjtsns_asf.csv", sep = ";", header = TRUE) %>% tbl_df()
 names(temp) <- c("E1","E2","E3","EA","SensEntr",
                  "S1","S2","S3","SA","SensSor")
@@ -274,7 +277,29 @@ rm(temp)
 
 ##########
 ### sens
+##########
 sens <- rbind(ASF.sens, ESCOTA.sens)
 save(sens, file="Sens_ref.RData")
 write.table(sens,"Ref_sens.csv",sep=";",row.name=FALSE,quote=FALSE)
 write.table(JF,"Ref_JF.csv",sep=";",row.name=FALSE,quote=FALSE)
+rm(ASF.sens, ESCOTA.sens)
+rm(t,t3,t5,temp)
+
+##########
+### Prepare for PlugIt
+##########
+### SF
+t1 <- sens %>% filter(Entr != 0) %>% select(Entr, Sor)
+t <- gares.LngLat %>% transmute(Entr = Cde, Elng = Lng, Elat = Lat)
+t1 <- inner_join(t1,t)
+t <- gares.LngLat %>% transmute(Sor = Cde, Slng = Lng, Slat = Lat)
+t1 <- inner_join(t1,t)
+trajetSF <- t1 %>% mutate(OD = paste0(Entr,"-",Sor))
+write.table(trajetSF,"trajetSF.csv",sep=";",row.name=FALSE,quote=FALSE)
+
+###SO
+t <- gares.LngLat %>% transmute(Sor = Cde, Autoroute, PK)
+t1 <- sens %>% filter(Entr == 0) %>% transmute(Entr, Sor, Sens = SensSor) %>% distinct
+trajetSO <- inner_join(t,t1) %>% mutate(OD = paste0(Entr,"-",Sor,"-",Sens))
+write.table(trajetSO,"trajetSO.csv",sep=";",row.name=FALSE,quote=FALSE)
+rm(t,t1)
