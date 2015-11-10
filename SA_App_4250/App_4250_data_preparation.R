@@ -399,8 +399,8 @@ Ref <- t
 count(Ref,ResultTS, ResultGeo, Recent, GoodTrx, Small, Inactive)
 
 # construct Seg
-Ref$Seg <- "Impropable"
-Ref$Seg[Ref$GoodTrx] <- "Propable"
+Ref$Seg <- "Improbable"
+Ref$Seg[Ref$GoodTrx] <- "Probable"
 
 Ref$Seg[Ref$Small == TRUE] <- "Small"
 

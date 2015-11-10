@@ -898,11 +898,20 @@ ggplot(temp) + geom_tile(aes(l,d, alpha = Per)) + xlim(c(-2,8)) + ylim(c(42,49))
 
 t2 <- t.Active %>% count(ID) %>% right_join(t.segment)
 
-t2 %>% 
+t3 <- t2 %>% 
   filter(ResultTS == FALSE,
          ResultGeo == FALSE,
          !is.na(n)) %>%
   arrange(desc(n) ,as.numeric(ID))
+
 k = c(3967,3710,3465,2598)
-ggplot(t.Active %>% filter(ID %in% k)) + geom_tile(aes(l,d, alpha = Per)) + xlim(c(-2,8)) + ylim(c(42,49)) + facet_wrap(~ID) +
+
+ggplot(t.Active %>% filter(ID %in% k)) + 
+  geom_tile(aes(l,d, alpha = Per)) + 
+  xlim(c(-2,8)) + ylim(c(42,49)) + 
+  facet_wrap(~ID) +
   geom_point(data= gares, aes(Lng, Lat, col = as.factor(Societe)))
+
+
+t3 %>% filter(Seg == "Propable")
+k <- c(529,606,729,1078)
