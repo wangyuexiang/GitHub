@@ -24,6 +24,7 @@ library(knitr)
 ##########
 ##########
 ### data preparation
+##########
 # load data
 # !!! to be replaced by: csv -> data.frame  
 # load("VIP2.RData")

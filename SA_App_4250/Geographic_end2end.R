@@ -34,8 +34,24 @@ ID.list <- trx %>% group_by(ID) %>% summarise()
 # !!! get running time
 end.time.preparation <- Sys.time()
 
+##########
+##########
+### hour heatmap
+##########
+trx.time <- transaction2 %>%
+  mutate(H = round(TimeSor, digits = 0),
+         H_2 = H - H %% 2
+         )
+
+
+
+
+### no Good result
+
+########
 ########
 #Find the number max of cluster by the density of TimeSor over 24h
+########
 # For each person
 # NbClusterMax <- getNbClusterMax( train )
 ### ??? trx or train

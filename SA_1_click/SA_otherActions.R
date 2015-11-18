@@ -9,6 +9,7 @@
 ### Major steps
 # Result Visualisation
 # Optimization of Models
+##########
 #   PM
 #   CC
 # Test
@@ -49,7 +50,8 @@ t3$DOW <- 2
 ### Stephane  47: trop peu de trajets, à demander 
 ### James     48
 ### Julien    49
-temp <- BDD.temp %>% filter(N == 44)
+temp <- BDD.temp %>% filter(N == 4) %>%
+  filter(Date > train.start)
 temp.OD <- temp %>%
   group_by(Entr, Sor) %>%
   summarise(n = n()) %>%
@@ -75,15 +77,162 @@ grid.arrange(g1,g2,g3,g4, g5, ncol = 2, main = title)
 temp.OD
 
 ##########
+##########
+### temp action 1
+##########
+temp.train <- BDD %>% 
+  filter(Date >= train.start,
+         Date < test.start) %>%
+  select(-Ste, - EVA)
+
+temp.train.ref <- temp.train %>% 
+  group_by(ID, Nom, N) %>%
+  summarise(Dmin = min(Date),
+            Dmax = max(Date),
+            Ddiff = Dmax - Dmin,
+            Day = n_distinct(Date),
+            Total = n())
+
+t <- count(result,Nom)
+t1 <- left_join(temp.train.ref, t)
+temp.train.ref <- t1 %>% mutate(result = !is.na(n)) 
+
+ggplot(temp.train.ref) + 
+  geom_segment(aes(x=Dmin, xend=Dmax, y = Nom, yend = Nom, 
+                   col = as.factor(result)))
 
 
+t <- stringr::str_split_fixed(result$OD,"-", 5) %>% as.data.frame() %>% tbl_df
+names(t) <- c("Entr", "Sor", "V3", "V4", "Sens")
+temp.result <- cbind(result, t %>% select(c(1,2,5))) %>% tbl_df
+
+temp.result <- count(result,N, Nom, OD)
+temp <- temp %>% rename(WeekPattern = n)
 
 
+temp %>% group_by(N, Nom) %>% summarise( nTrajet = n()) %>% count(nTrajet)
+temp %>% filter(n<5)
+
+t <- result$OD[1]
+
+#############
+#############
+### temp action 2
+#############
+t <- train %>%
+  group_by(ID, Entr, Sor, Sens) %>%
+  summarise(
+    Dmin = min(Date),
+    Dmax = max(Date),
+    
+    D1 = sum(DOW == 1),
+    D2 = sum(DOW == 2),
+    D3 = sum(DOW == 3),
+    D4 = sum(DOW == 4),
+    D5 = sum(DOW == 5),
+    D6 = sum(DOW == 6),
+    D0 = sum(DOW == 0),
+    noPsg = n()
+  )
+
+t <- t %>% ungroup() %>% group_by(ID) %>% arrange(desc(noPsg)) %>% mutate(ord = row_number())
+
+ggplot(count(t,ID)) + geom_bar(aes(n),binwidth = 5)
+
+ggplot(t) + geom_segment(aes(x=Dmin, xend=Dmax, y=ID, yend=ID, col = ord))
+
+t1 <- t %>% filter( (noPsg > 10 & ord < 4) &
+                      Dmax > as.Date("2015-5-1"))
+
+ggplot(t1) +
+  geom_point(aes(x="D1",y = D1)) +
+  geom_point(aes(x="D2",y = D2)) +
+  geom_point(aes(x="D3",y = D3)) +
+  geom_point(aes(x="D4",y = D4)) +
+  geom_point(aes(x="D5",y = D5)) +
+  geom_point(aes(x="D6",y = D6)) +
+  geom_point(aes(x="D0",y = D0)) 
+
+ggplot(t1 %>% ungroup() %>% slice(1:6) ) +
+  geom_segment(aes(x="D1",y = D1, xend="D2", yend=D2, col = as.factor(ID))) +
+  geom_segment(aes(x="D2",y = D2, xend="D3", yend=D3, col = as.factor(ID))) +
+  geom_segment(aes(x="D3",y = D3, xend="D4", yend=D4, col = as.factor(ID))) +
+  geom_segment(aes(x="D4",y = D4, xend="D5", yend=D5, col = as.factor(ID))) +
+  geom_segment(aes(x="D5",y = D5, xend="D6", yend=D6, col = as.factor(ID))) +
+  geom_segment(aes(x="D6",y = D6, xend="D7", yend=D0, col = as.factor(ID))) 
+
+t <- train %>%
+  group_by(ID) %>%
+  summarise(
+    D1 = sum(DOW == 1),
+    D2 = sum(DOW == 2),
+    D3 = sum(DOW == 3),
+    D4 = sum(DOW == 4),
+    D5 = sum(DOW == 5),
+    D6 = sum(DOW == 6),
+    D0 = sum(DOW == 0),
+    
+    noPsg = n(),
+    noWE = D6+D0,
+    noW = noPsg - noWE,
+    
+    SD = sd(c(D1,D2,D3,D4,D5,D6,D0)),
+    SDW = sd(c(D1,D2,D3,D4,D5)),
+    SDprnoPsg = SD / noPsg,
+    SDWprnoW = SDW / noW,
+    sumSD = SDWprnoW + SDprnoPsg,
+    
+    avg = noPsg / 7,
+    avgWE = noWE / 2,
+    avgW = noW / 5,
+    
+    perW = noW/noPsg
+  )
+
+t1 <- t %>% select(ID, noPsg, noW, noWE, avgW, avgWE, avg, perW)
+
+#############
+#############
+### temp action 3
+#############
+temp <- gares %>% transmute(Entr = Cde, ELib = Lib, ELng = Lng, ELat = Lat)
+temp.gares <- left_join(gares.sens, temp)
+temp <- gares %>% transmute(Sor = Cde, SLib = Lib, SLng = Lng, SLat = Lat)
+temp.gares <- left_join(temp.gares, temp)
+
+ggplot( na.omit(temp.gares)) +
+  geom_segment(aes(x=ELng, xend = SLng, y=ELat, yend = SLat, alpha = .2)) +
+  geom_point(aes(x = ELng, y = ELat, col = "Entr", shape = as.factor(SensEntr) )) +
+  geom_point(aes(x = SLng, y = SLat, col = "Sor", shape = as.factor(SensSor) )) 
+
+t1 <- temp.gares %>% filter(is.na(ELib)) %>% count(Entr)
+t2 <- temp.gares %>% filter(is.na(SLib)) %>% count(Sor)
+names(t1) <- c("Cde", "nE")
+names(t2) <- c("Cde", "nS")
+t <- full_join(t1,t2)
+t <- inner_join(t1,t2)
+
+ggplot(t) + geom_bar(aes(Cde), binwidth = 1000)
+ggplot(t) + 
+  geom_segment(aes(x = Cde, xend = Cde, y = nE, yend = nS)) +
+  geom_point(aes(Cde, nE, col ="nE", alpha = .2)) +
+  geom_point(aes(Cde, nS, col ="nS", alpha = .2)) 
+
+t %>% mutate(Test = lag(t, 1 * t))
+
+t %>% 
+  mutate(Res = 
+           ( if(T == F) t
+             else  lag(t)
+             
+           )
+  )
+t %>% rowwise() %>% mutate(Test = (if(T) 1 else 0 ))
 
 ##########
 ##########
 ### Model: verstion before OD identifier
-
+##########
 Model <- function(transaction, model.decades, model.units) {
   # Run the model over the transaction set
   # Args:
@@ -448,10 +597,10 @@ Model <- function(transaction, model.decades, model.units) {
   return(result %>% select(ID, Entr, Sor, SensEntr, SensSor, Sens, DOW, Tmin, Tmax, Model, noPsg) )
 } # end of fuction Model
 
-
 ##########
 ##########
 ### SA_end2end : Time
+##########
 # 20150930 06:56
 # Time difference of 14.65324 secs
 # Time difference of 0.05180001 secs
@@ -468,6 +617,7 @@ Model <- function(transaction, model.decades, model.units) {
 ##########
 ##########
 ### Sens O/D
+##########
 gares <- gares %>% tbl_df()
 
 temp <- read.table("export_trjtsns_asf.csv", sep = ";", header = T) %>% tbl_df()
@@ -479,7 +629,6 @@ gares.sens <- temp %>%
             Sor = S1 * 100000 + S2 * 1000 + as.numeric(as.character(S3)), 
             SensSor) %>%
   filter(!is.na(Entr) & !is.na(Sor))
-
 
 ##########
 ##########
@@ -496,6 +645,7 @@ ggplot(Ind) +
 
 ##########
 # viz: result
+##########
 ggplot(result.final) + 
   geom_point(aes(DOW, Tmin, col = "Tmin")) +
   geom_point(aes(DOW, Tmax, col = "Tmax")) +
@@ -504,12 +654,14 @@ ggplot(result.final) +
 
 ##########
 # viz: test result
+##########
 ggplot(test.final) + geom_point(aes(Date, TimeSor, col = as.factor(result))) + facet_wrap(~ID) + ggtitle("Test Result")
 plyr::count(test.final, c("ID","result"))
 test.final %>% group_by(ID) %>% summarise(noPsg = n(), noTP = sum(result), Per_TP = noTP/noPsg)
 
 ##########
 # viz: train result
+##########
 ggplot(train.final) + geom_point(aes(Date, TimeSor, col = as.factor(result))) + facet_wrap(~ID) + ggtitle("Train Result")
 
 # result in text
@@ -532,7 +684,6 @@ ggplot(result.LngLat %>% filter(ID == "PM")) +
   geom_point(aes(SLng, SLat, col = "Sor")) +
   geom_segment(aes(x = ELng, xend = SLng, y = ELat, yend = SLat)) +
   facet_wrap(~DOW)
-
 
 ##########
 ##########
@@ -579,9 +730,10 @@ PM.temp %>% group_by(Entr, Sor) %>% summarise(n = n()) %>% ungroup() %>% arrange
 ##########
 ### Fist data view All
 
-##### 
+##########
 # 20150811
 # SO
+##########
 temp <- Sens(trx)
 temp1 <- SO(temp)
 
@@ -600,9 +752,10 @@ ggplot(temp1.L) +
   facet_wrap(~ID)
 
 rm(temp, temp1, temp.L, temp1.L)
-#####
 
-
+##########
+### temp
+##########
 temp <- trx %>% group_by(ID) %>% summarise(Dmin = min(Date), Dmax = max(Date), noPsg = n())
 ggplot(temp) + geom_segment(aes(x=Dmin, xend=Dmax, y=as.factor(ID), yend=as.factor(ID), size = noPsg))
 
@@ -622,12 +775,14 @@ ggplot(trx.LngLat) +
 
 ##########
 ### FF
+##########
 temp <- result.final %>% filter(ID == "PM")
 plyr::count(temp, c("Entr", "Sor"))
 plyr::count(temp, c("Entr", "Sor", "Tmin"))
 
 ##########
 ### CC
+##########
 train_decompose.LngLat <- GetLngLat(train_decompose)
 
 ggplot(train_decompose.LngLat) + 
@@ -644,8 +799,6 @@ ggplot(train_decompose.LngLat) +
 ##########
 ### PM
 ##########
-##########
-### PM
 
 PM <- PM.all %>% filter(Date >= as.Date("2015/1/1"))
 PM <- Sens(PM)

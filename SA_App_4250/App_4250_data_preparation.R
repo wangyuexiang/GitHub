@@ -358,6 +358,15 @@ Grid <- Grid %>% tbl_df %>% slice(-1)
 grid.display <- t.grid %>% mutate(OD = paste0(Row,"-",Col))
 
 ##########
+### viz Grid
+##########
+ggplot(grid.display) +
+  geom_tile(aes(l,d, fill = l, col = d, alpha = .1)) +
+  geom_point(data = gares, aes(Lng, Lat))
+  geom_point(data = gares, aes(Lng, Lat, col = as.factor(Societe)))
+
+
+##########
 ### Segmentation
 ##########
 result.TS <- read.table(file = "result.final.TimeSpace.v20151029.csv", header = TRUE, sep = ";") %>% tbl_df %>% mutate(ID = as.character(ID))
