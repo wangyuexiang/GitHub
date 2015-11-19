@@ -36,9 +36,9 @@ library(knitr)
 #	ID.list:	ID
 
 # predefined parameters
-train.start <- as.Date("2015-4-1")
-test.start <- as.Date("2015-6-1")
-test.end <- as.Date("2015-6-30")
+train.start <- as.Date("2015-7-1")
+test.start <- as.Date("2015-10-30")
+test.end <- as.Date("2015-11-30")
 train.period <- data.frame(Date = seq(train.start, test.start, "day"))
 train.period$DOW <- as.POSIXlt(train.period$Date)$wday
 test.period <- data.frame(Date = seq(test.start, test.end, "day"))
@@ -50,6 +50,8 @@ param.days <- GetNumberDays(train.period)
 start.time <- Sys.time()
 
 trx <- t0 %>% filter(Date >= train.start & Date < test.end)
+
+trx <- t3
 
 # add SensEntr, SensSor
 trx <- trx %>% mutate(Voie = ifelse(Entr == 0, Voie, 0))
@@ -65,7 +67,7 @@ trx <- inverse.after.SO(trx)
 trx <- trx %>% mutate(OD = paste0(Entr,"-",Sor,"-",SensEntr,"-",SensSor,"-",Sens))
 
 # construct train & test set
-train <- trx %>% filter(Date < test.start)
+train <- trx %>% filter(Date < test.start & Date >= train.start)
 test <- trx %>% filter(Date >= test.start)
 
 # get the ID list

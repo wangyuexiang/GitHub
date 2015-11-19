@@ -50,7 +50,7 @@ t3$DOW <- 2
 ### Stephane  47: trop peu de trajets, à demander 
 ### James     48
 ### Julien    49
-temp <- BDD.temp %>% filter(N == 4) %>%
+temp <- BDD.temp %>% filter(N == 44) %>%
   filter(Date > train.start)
 temp.OD <- temp %>%
   group_by(Entr, Sor) %>%

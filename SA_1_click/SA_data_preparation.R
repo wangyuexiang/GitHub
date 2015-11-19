@@ -40,6 +40,7 @@ result <- result %>% distinct
 # BDD.BO
 ##########
 t <- read.table("BDD.BO.v20151022.csv", sep = ";", header = TRUE) %>% tbl_df
+t <- read.table("BDD.fabrice_v20151119.csv", sep = ";", header = TRUE) %>% tbl_df
 
 names(t) <- c("cEntr","cSor", "na","badge","DEntr", "DSor", "na2","Ste", "ID" )
 
@@ -54,12 +55,24 @@ t1 <- t %>%
     WOY = as.numeric(format(Date+3, "%U")),
     HH = as.numeric(substr(DEntr, 12, 13)), MM = as.numeric(substr(DEntr, 15, 16)),
     TimeEntr = HH + MM / 60,
-    # HH = as.numeric(substr(DSor, 12, 13)), MM = as.numeric(substr(DSor, 15, 16)),
+    HH = as.numeric(substr(DSor, 12, 13)), MM = as.numeric(substr(DSor, 15, 16)),
     TimeSor = HH + MM / 60
   ) %>%
   select(ID, Entr, Sor, Date, DOW, WOY, TimeEntr, TimeSor)
 
 t1$Voie <- 0
+
+t1 <- t1 %>%
+  mutate(ID = as.character(903965600001),
+         Ste = 25004,
+         EVA = 376235,
+         Nom = "Fabrice Frajut",
+         N = 4
+  )
+
+t2 <- BDD %>% filter(N == 4)
+t3 <- rbind(t1,t2) %>% distinct
+BDD <- rbind(BDD, t1) %>% distinct
 
 ##########
 # BDD.ESCOTA
@@ -139,6 +152,7 @@ result$EVA[result$N == 38] <- 598771
 
 write.table(ref, file="Ref.ID.v20151102.csv", sep = ";", row.names = F, quote = F)
 write.table(BDD.temp, file="BDD.old.v20151022.csv", sep = ";", row.names = F, quote = F)
+write.table(BDD, file="BDD.v20151119.csv", sep = ";", row.names = F, quote = F)
 
 
 t1 <- left_join(result.final, ref)
