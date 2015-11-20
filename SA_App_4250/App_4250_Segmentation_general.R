@@ -898,6 +898,7 @@ ggplot(temp) + geom_tile(aes(l,d, alpha = Per)) + xlim(c(-2,8)) + ylim(c(42,49))
 
 t2 <- t.Active %>% count(ID) %>% right_join(t.segment)
 
+
 count(t2, Seg, is.na(n))
 count(t2, Seg, ResultTS, is.na(n))
 count(t2, Seg, ResultTS, is.na(n))
@@ -909,9 +910,9 @@ t3 <- t2 %>%
   arrange(desc(n) ,as.numeric(ID))
 
 k = c(3967,3710,3465,2598)
-
 k = c(1003,1004,1001,1000)
-
+k = c(10:14)
+  
 ggplot(t.Active %>% filter(ID %in% k)) + 
   geom_tile(aes(l,d, alpha = Per)) + 
   xlim(c(-2,8)) + ylim(c(42,49)) + 

@@ -4,7 +4,6 @@
 ##########
 
 ##########
-##########
 ### hour heatmap
 ##########
 trx.time <- transaction2 %>%
@@ -12,7 +11,6 @@ trx.time <- transaction2 %>%
          H_2 = H - H %% 2
   ) %>%
   inner_join(JF)
-
 
 t <- trx.time %>% filter(as.numeric(ID) < 9)
 t1 <- t %>% group_by(ID,DOW,H) %>% summarise(freq = n())
@@ -24,3 +22,75 @@ ggplot(t2 %>% filter(freq > 15)) + geom_tile(aes(DOW,H_2, fill = freq))
 
 t3 <-  t %>% group_by(ID,DOW,H) %>% summarise(freq = n())
 ggplot(t) + geom_tile(aes(Date,H)) + facet_wrap(~ID)
+
+##########
+### get important TimeWindow
+##########
+t1 <- trx.time %>%
+  group_by(ID, DOW) %>%
+  summarise(ActiveDay = n_distinct(Date))
+
+t2 <- trx.time %>%
+  group_by(ID, DOW, H) %>%
+  summarise(Day = n_distinct(Date))
+
+t2 <- trx.time %>%
+  group_by(ID, DOW, H_2) %>%
+  summarise(Day = n_distinct(Date))
+
+t.TimeWindow <- inner_join(t1,t2) %>% 
+  mutate(Per = Day / ActiveDay,
+         Per_floor = round(Per, 1))
+
+t <- t.TimeWindow %>% filter(as.numeric(ID) < 9)
+ggplot(t) + geom_tile(aes(DOW,H, fill = as.factor(Per_floor))) + facet_wrap(~ID)
+ggplot(t %>% filter(Per_floor > .4)) + geom_tile(aes(DOW,H, fill = as.factor(Per_floor)))+ facet_wrap(~ID)
+
+
+ggplot(t) + geom_tile(aes(DOW,H_2, fill = as.factor(Per_floor))) + facet_wrap(~ID)
+ggplot(t %>% filter(Per_floor > .4)) + geom_tile(aes(DOW,H_2, fill = as.factor(Per_floor)))+ facet_wrap(~ID)
+
+ggplot(t %>% filter(ActiveDay > 4)) + geom_tile(aes(DOW,H_2, fill = as.factor(Per_floor)))+ facet_wrap(~ID)
+ggplot(t %>% filter(ActiveDay > 4 & Per_floor > .4)) + geom_tile(aes(DOW,H_2, fill = as.factor(Per_floor)))+ facet_wrap(~ID)
+
+##########
+### Connect Grid
+##########
+t <- t.Active %>% group_by(ID)
+
+# Get 4 points
+#   NW  NE
+#   SW  SE
+t1 <- t %>% arrange(Row, Col)             %>% select(Row, Col) %>% slice(1) %>% rename(R_NW = Row, C_NW = Col)
+t2 <- t %>% arrange(Row, desc(Col))       %>% select(Row, Col) %>% slice(1) %>% rename(R_NE = Row, C_NE = Col)
+t3 <- t %>% arrange(desc(Row), Col)       %>% select(Row, Col) %>% slice(1) %>% rename(R_SW = Row, C_SW = Col)
+t4 <- t %>% arrange(desc(Row), desc(Col)) %>% select(Row, Col) %>% slice(1) %>% rename(R_SE = Row, C_SE = Col)
+  
+temp <- inner_join(t1, t2) %>% inner_join(t3) %>% inner_join(t4)
+
+# Compare to get One_Zone
+#   C_NW & C_SW
+#   C_NE & C_SE
+temp <- temp %>% mutate(Left = (C_NW == C_SW),
+                        Right = (C_NE == C_SE),
+                        One_Zone = Left && Right)
+
+# Viz
+t1 <- temp %>% filter(Left != Right) %>% select(ID) %>% ungroup %>% slice(c(1:9))
+t1 <- temp %>% filter(Left == Right, Left == TRUE) %>% select(ID) %>% ungroup %>% slice(c(1:9))
+k <- t1$ID
+ggplot(t.Active %>% filter(ID %in% k)) + 
+  geom_tile(aes(l,d, alpha = Per)) + 
+  # xlim(c(-2,8)) + ylim(c(42,49)) + 
+  facet_wrap(~ID) +
+  geom_point(data= gares, aes(Lng, Lat, col = as.factor(Societe)))
+
+# Integrate result to ID.segment
+t2 <- t.Active %>% count(ID, ActiveDay) %>% right_join(t.segment)
+ID.segment <- temp %>%
+  select(ID, One_Zone) %>%
+  right_join(t2)
+
+##########
+### Get Hourheatmap for One_Zone
+##########
