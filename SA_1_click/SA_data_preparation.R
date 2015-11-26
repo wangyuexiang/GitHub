@@ -4,7 +4,6 @@
 # first: 20150806
 # from csv to data.frame/tbl
 
-
 # from 20151001 - 45 VIP
 #   history:    BDD.v20151001.csv
 #   reference:  Ref.ID.v20151001.csv
@@ -78,6 +77,9 @@ BDD <- rbind(BDD, t1) %>% distinct
 # BDD.ESCOTA
 ##########
 t <- read.table("BDD.ESCOTA.v20151029.csv", sep = ";", header = TRUE) %>% tbl_df
+t <- read.table("BDD_FF_v20151120.csv", sep = ";", header = TRUE) %>% tbl_df
+t <- read.table("BDD_PB_v20151120.csv", sep = ";", header = TRUE) %>% tbl_df
+t <- read.table("BDD.ESCOTA.v20151029.csv", sep = ";", header = TRUE) %>% tbl_df
 
 names(t) <- c("sSor", "cSor", "Voie", "DateSor", "hSor",
               "ID", "porteur",
@@ -103,8 +105,15 @@ t2[t2$cEntr == 0, ]$Entr <- 0
 t2[t2$cEntr != 0, ]$Voie <- 0 
 t2$cEntr <- NULL
 
+t2 <- t2 %>% mutate(ID = as.character(ID))
 temp <- t2
 
+### 20151123 integrate the latest history of FF & PB
+temp_PB <- inner_join(t2,ref)
+temp_FF <- inner_join(t2,ref)
+BDD <- rbind(BDD, temp_PB,temp_FF)
+write.table(BDD, file="BDD.v20151123.csv", sep = ";", row.names = F, quote = F)
+###
 
 t2 <- t1 %>% mutate(Nom = as.character(Nom))
 
@@ -139,7 +148,6 @@ t0 <- inner_join(t,ref.temp)
 
 BDD.temp <- rbind(BDD,t0)
 
-
 ##########
 ### change EVA number
 ref$EVA[ref$N == 23] <- 2629771 
@@ -151,9 +159,9 @@ result$EVA[result$N == 19] <- 2424144
 result$EVA[result$N == 38] <- 598771
 
 write.table(ref, file="Ref.ID.v20151102.csv", sep = ";", row.names = F, quote = F)
+write.table(ref.temp, file="Ref.ID.v20151029.csv", sep = ";", row.names = F, quote = F)
 write.table(BDD.temp, file="BDD.old.v20151022.csv", sep = ";", row.names = F, quote = F)
 write.table(BDD, file="BDD.v20151119.csv", sep = ";", row.names = F, quote = F)
-
 
 t1 <- left_join(result.final, ref)
 t2 <- rbind(result,t1)
@@ -165,3 +173,14 @@ result <- rbind(r,t1)
 
 write.table(result, file="Result.v20151102.csv", sep = ";", row.names = F, quote = F)
 
+t1 <- left_join(result.final, ref)
+t2 <- rbind(result,t1)
+
+r <- read.table(file="Result.v20151026.csv", sep = ";", header = TRUE) %>% tbl_df
+
+rbind(r,t1)
+result <- rbind(r,t1)
+
+write.table(result, file="Result.v20151029.csv", sep = ";", row.names = F, quote = F)
+
+>>>>>>> .r35

@@ -14,8 +14,9 @@
 # GetInd:
 param.ind3 <- 5 # weight of Ind3 in calculation of Ind
 # Model:
-param.min.noPsg = 5            # low limit for choosing the result
-param.min.nb.for.cluster = 10  # lower than which we won't clustering
+param.min.uniqueTimeSor = 5    #low limit for using clustering
+param.min.noPsg = 15            # low limit for choosing the result
+param.min.nb.for.cluster = 5  # lower than which we won't clustering
 param.max.nb.cluster = 3			 # the max number of cluster we'll test when choosing the number of cluster
 param.model.2 = .3						 # low limit for choosing the ID-OD for Model.2 Space - Time
 #getModelunits : 
@@ -66,7 +67,9 @@ GetResult <- function(test, result) {
   name <- names(test)
 	# temp <- inner_join(test, result, by = c("ID", "Entr", "Sor", "SensEntr", "SensSor","Sens", "DOW"))
 	temp <- inner_join(test, result, by = c("ID", "OD", "DOW"))
-  temp[temp$TimeSor >= temp$Tmin & temp$TimeSor <= temp$Tmax,]$result <- 1
+	if(nrow(temp[temp$TimeSor >= temp$Tmin & temp$TimeSor <= temp$Tmax,]) > 0) {
+		temp[temp$TimeSor >= temp$Tmin & temp$TimeSor <= temp$Tmax,]$result <- 1
+	}
   return(temp[, name])
 }
 
@@ -75,7 +78,6 @@ GetInd <- function(test, result) {
   # Args:
   #	  test: ID Entr Sor Date DOW WOY TimeEntr TimeSor Sens SensEntr SensSor
   #	  result: result of Model in format: ID, Entr, Sor, SensEntr, SensSor, Sens, (DOW,) Tmin, Tmax
-  
   Ind <-  test %>%
     group_by(ID) %>%
     summarise(Tpos = sum(result[result == 1]), Fneg = n() - Tpos, Ind1 = Tpos/(Tpos+Fneg), Ind2 = Fneg/(Tpos+Fneg) )
@@ -277,10 +279,8 @@ getModel.units <- function ( Transactions ){
 chose.model <-function ( SDWprnoW ) {
   # Input : ID, SDWprnoW
   if( is.na(SDWprnoW)) return(NA)
-  
   if ( SDWprnoW > param.SDWprnoW ) model <- 2 
   else  model <- 1
-
   return(model)
 }
 
@@ -410,7 +410,7 @@ Model <- function(transaction, model.decades, model.units) {
     for (i in 1:nrow(ID.list)) {
       temp <- transaction %>% filter(ID == ID.list$ID[i])
 			 max.cluster <- length(unique(temp$TimeSor))
-      if(nrow(temp) >= param.min.nb.for.cluster & max.cluster > 1) {
+      if(nrow(temp) >= param.min.nb.for.cluster & max.cluster > param.min.uniqueTimeSor) {
         # if not many passages, we will not cluster
         # decide nb of cluster
         clus<- clusGap(temp %>% select(TimeSor), kmeans, max(min(param.max.nb.cluster, max.cluster),2))
@@ -461,7 +461,7 @@ Model <- function(transaction, model.decades, model.units) {
       for (j in 0:1) {
         temp <- temp1 %>% filter(ID == ID.list$ID[i] & weekday == j)
 			 max.cluster <- length(unique(temp$TimeSor))
-      if(nrow(temp) >= param.min.nb.for.cluster & max.cluster > 1) {
+      if(nrow(temp) >= param.min.nb.for.cluster & max.cluster > param.min.uniqueTimeSor) {
           # if not many passages, we will not cluster
           # decide nb of cluster
 					clus<- clusGap(temp %>% select(TimeSor), kmeans, max(min(param.max.nb.cluster, max.cluster),2))
@@ -524,7 +524,7 @@ Model <- function(transaction, model.decades, model.units) {
       for (j in 0:6) {
         temp <- train %>% filter(ID == ID.list$ID[i] & DOW == j)
         max.cluster <- length(unique(temp$TimeSor))
-				if(nrow(temp) >= param.min.nb.for.cluster & max.cluster > 1) {
+				if(nrow(temp) >= param.min.nb.for.cluster & max.cluster > param.min.uniqueTimeSor) {
           # if not many passages, we will not cluster
           # decide nb of cluster
 					clus<- clusGap(temp %>% select(TimeSor), kmeans, max(min(param.max.nb.cluster, max.cluster),2))
@@ -575,13 +575,12 @@ Model <- function(transaction, model.decades, model.units) {
     if(model == 20) {
       # result <- data.frame(ID="", Entr=0, Sor=0, SensEntr = 0, SensSor = 0, Sens = 0, DOW=0, SD=0, T=0, Tmin=0, Tmax=0, noPsg=0)
 			result <- data.frame(ID="", OD="", DOW=0, SD=0, T=0, Tmin=0, Tmax=0, noPsg=0)
-
       result$ID <- as.character(result$ID)
       for (k in 1:nrow(OD.list)){
         temp <- VIP2_espace %>% filter(ID == OD.list$ID[k] &  Entr == OD.list$Entr[k] & Sor == OD.list$Sor[k] )
         # base to be verified
 				max.cluster <- length(unique(temp$TimeSor))
-				if(nrow(temp) >= param.min.nb.for.cluster & max.cluster > 1) {				
+				if(nrow(temp) >= param.min.nb.for.cluster & max.cluster > param.min.uniqueTimeSor) {				
           # if not many passages, we will not cluster
           # decide nb of cluster
           clus<- clusGap(temp %>% select(TimeSor), kmeans, max(min(param.max.nb.cluster, max.cluster),2))
@@ -600,7 +599,6 @@ Model <- function(transaction, model.decades, model.units) {
       } # end of k loop
       result <- result[-1,]
       if(nrow(result)>0)  result$Model <- model
-      
       ##########
       # end of model 20
     } else 
@@ -616,7 +614,7 @@ Model <- function(transaction, model.decades, model.units) {
         for (j in 0:1){
           temp <- VIP2_espace %>% filter(ID == OD.list$ID[k] &  Entr == OD.list$Entr[k] & Sor == OD.list$Sor[k] & weekday == j)
 					max.cluster <- length(unique(temp$TimeSor))
-					if(nrow(temp) >= param.min.nb.for.cluster & max.cluster > 1) {				
+					if(nrow(temp) >= param.min.nb.for.cluster & max.cluster > param.min.uniqueTimeSor) {				
 						# if not many passages, we will not cluster
 						#	decide nb of cluster
 						clus<- clusGap(temp %>% select(TimeSor), kmeans, max(min(param.max.nb.cluster, max.cluster),2))
@@ -648,7 +646,7 @@ Model <- function(transaction, model.decades, model.units) {
         for (j in 0:6){
           temp <- VIP2_espace %>% filter(ID == OD.list$ID[k] & DOW == j &  Entr == OD.list$Entr[k] & Sor == OD.list$Sor[k] )
 					max.cluster <- length(unique(temp$TimeSor))
-					if(nrow(temp) >= param.min.nb.for.cluster & max.cluster > 1) {				
+					if(nrow(temp) >= param.min.nb.for.cluster & max.cluster > param.min.uniqueTimeSor) {				
 						# if not many passages, we will not cluster
 						# decide nb of cluster
 						clus<- clusGap(temp %>% select(TimeSor), kmeans, max(min(param.max.nb.cluster, max.cluster),2))

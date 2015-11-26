@@ -94,3 +94,62 @@ ID.segment <- temp %>%
 ##########
 ### Get Hourheatmap for One_Zone
 ##########
+# Get ID with only One_Zone
+t <- ID.segment %>% filter(One_Zone == TRUE) %>% select(ID)
+# Get grid for all ID with One_Zone
+# t1 <- inner_join(t,t.Active) %>% select(ID,OD,Per) %>% mutate(PerR = round(Per,1))
+t1 <- inner_join(t,t.Active) %>% select(ID,OD) %>% ungroup %>% distinct
+# Get all trx for ID with One_Zone
+t2 <- inner_join(t1,trx)
+
+### from Row_Col to Entr_Sor
+temp1 <- trx %>% select(-c(Row:OD)) %>% ungroup %>% distinct
+temp2 <- t2 %>% select(-c(OD,Row,Col)) %>% ungroup %>% distinct
+
+# Know how many Psg of these ID are in the One_Zone
+temp <- GetCharacters(temp1)
+t4 <- count(temp2, ID) %>% rename(nTrx_in_Zone = n)
+temp <- left_join(temp, t4) %>%
+  mutate(Per_in_Zone = nTrx_in_Zone / noPsg)
+
+ggplot(temp) + geom_density(aes(Per_in_Zone))
+
+### display
+temp.time <- temp2 %>%
+  mutate(H = round(TimeSor, digits = 0),
+         H_2 = H - H %% 2
+  ) 
+
+t5 <-  temp.time %>% count(ID) %>% filter( n > 80) %>%
+  select(ID) %>%
+  left_join(ID.segment) %>%
+  filter(ResultTS == FALSE & ResultGeo == TRUE) %>%
+  slice(1:9)
+
+t <- temp.time %>% inner_join(t5)
+t1 <- t %>% group_by(ID,DOW,H) %>% summarise(freq = n())
+t2 <- t %>% group_by(ID,DOW,H_2) %>% summarise(freq = n())
+ggplot(t1) + geom_tile(aes(DOW,H, fill = freq)) + facet_wrap(~ID)
+ggplot(t2) + geom_tile(aes(DOW,H_2, fill = freq)) + facet_wrap(~ID)
+
+
+t3 <- t.Active %>% inner_join(t5)
+ggplot(t3) + geom_tile(aes(l,d, alpha = Per)) + xlim(c(-2,8)) + ylim(c(42,49)) + facet_wrap(~ID) +
+  geom_point(data= gares, aes(Lng, Lat, col = as.factor(Societe)))
+
+ggplot(t3) + geom_tile(aes(l,d, alpha = Per)) + xlim(c(-2,8)) + ylim(c(42,44)) + facet_wrap(~ID) +
+  geom_point(data= gares, aes(Lng, Lat, col = as.factor(Societe)))
+
+t4 <- ID.segment %>% inner_join(t5)
+
+
+
+
+
+
+
+
+
+ggplot(t2 %>% filter(freq > 15)) + geom_tile(aes(DOW,H_2, fill = freq))
+t3 <-  t %>% group_by(ID,DOW,H) %>% summarise(freq = n())
+ggplot(t) + geom_tile(aes(Date,H)) + facet_wrap(~ID)

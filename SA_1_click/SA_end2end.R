@@ -36,9 +36,9 @@ library(knitr)
 #	ID.list:	ID
 
 # predefined parameters
-train.start <- as.Date("2015-7-1")
-test.start <- as.Date("2015-10-30")
-test.end <- as.Date("2015-11-30")
+train.start <- as.Date("2015-5-1")
+test.start <- as.Date("2015-7-30")
+test.end <- as.Date("2015-9-30")
 train.period <- data.frame(Date = seq(train.start, test.start, "day"))
 train.period$DOW <- as.POSIXlt(train.period$Date)$wday
 test.period <- data.frame(Date = seq(test.start, test.end, "day"))
@@ -49,9 +49,8 @@ param.days <- GetNumberDays(train.period)
 # !!! get running time
 start.time <- Sys.time()
 
-trx <- t0 %>% filter(Date >= train.start & Date < test.end)
-
-trx <- t3
+# t <- BDD %>% filter(N == 4 | N == 44)
+trx <- BDD %>% filter(Date >= train.start & Date < test.end)
 
 # add SensEntr, SensSor
 trx <- trx %>% mutate(Voie = ifelse(Entr == 0, Voie, 0))
@@ -144,6 +143,8 @@ temp <- inner_join(ref, result.final) %>%
   arrange (ID, desc(noPsg), Tmin) %>%
   filter((Tmax - Tmin) <= 1.5)
 # output: csv file
+
+temp <- temp %>% arrange(N, desc(noPsg))
 write.table(temp, file="result.treated.csv", sep = ";", row.names = F, quote = F)
 
 

@@ -27,7 +27,7 @@ names(transaction) <- c("EVA","Badge",
                          "cde_soc_sor","cde_sor", "heure_sor",
                          "Voie")
 
-str(transaction)
+# str(transaction)
 
 # some gares are with cde_soc_entr as character, just removed
 temp <- transaction %>%
@@ -61,6 +61,9 @@ temp$TimeEntr[temp$cde_entr==0] <- 0
 transaction1 <- temp %>% select(EVA, Badge, Entr, Sor, Date, DOW, WOY, TimeEntr, TimeSor, Voie)
 rm(temp)
 
+
+# write.table(transaction1,"Input_v20151126.csv",sep=";",row.name=FALSE,quote=FALSE)
+
 transaction1 <- transaction1 %>% filter(Date >= as.Date("2015-1-1"))
 transaction1 <- transaction1 %>% mutate(Sens = ifelse(Entr == 0,
                                                       ifelse(Voie <=20, 1,2),
@@ -88,28 +91,29 @@ rm(temp)
 ##########
 transaction2 <- transaction1 %>% filter(Date >= train.start)
 
-# period <- data.frame(Date = seq(train.start, test.end, "day"))
-t1 <- data.frame(Date = seq(train.start, test.end, "day")) %>% transmute(Dmin = Date, t=1)
-t2 <- t1 %>% rename(Dmax = Dmin)
-t <- inner_join(t1,t2) %>% filter(Dmin < Dmax) %>% select(-t) %>% tbl_df
-
-t1 <- data.frame(D0 = 0,
-                 D1 = 0,
-                 D2 = 0,
-                 D3 = 0,
-                 D4 = 0,
-                 D5 = 0,
-                 D6 = 0,
-                 Day = 0
-)
-for(i in 1:nrow(t)){
-  temp <- GetDays(t$Dmin[i],t$Dmax[i])
-  t1 <- rbind(t1,temp)
-}
-
-t1 <- t1[-1,]
-period <- cbind(t, t1 ) %>% tbl_df
-rm(t,t1,t2)
+##########
+# # period <- data.frame(Date = seq(train.start, test.end, "day"))
+# t1 <- data.frame(Date = seq(train.start, test.end, "day")) %>% transmute(Dmin = Date, t=1)
+# t2 <- t1 %>% rename(Dmax = Dmin)
+# t <- inner_join(t1,t2) %>% filter(Dmin < Dmax) %>% select(-t) %>% tbl_df
+# 
+# t1 <- data.frame(D0 = 0,
+#                  D1 = 0,
+#                  D2 = 0,
+#                  D3 = 0,
+#                  D4 = 0,
+#                  D5 = 0,
+#                  D6 = 0,
+#                  Day = 0
+# )
+# for(i in 1:nrow(t)){
+#   temp <- GetDays(t$Dmin[i],t$Dmax[i])
+#   t1 <- rbind(t1,temp)
+# }
+# 
+# t1 <- t1[-1,]
+# period <- cbind(t, t1 ) %>% tbl_df
+# rm(t,t1,t2)
 
 ##########
 ### ID2 <- period
@@ -123,7 +127,7 @@ ID2 <- transaction2 %>%
             noPsg = n()) %>%
   arrange(desc(noPsg))
 
-ID2 <- left_join(ID2,period %>% select(-Day))
+# ID2 <- left_join(ID2,period %>% select(-Day))
 
 ##########
 ### ID2 - segmentation
