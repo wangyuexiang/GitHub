@@ -421,3 +421,12 @@ Ref$Seg[Ref$Recent == TRUE] <- "Recent"
 Ref$Seg[Ref$Inactive == TRUE] <- "Inactive"
 
 t.segment <- Ref %>% select(ID, ResultTS, ResultGeo, Seg)
+
+##########
+### For 1_click
+##########
+VIP <- read.table("BDD.v20151123.csv", header = T, sep = ";") %>% tbl_df
+t <- VIP %>%
+  mutate(Badge = paste0(Ste, ID)) %>%
+  select(EVA, Badge, Entr, Sor, Date, DOW, WOY, TimeEntr, TimeSor, Voie)
+write.table(t, "VIP.csv",sep=";",row.name=FALSE,quote=FALSE)
