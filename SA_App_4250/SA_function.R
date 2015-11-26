@@ -9,9 +9,6 @@
 # GetInd:			get indicators for each model
 ### Old functions - in S_function_old.R
 
-print("source succeeds")
-
-
 ##########
 # ??? parameters to be justified or modified
 # GetInd:
