@@ -6,13 +6,13 @@ library(cluster)
 args <- commandArgs(trailingOnly = TRUE)
 # Command Line example
 # cd C:\Users\wangy2\Documents\GitHub\SA_Script
-# rscript main.r Input.csv Output.csv 2015-8-31 2015-5-1
+# rscript main.r App.csv Output.csv 2015-5-1 2015-8-31 
 
 InputFileName <- args[1]
 OutputFileName <- args[2]
 
-end <- as.Date(args[3])
-start <- as.Date(args[4])
+start <- as.Date(args[3])
+end <- as.Date(args[4])
 
 numLine <- args[5]
 
@@ -60,7 +60,7 @@ if(nrow(test.model.1) > 0) test.model.1$ModelDecade <- 1
 ind.model.1 <- GetInd(test.model.1, result.model.decade.1)
 if(nrow(ind.model.1) > 0)  ind.model.1$ModelDecade <- 1
 
-#Model 2 (decades) OD -> Space -> Time
+# Model 2 (decades) OD -> Space -> Time
 result.model.decade.2 <- Model.for.a.decade(train,2,models.units)
 ### evalutaion model.02
 test.model.2 <- GetResult(test, result.model.decade.2)

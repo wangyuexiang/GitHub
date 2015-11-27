@@ -2,7 +2,7 @@
 library(dplyr)
 library(cluster)
 
-InputFileName <- "VIP.csv"
+InputFileName <- "App.csv"
 OutputFileName <- "Output.csv"
 
 end <- as.Date("2015-8-31")

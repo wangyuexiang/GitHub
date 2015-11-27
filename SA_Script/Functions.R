@@ -63,10 +63,11 @@ GetResult <- function(test, result) {
 
   # !!! removed when modify data_preparation
   # test$DOW <- as.numeric(test$DOW)
-  test$result <- 0
+  if(nrow(test) > 0) test$result <- 0
   name <- names(test)
 	# temp <- inner_join(test, result, by = c("ID", "Entr", "Sor", "SensEntr", "SensSor","Sens", "DOW"))
-	temp <- inner_join(test, result, by = c("ID", "OD", "DOW"))
+	temp <- inner_join(test, result)
+	# temp <- inner_join(test, result, by = c("ID", "OD", "DOW"))
 	if(nrow(temp[temp$TimeSor >= temp$Tmin & temp$TimeSor <= temp$Tmax,]) > 0) {
 		temp[temp$TimeSor >= temp$Tmin & temp$TimeSor <= temp$Tmax,]$result <- 1
 	}
