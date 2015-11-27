@@ -8,7 +8,7 @@ library(dplyr)
 ##########
 trx <- input %>%
   mutate(
-    ID = as.character(Badge),
+    ID = as.character(Badge * 100000 + Porteur),
     Date = as.Date(as.character(Date)),
     Sens = ifelse(Entr == 0,
                   ifelse(Voie <=20, 1,2),

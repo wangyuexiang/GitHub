@@ -183,4 +183,10 @@ result <- rbind(r,t1)
 
 write.table(result, file="Result.v20151029.csv", sep = ";", row.names = F, quote = F)
 
->>>>>>> .r35
+##########
+### For SA_Script
+##########
+t <- BDD %>%
+  mutate(Badge = ID) %>%
+  select(EVA, Badge, Entr, Sor, Date, DOW, WOY, TimeEntr, TimeSor, Voie, Ste)
+write.table(t, "VIP.csv",sep=";",row.name=FALSE,quote=FALSE)

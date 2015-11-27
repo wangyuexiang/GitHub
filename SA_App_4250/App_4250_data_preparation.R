@@ -19,13 +19,13 @@ test.end <- as.Date("2015-8-31")
 ##########
 ### input -> transaction -> transaction1
 ##########
-transaction <- read.table("BDD.csv", header = T, sep = ";")
-transaction <- tbl_df(transaction)
+transaction <- read.table("BDD.after.csv", header = T, sep = ";") %>% tbl_df
 
-names(transaction) <- c("EVA","Badge",
+names(transaction) <- c("EVA","ID",
                          "cde_soc_entr","cde_entr", "heure_entr",
                          "cde_soc_sor","cde_sor", "heure_sor",
-                         "Voie")
+                         "Voie",
+                        "Ste","Badge","Porteur")
 
 # str(transaction)
 
@@ -53,12 +53,12 @@ temp <- temp %>%
     HH = as.numeric(substr(heure_sor, 12, 13)), MM = as.numeric(substr(heure_sor, 15, 16)) ,
     TimeSor = HH + MM / 60
   ) %>%
-  select(EVA,Badge, cde_entr, Entr, Sor, Voie, Date, DOW, WOY, TimeEntr, TimeSor) 
+  select(EVA,Ste, Badge, Porteur,ID, cde_entr, Entr, Sor, Voie, Date, DOW, WOY, TimeEntr, TimeSor) 
 
 temp$Entr[temp$cde_entr==0] <- 0
 temp$TimeEntr[temp$cde_entr==0] <- 0
 
-transaction1 <- temp %>% select(EVA, Badge, Entr, Sor, Date, DOW, WOY, TimeEntr, TimeSor, Voie)
+transaction1 <- temp %>% select(-cde_entr)
 rm(temp)
 
 
@@ -423,10 +423,8 @@ Ref$Seg[Ref$Inactive == TRUE] <- "Inactive"
 t.segment <- Ref %>% select(ID, ResultTS, ResultGeo, Seg)
 
 ##########
-### For 1_click
+### For SA_Script
 ##########
-VIP <- read.table("BDD.v20151123.csv", header = T, sep = ";") %>% tbl_df
-t <- VIP %>%
-  mutate(Badge = paste0(Ste, ID)) %>%
-  select(EVA, Badge, Entr, Sor, Date, DOW, WOY, TimeEntr, TimeSor, Voie)
-write.table(t, "VIP.csv",sep=";",row.name=FALSE,quote=FALSE)
+t <- transaction1 %>% select(-ID)
+write.table(t, "App.csv",sep=";",row.name=FALSE,quote=FALSE)
+
