@@ -10,16 +10,15 @@ library(gridExtra)
 TLPC <- read.table("BDD_TLPC.csv", sep = ";", header = TRUE) %>% tbl_df
 
 t <- TLPC
-names(t) <- c("Ste", "ID", "porteur",
+names(t) <- c("Ste", "Badge", "Porteur",
               "Sor",  "Voie", 
               "DateSor", "hSor",
               "Entr", "ind",
               "DateEntr","hEntr")
 
-
-t1 <- t %>%  
+t <- t %>%  
   mutate(
-    ID = ID * 1e5 + porteur,
+    ID = Badge * 1e5 + Porteur,
     Y = substr(DateSor, 1, 4), M = substr(DateSor, 5, 6), D = substr(DateSor, 7, 8),
     DateSor = as.Date(paste0(Y, "-", M, "-", D)),
     Y = substr(DateEntr, 1, 4), M = substr(DateEntr, 5, 6), D = substr(DateEntr, 7, 8),
@@ -33,5 +32,4 @@ t1 <- t %>%
     HH = hSor %/% 10000, MM = ((hSor %% 10000) %/% 100),
     TimeSor = HH + MM / 60
   ) %>%
-  select(ID, Entr, Sor, Voie, DateEntr, DateSor, DOW, WOY, TimeEntr, TimeSor, ind) 
-
+  select(Ste, ID, Badge, Porteur, Entr, Sor, Voie, DateEntr, DateSor, DOW, WOY, TimeEntr, TimeSor, ind) 

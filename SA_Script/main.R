@@ -2,11 +2,12 @@
 library(dplyr)
 library(cluster)
 
-### get arguments
+### get arguments 
 args <- commandArgs(trailingOnly = TRUE)
 # Command Line example
 # cd C:\Users\wangy2\Documents\GitHub\SA_Script
 # rscript main.r App.csv Output.csv 2015-5-1 2015-8-31 
+# rscript main.r VIP.csv Output.csv 2015-5-1 2015-8-31 
 
 InputFileName <- args[1]
 OutputFileName <- args[2]

@@ -186,7 +186,13 @@ write.table(result, file="Result.v20151029.csv", sep = ";", row.names = F, quote
 ##########
 ### For SA_Script
 ##########
-t <- BDD %>%
-  mutate(Badge = ID) %>%
-  select(EVA, Badge, Entr, Sor, Date, DOW, WOY, TimeEntr, TimeSor, Voie, Ste)
+t1 <- BDD %>%
+  mutate(
+    ID = as.numeric(ID),
+    Badge = floor(ID/100000),
+    Porteur = ID - Badge * 100000
+         ) %>%
+  select(EVA, Ste, Badge, Porteur, Entr, Sor, Date, DOW, WOY, TimeEntr, TimeSor, Voie, Ste, Nom)
+
+t <- t1 %>% select(-Nom)
 write.table(t, "VIP.csv",sep=";",row.name=FALSE,quote=FALSE)

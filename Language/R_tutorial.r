@@ -320,6 +320,7 @@ dat[, c(3,6:15,37)] <- sapply(dat[, c(3,6:15,37)], as.numeric)
 getwd()
 list.files()
 list.files(getwd())
+rm(list=ls())
 
 summary()
 
