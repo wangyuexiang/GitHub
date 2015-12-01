@@ -1,84 +1,123 @@
 ### load package
 library(dplyr)
-library(cluster)
 
-InputFileName <- "App.csv"
-OutputFileName <- "Output.csv"
+filename.Input <- "App.csv"
+filename.Output <- "Output.csv"
 
-start <- as.Date("2015-5-1")
-end <- as.Date("2015-8-31")
+limit.ZonePer <- .5
+limit.ActiveyDay <- 5
+# limit.WindowFreq <- 5
+
+day.start <- as.Date("2015-5-1")
+day.end <- as.Date("2015-8-31")
+
 
 ### input 
-input <- read.table(InputFileName, header = T, sep = ";") %>% tbl_df 
+input <- read.table(filename.Input, header = T, sep = ";") %>% tbl_df 
 
 ### load function
-source('DataPreparation.R', encoding = 'UTF-8')
-source('Functions.R', encoding = 'UTF-8')
+# source('DataPreparation.R', encoding = 'UTF-8')
+# source('Functions.R', encoding = 'UTF-8')
 
 ####################
 ####################
 
-### prepare period
-train.period <- data.frame(Date = seq(start, end - 30, "day"))
-train.period$DOW <- as.POSIXlt(train.period$Date)$wday
-test.period <- data.frame(Date = seq(end - 30, end, "day"))
-test.period$DOW <- as.POSIXlt(test.period$Date)$wday
+##########
+### Step 1: add ID & get only the trx in the period
+##########
+trx <- input %>%
+  mutate(
+    ID = as.character(Badge * 100000 + Porteur),
+    Date = as.Date(as.character(Date)),
+    Sens = ifelse(Entr == 0,
+                  ifelse(Voie <=20, 1,2),
+                  0)) %>%
+  filter(Date >= day.start,
+         Date <= day.end)
 
-### train & test
-train <- output %>% filter(Date < end - 30)
-test <- output %>% filter(Date >= end - 30)
-ID.list <- output %>% group_by(ID) %>% summarise()
+##########
+### Step 2: find Zone frequently visited
+##########
+# get ODtoGrid
+ODtoGrid <- read.table("Ref_ODtoGrid.csv", header = T, sep = ";") %>% tbl_df
+# transform Entr-Sor to Zone
+trxZone <- trx %>% inner_join(ODtoGrid)
 
-### model & eval
-models.units <- getModel.units( output )
+# find number of active day for each ID
+t1 <- trxZone %>%
+  group_by(ID) %>%
+  summarise(ActiveDay = n_distinct(Date))
+# find number of active day for each ID,Zone
+t2 <- trxZone %>%
+  group_by(ID, Zone) %>%
+  summarise(Day = n_distinct(Date))
 
-#Model 0 (decades) : BENCHMARK
-result.model.decade.0 <- Model.for.a.decade(train,0,models.units)
-### evalutaion model.00
-test.model.0 <- GetResult(test, result.model.decade.0)
-if(nrow(test.model.0) > 0) test.model.0$ModelDecade <- 0
-ind.model.0 <- GetInd(test.model.0, result.model.decade.0)
-if(nrow(ind.model.0) > 0)  ind.model.0$ModelDecade <- 0
+# get ID,Zone with (Zone frequently visited)
+#   - ActiveDay >= limit.ActiveDay 
+#   - Per >= limit.ZonePer
+trxZoneActive <- inner_join(t1,t2) %>% 
+  mutate(Per = Day / ActiveDay) %>%
+  filter(ActiveDay >= limit.ActiveyDay,
+         Per >= limit.ZonePer)
+rm(t1,t2)
 
-#Model 1 (decades)	Time-Space
-result.model.decade.1 <- Model.for.a.decade(train,1,models.units)
-### evalutaion model.01
-test.model.1 <- GetResult(test, result.model.decade.1)
-if(nrow(test.model.1) > 0) test.model.1$ModelDecade <- 1
-ind.model.1 <- GetInd(test.model.1, result.model.decade.1)
-if(nrow(ind.model.1) > 0)  ind.model.1$ModelDecade <- 1
+##########
+### Step 3: find ID with only one big zone  
+##########
+# get GridLimit
+GridLimit <- read.table("Ref_GridLimit.csv", header = T, sep = ";") %>% tbl_df 
+# get Grid detailed info for trxZoneActive
+t <- inner_join(trxZoneActive, GridLimit)
+# group them by ID
+t <- t %>% group_by(ID)
 
-#Model 2 (decades) OD -> Space -> Time
-result.model.decade.2 <- Model.for.a.decade(train,2,models.units)
-### evalutaion model.02
-test.model.2 <- GetResult(test, result.model.decade.2)
-if(nrow(test.model.2) > 0) test.model.2$ModelDecade <- 2
-ind.model.2 <- GetInd(test.model.2, result.model.decade.2)
-if(nrow(ind.model.2) > 0)  ind.model.2$ModelDecade <- 2
+# Get 4 points
+#   NW  NE (NorthWest, NorthEast)
+#   SW  SE (SouthWest, SouthEast)
+t1 <- t %>% arrange(Row, Col)             %>% select(Row, Col) %>% slice(1) %>% rename(R_NW = Row, C_NW = Col)
+t2 <- t %>% arrange(Row, desc(Col))       %>% select(Row, Col) %>% slice(1) %>% rename(R_NE = Row, C_NE = Col)
+t3 <- t %>% arrange(desc(Row), Col)       %>% select(Row, Col) %>% slice(1) %>% rename(R_SW = Row, C_SW = Col)
+t4 <- t %>% arrange(desc(Row), desc(Col)) %>% select(Row, Col) %>% slice(1) %>% rename(R_SE = Row, C_SE = Col)
 
-### compare model results
-Ind <- rbind(ind.model.0, ind.model.1, ind.model.2)
-Ind <- inner_join ( Ind, models.units)
-Ind.final <- Ind %>% 
-  group_by(ID) %>% 
-  summarise( Model = ModelDecade[Ind == max(Ind)][1]*10 + model[Ind == max(Ind)][1])
+temp <- inner_join(t1, t2) %>% inner_join(t3) %>% inner_join(t4)
+rm(t1,t2,t3,t4)
 
-result <- rbind(result.model.decade.0, result.model.decade.1, result.model.decade.2)
+# Compare to get One_Zone
+#   C_NW & C_SW
+#   C_NE & C_SE
+temp <- temp %>% mutate(Left = (C_NW == C_SW),
+                        Right = (C_NE == C_SE),
+                        OneZone = Left && Right)
 
-rm(result.model.decade.0, test.model.0, ind.model.0,
-   result.model.decade.1, test.model.1, ind.model.1,
-   result.model.decade.2, test.model.2, ind.model.2)
+##########
+### Step 4: get Hourheatmap for OneZone
+##########
+# get ID with only one zone
+t <- temp %>%
+  filter(OneZone == TRUE) %>%
+  select(ID)
+# get all grids for these ID
+t <- inner_join(t,trxZoneActive) %>% select(ID,Zone) %>% ungroup %>% distinct
+# Get all trx passing these grids for these ID
+t <- inner_join(t,trxZone)
+# transform back from Zone to Entr_Sor
+t1 <- t %>% select(-Zone) %>% ungroup %>% distinct
 
-result.final <- inner_join(result, Ind.final) %>%
-  arrange (ID, desc(noPsg), Tmin) %>%
-  select(-Model) %>%
-  mutate(ID = as.character(as.numeric(ID))) %>%
-  filter(noPsg > 5)
+# get time window
+t2 <- t1 %>%
+  mutate(H = round(TimeSor, digits = 0),
+         H_2 = H - H %% 2
+  ) 
 
-rm(Ind, Ind.final, models.units)
-rm(ID.list,
-   test,train,
-   test.period,train.period)
+# get time window frequency >= limit.WindowFreq
+result <- t2 %>% 
+  group_by(ID,DOW,H) %>% 
+  summarise(freq = n()) 
+# %>%
+#   filter(freq >= limit.WindowFreq)
+rm(temp,t1,t2,ODtoGrid,GridLimit)
 
+##########
 ### output
-write.table(result.final, OutputFileName,sep=";",row.name=FALSE,quote=FALSE)
+##########
+write.table(result, filename.Output,sep=";",row.name=FALSE,quote=FALSE)
