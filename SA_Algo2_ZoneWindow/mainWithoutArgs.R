@@ -1,7 +1,7 @@
 ### load package
 library(dplyr)
 
-filename.Input <- "App.csv"
+filename.Input <- "VIP.csv"
 filename.Output <- "Output.csv"
 
 limit.ZonePer <- .5
@@ -101,16 +101,16 @@ t <- inner_join(t,trxZoneActive) %>% select(ID,Zone) %>% ungroup %>% distinct
 # Get all trx passing these grids for these ID
 t <- inner_join(t,trxZone)
 # transform back from Zone to Entr_Sor
-t1 <- t %>% select(-Zone) %>% ungroup %>% distinct
+t <- t %>% select(-Zone) %>% ungroup %>% distinct
 
 # get time window
-t2 <- t1 %>%
+trxZoneActiveH <- t %>%
   mutate(H = round(TimeSor, digits = 0),
          H_2 = H - H %% 2
   ) 
 
 # get time window frequency >= limit.WindowFreq
-result <- t2 %>% 
+result <- trxZoneActiveH %>% 
   group_by(ID,DOW,H) %>% 
   summarise(freq = n()) 
 # %>%

@@ -5,7 +5,7 @@ library(cluster)
 ### get arguments 
 args <- commandArgs(trailingOnly = TRUE)
 # Command Line example
-# cd C:\Users\wangy2\Documents\GitHub\SA_Script
+# cd C:\Users\wangy2\Documents\GitHub\SA_Algo1_TimeSpace
 # rscript main.r App.csv Output.csv 2015-5-1 2015-8-31 
 # rscript main.r VIP.csv Output.csv 2015-5-1 2015-8-31 
 

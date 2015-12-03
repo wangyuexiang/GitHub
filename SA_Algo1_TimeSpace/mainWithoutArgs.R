@@ -2,11 +2,11 @@
 library(dplyr)
 library(cluster)
 
-InputFileName <- "App.csv"
+InputFileName <- "TLPC.csv"
 OutputFileName <- "Output.csv"
 
-start <- as.Date("2015-5-1")
-end <- as.Date("2015-8-31")
+start <- as.Date("2015-8-1")
+end <- as.Date("2015-11-26")
 
 ### input 
 input <- read.table(InputFileName, header = T, sep = ";") %>% tbl_df 

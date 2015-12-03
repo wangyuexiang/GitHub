@@ -14,7 +14,7 @@ trx <- input %>%
                   ifelse(Voie <=20, 1,2),
                   0))
 
-trx <- trx %>% filter(Date > start)
+trx <- trx %>% filter(Date >= start)
 
 ##########
 ### ID segmentation
