@@ -351,6 +351,9 @@ sapply()
 t$H<-NULL # remove column in data.frame
 
 order(,decreasing=TRUE)
+[http]
+	proxy = http://proxy.asf.fr:8080
+
 ##########
 ##########
 #Date
