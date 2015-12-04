@@ -1,12 +1,24 @@
-### Visulisation of result
+####################
+# Alog2_VizZoneWindow
+####################
+# Visulise the result of Algo2 (only used in RStudio, after Algo2.R, because viz method ggplot2 is only accessible there)
+#
+# Input: 
+#   Reference:
+#     gares(Reference/Ref_gares.csv): code, latitude et longitude des gares 
+#     sens: Reference/Ref_sens.csv
+#   Result of Algo2
+####################
+
+# import libraries
 library(dplyr)
 library(ggplot2)
 
 ##########
 ### Get Ref
 ##########
-GridLimit <- read.table("Ref_GridLimit.csv", header = T, sep = ";") %>% tbl_df 
-gares <- read.table("Ref_gares.csv", header = T, sep = ",") %>% tbl_df 
+GridLimit <- read.table("Reference/Ref_GridLimit.csv", header = T, sep = ";") %>% tbl_df
+gares <- read.table("Reference/Ref_gares.csv", header = T, sep = ";") %>% tbl_df 
  
 ##########
 ### Zone

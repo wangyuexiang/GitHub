@@ -1,26 +1,52 @@
-### load package
+####################
+# Alog2_main
+####################
+# Run Algo2_ZoneWindow
+#
+# Input: 
+#   Args (from Parameter/Param_Algo2_main.csv :
+#     filename.Input: 
+#     limit.ZonePer
+#     limit.ActiveDay
+#     day.start
+#     day.end
+#   Input:
+#     transaction history: Input/filename.Input
+# Output:
+#   result of model Zone Window: Reference/filename.Output
+####################
+
+##########
+### Step 0: Prepare
+##########
+# load package
 library(dplyr)
 
-filename.Input <- "VIP.csv"
-filename.Output <- "Output.csv"
+# get Parameter from Parameter/Param_Algo2
+args <- read.table("Parameters/Param_Algo2.csv",sep = ";", header=TRUE) 
 
-limit.ZonePer <- .5
-limit.ActiveyDay <- 5
+filename.Input <- as.character(args[1,1])
+limit.ZonePer <- args[1,2]
+limit.ActiveDay <- args[1,3]
 # limit.WindowFreq <- 5
+day.start <- as.Date(as.character(args[1,4]))
+day.end <- as.Date(as.character(args[1,5]))
 
-day.start <- as.Date("2015-5-1")
-day.end <- as.Date("2015-8-31")
+rm(args)
 
+# input 
+input <- read.table(paste0("Input/",filename.Input), header = T, sep = ";") %>% tbl_df 
 
-### input 
-input <- read.table(filename.Input, header = T, sep = ";") %>% tbl_df 
-
-### load function
-# source('DataPreparation.R', encoding = 'UTF-8')
-# source('Functions.R', encoding = 'UTF-8')
-
-####################
-####################
+# get Reference data from Reference/
+# run Algo2_makeGrid to have "Ref_ODtoGrid.csv" and "Ref_GridLimit.csv" 
+# get ODtoGrid
+ODtoGrid <- read.table("Reference/Ref_ODtoGrid.csv", header = T, sep = ";") %>% 
+  tbl_df %>%
+  mutate(Zone = as.character(Zone))
+# get GridLimit
+GridLimit <- read.table("Reference/Ref_GridLimit.csv", header = T, sep = ";") %>% 
+  tbl_df %>%
+  mutate(Zone = as.character(Zone))
 
 ##########
 ### Step 1: add ID & get only the trx in the period
@@ -32,14 +58,11 @@ trx <- input %>%
     Sens = ifelse(Entr == 0,
                   ifelse(Voie <=20, 1,2),
                   0)) %>%
-  filter(Date >= day.start,
-         Date <= day.end)
+  filter(Date >= day.start & Date <= day.end)
 
 ##########
 ### Step 2: find Zone frequently visited
 ##########
-# get ODtoGrid
-ODtoGrid <- read.table("Ref_ODtoGrid.csv", header = T, sep = ";") %>% tbl_df
 # transform Entr-Sor to Zone
 trxZone <- trx %>% inner_join(ODtoGrid)
 
@@ -57,15 +80,13 @@ t2 <- trxZone %>%
 #   - Per >= limit.ZonePer
 trxZoneActive <- inner_join(t1,t2) %>% 
   mutate(Per = Day / ActiveDay) %>%
-  filter(ActiveDay >= limit.ActiveyDay,
+  filter(ActiveDay >= limit.ActiveDay,
          Per >= limit.ZonePer)
 rm(t1,t2)
 
 ##########
 ### Step 3: find ID with only one big zone  
 ##########
-# get GridLimit
-GridLimit <- read.table("Ref_GridLimit.csv", header = T, sep = ";") %>% tbl_df 
 # get Grid detailed info for trxZoneActive
 t <- inner_join(trxZoneActive, GridLimit)
 # group them by ID
@@ -115,9 +136,14 @@ result <- trxZoneActiveH %>%
   summarise(freq = n()) 
 # %>%
 #   filter(freq >= limit.WindowFreq)
-rm(temp,t1,t2,ODtoGrid,GridLimit)
+rm(temp,ODtoGrid,GridLimit)
 
 ##########
-### output
+### Step 5: Output in Output/
 ##########
-write.table(result, filename.Output,sep=";",row.name=FALSE,quote=FALSE)
+inputName <-  read.table(text = filename.Input, sep=".")$V1 %>% as.character
+time <- Sys.time() %>% format(format = "%Y%m%d_%H%M")
+
+write.table(result, paste0("Output/",inputName,"_V",time,"_Window.csv"),sep=";",row.name=FALSE,quote=FALSE)
+write.table(trxZoneActive, paste0("Output/",inputName,"_V",time,"_Zone.csv"),sep=";",row.name=FALSE,quote=FALSE)
+rm(inputName,time)

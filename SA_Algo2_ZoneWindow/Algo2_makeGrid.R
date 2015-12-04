@@ -1,13 +1,40 @@
-### create the grid system which will be used in the ZoneWindow model
+####################
+# Alog2_makeGrid
+####################
+# Create the grid system for Algo2_ZoneWindow
+#
+# Input: 
+#   Args (from Parameter/Param_makeGrid.csv :
+#     gridStep: unit in degree, width & height of each grid rectangular
+#     zoneStep: unit in degree, extension for Entr or Sor with no Lng&Lat, ex. Systeme Ouvert
+#   Reference:
+#     gares(Reference/Ref_gares.csv): code, latitude et longitude des gares 
+#     sens: Reference/Ref_sens.csv
+# Output:
+#   Reference/Ref_GridLimit
+#   Reference/Ref_ODtoGrid
+####################
 
+##########
+### Step 0: create Grid
+##########
+# import libraries
 library(dplyr)
-args <- commandArgs(trailingOnly = TRUE)
 
-gridStep <- args[1] # unit in degree, width & height of each grid rectangular
-zoneStep <- args[2] # unit in degree, extension for Entr or Sor with no Lng&Lat, ex. Systeme Ouvert
+# get Parameter from Parameter/Param_makeGrid
+args <- read.table("Parameters/Param_makeGrid.csv",sep = ";", header=TRUE) 
+gridStep <- args[1,1] 
+zoneStep <- args[1,2]  
+rm(args)
 
-if(is.na(gridStep)) gridStep <- .5 # make sure integer times of step makes 1, eg: 0.1,0.2,0.5,1
-if(is.na(zoneStep)) zoneStep <- .1 # if Lng & Lat not availble, add delta.Lat & delta.Lng (0.1 degree )
+# get Reference data from Reference/
+## TODO: update Ref_gares.csv, many missing Lng & Lat, wrong Code
+gares <- read.table("Reference/Ref_gares.csv",sep = ";", header=TRUE) %>% 
+  tbl_df %>%
+  transmute(Ste = Societe,
+            Cde,Lng, Lat)
+
+sens = read.table("Reference/Ref_sens.csv",sep = ";", header=TRUE) %>% tbl_df
 
 ##########
 ### Step 1: create Grid
@@ -32,6 +59,7 @@ t.lng <- data.frame(
 t.lat$t <- 1
 t.lng$t <- 1
 
+# Create GridLimit, define the 4 bounds of each rectangle in Grid System
 GridLimit <- inner_join(t.lat, t.lng) %>% 
   tbl_df %>%
   mutate(Zone = paste0(Row,"-",Col))
@@ -40,20 +68,9 @@ rm(t.lat, t.lng)
 ##########
 ### Step 2: find upper, down, left, right limit for each Entr-Sor possible
 ##########
-
 ##########
-### 2.1 get Gares Lng & Lat
+### 2.1 find relationship: Entr, Sor -> U,D,L,R (four limit for each Entr-Sor) 
 ##########
-## TODO: update Ref_gares.csv, many missing Lng & Lat, wrong Code
-gares <- read.table("Ref_gares.csv",sep = ",", header=TRUE) %>% 
-  tbl_df %>%
-  transmute(Ste = Societe,
-            Cde,Lng, Lat)
-
-##########
-### 2.2 find relationship: Entr, Sor -> U,D,L,R (four limit for each Entr-Sor) 
-##########
-sens = read.table("Ref_sens.csv",sep = ";", header=TRUE) %>% tbl_df
 temp <- sens %>% select(Entr, Sor) %>% distinct %>% tbl_df
 t <- gares %>% transmute(Entr = Cde, Elng = Lng, Elat = Lat)
 temp <- left_join(temp, t)
@@ -94,8 +111,9 @@ temp1 <- temp1 %>%
 rm(t1,t2,t3,temp, gares, sens)
 
 ##########
-### 2.3 create ref table: Entr-Sor to Grid
+### 2.2 create ref table: Entr-Sor to Grid
 ##########
+# Create reference table from OD to Grid
 ODtoGrid <- inner_join(GridLimit,temp1, by = "t") %>%
   filter(u > D,
          d < U,
@@ -113,8 +131,8 @@ GridLimit <- GridLimit %>%
          Row,Col,
          u,d,l,r)
 
-write.table(GridLimit, "Ref_GridLimit.csv",sep=";",row.name=FALSE,quote=FALSE)
-write.table(ODtoGrid, "Ref_ODtoGrid.csv",sep=";",row.name=FALSE,quote=FALSE)
+write.table(GridLimit, "Reference/Ref_GridLimit.csv",sep=";",row.name=FALSE,quote=FALSE)
+write.table(ODtoGrid, "Reference/Ref_ODtoGrid.csv",sep=";",row.name=FALSE,quote=FALSE)
 
 # rm(GridLimit,ODtoGrid)
 rm(zoneStep,gridStep)
