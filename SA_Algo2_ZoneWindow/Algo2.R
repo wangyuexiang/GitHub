@@ -144,6 +144,6 @@ rm(temp,ODtoGrid,GridLimit)
 inputName <-  read.table(text = filename.Input, sep=".")$V1 %>% as.character
 time <- Sys.time() %>% format(format = "%Y%m%d_%H%M")
 
-write.table(result, paste0("Output/",inputName,"_V",time,"_Window.csv"),sep=";",row.name=FALSE,quote=FALSE)
-write.table(trxZoneActive, paste0("Output/",inputName,"_V",time,"_Zone.csv"),sep=";",row.name=FALSE,quote=FALSE)
+write.table(result, paste0("Output/Algo2_",inputName,"_V",time,"_Window.csv"),sep=";",row.name=FALSE,quote=FALSE)
+write.table(trxZoneActive, paste0("Output/Algo2_",inputName,"_V",time,"_Zone.csv"),sep=";",row.name=FALSE,quote=FALSE)
 rm(inputName,time)

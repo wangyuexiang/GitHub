@@ -1,7 +1,20 @@
-##########
-### load package
-##########
-# library(dplyr)
+####################
+# Alog1_DataPreparation
+####################
+# Run Algo2_ZoneWindow
+#
+# Input: 
+#   Args (from Parameter/Param_Algo2_main.csv :
+#     filename.Input: 
+#     limit.ZonePer
+#     limit.ActiveDay
+#     day.start
+#     day.end
+#   Input:
+#     transaction history: Input/filename.Input
+# Output:
+#   result of model Zone Window: Reference/filename.Output
+####################
 
 ##########
 ### input
@@ -14,7 +27,7 @@ trx <- input %>%
                   ifelse(Voie <=20, 1,2),
                   0))
 
-trx <- trx %>% filter(Date >= start)
+trx <- trx %>% filter(Date >= day.start)
 
 ##########
 ### ID segmentation
@@ -39,7 +52,7 @@ if(nrow(ID) > 0) {
   #   F: always active
   #   T: no trx after 30 days before end date
   ID$Inactive <- FALSE
-  ID$Inactive[ID$Dmax < end - 30] <- TRUE
+  ID$Inactive[ID$Dmax < day.end - 30] <- TRUE
   
   ### remove small and inactive
   ID <- ID %>%
@@ -49,7 +62,6 @@ if(nrow(ID) > 0) {
   trx <- inner_join(trx, ID, by = "ID")
   rm(ID)
 }
-
 
 ##########
 ### ID.OD segmentation
@@ -75,7 +87,7 @@ if(nrow(t) > 0){
   #   F: always active
   #   T: no trx after 30 days before end date
   t$Inactive <- FALSE
-  t$Inactive[t$Dmax < end - 30] <- TRUE
+  t$Inactive[t$Dmax < day.end - 30] <- TRUE
   
   t <- t %>%
     filter(Small == FALSE & Inactive == FALSE) %>%
@@ -88,7 +100,6 @@ if(nrow(t) > 0){
 ##########
 ### add sens & create OD
 ##########
-sens = read.table("Ref_sens.csv",sep = ";", header=TRUE)
 trx <- trx %>% mutate(Voie = ifelse(Entr == 0, Voie, 0))
 trx <- trx %>% left_join(sens)
 trx <- trx %>% mutate(SensEntr = ifelse(is.na(SensEntr), 0, SensEntr),
