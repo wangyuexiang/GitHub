@@ -1,5 +1,5 @@
 ####################
-# Alog2_main
+# Alog2
 ####################
 # Run Algo2_ZoneWindow
 #

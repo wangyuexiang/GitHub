@@ -1,13 +1,29 @@
-### load package
+####################
+# Alog1
+####################
+# Run Algo1_TimeSpace
+#
+# Input: 
+#   Args (from Parameter/Param_Algo2_main.csv :
+#     filename.Input
+#     day.start
+#     day.end
+#   Input:
+#     transaction history: Input/filename.Input
+# Output:
+#   result of model Zone Window: Reference/filename.Output
+####################
+
+##########
+### Step 0: Prepare
+##########
+# load package
 library(dplyr)
 library(cluster)
 
-### get arguments 
+# get arguments 
 args <- commandArgs(trailingOnly = TRUE)
-# Command Line example
-# cd C:\Users\wangy2\Documents\GitHub\SA_Algo1_TimeSpace
-# rscript main.r App.csv Output.csv 2015-5-1 2015-8-31 
-# rscript main.r VIP.csv Output.csv 2015-5-1 2015-8-31 
+
 
 InputFileName <- args[1]
 OutputFileName <- args[2]
