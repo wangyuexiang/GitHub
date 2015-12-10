@@ -29,3 +29,23 @@ t1 <- left_join(result.ZW,ref)
 t2 <- count(t,Nom) %>% rename(nTS = n)
 t3 <- count(t1,Nom) %>% rename(nZW = n)
 t4 <- full_join(t2,t3)
+
+##########
+### combine Algo 1 & 2
+##########
+t <- trx
+
+### find trx in result.TS
+t1 <- result.TS %>% transmute(OD =as.character(OD))
+t2 <- read.table(text = t1$OD,sep="-") %>% tbl_df %>%
+  transmute(Entr = V1, Sor = V2)
+t1 <- cbind(result.TS,t2) %>% tbl_df
+
+t3 <- inner_join(t,t1)
+t4 <- t3 %>% filter(TimeSor <= Tmax & TimeSor >= Tmin)
+t5 <- t4 %>% select(Ste: Sens) %>% distinct
+
+t5$TS <- TRUE
+
+trx.Algo2 <- left_join(t,t5) %>% filter(is.na(TS)) %>% select(-TS)
+rm(t1,t2,t3,t4,t5)
