@@ -912,6 +912,7 @@ t3 <- t2 %>%
 k = c(3967,3710,3465,2598)
 k = c(1003,1004,1001,1000)
 k = c(10:14)
+k = c(1:4)
   
 ggplot(t.Active %>% filter(ID %in% k)) + 
   geom_tile(aes(l,d, alpha = Per)) + 
@@ -930,3 +931,10 @@ t <- trx %>%
   group_by(ID) %>%
   arrange(desc(noOD)) %>%
   mutate(Ord = row_number())
+
+### viz Grid system
+ggplot(t.grid) + 
+  geom_tile(aes(l,d,color = "Grid"), alpha = 0) + 
+  xlim(c(-2,8)) + ylim(c(42,49)) + 
+  geom_point(data= gares, aes(Lng, Lat, col = as.factor(Societe)))
+

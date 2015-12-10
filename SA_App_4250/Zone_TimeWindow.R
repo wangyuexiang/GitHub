@@ -12,7 +12,9 @@ trx.time <- transaction2 %>%
   ) %>%
   inner_join(JF)
 
-t <- trx.time %>% filter(as.numeric(ID) < 9)
+
+t <- trx.time %>% filter(as.numeric(ID) < 5)
+t <- trx.time %>% filter(ID %in% k)
 t1 <- t %>% group_by(ID,DOW,H) %>% summarise(freq = n())
 t2 <- t %>% group_by(ID,DOW,H_2) %>% summarise(freq = n())
 ggplot(t1) + geom_tile(aes(DOW,H, fill = freq)) + facet_wrap(~ID)

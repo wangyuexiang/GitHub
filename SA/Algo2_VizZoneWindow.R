@@ -19,7 +19,9 @@ library(ggplot2)
 ##########
 GridLimit <- read.table("Reference/Ref_GridLimit.csv", header = T, sep = ";") %>% tbl_df
 gares <- read.table("Reference/Ref_gares.csv", header = T, sep = ";") %>% tbl_df 
- 
+
+result.TS <- read.table("Output/Algo1_VIP_v20151210_V20151210_1703.csv", header = T, sep = ";") %>% 
+  tbl_df %>% mutate(ID = as.character(ID))
 ##########
 ### Zone
 ##########

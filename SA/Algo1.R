@@ -95,11 +95,12 @@ rm(result.model.decade.0, test.model.0, ind.model.0,
    result.model.decade.1, test.model.1, ind.model.1,
    result.model.decade.2, test.model.2, ind.model.2)
 
-result.final <- inner_join(result, Ind.final) %>%
+result.TS <- inner_join(result, Ind.final) %>%
   arrange (ID, desc(noPsg), Tmin) %>%
   select(-Model) %>%
   mutate(ID = as.character(as.numeric(ID))) %>%
-  filter(noPsg > 5)
+  filter(noPsg > 5) %>%
+  distinct
 
 rm(Ind, Ind.final, models.units)
 rm(ID.list,
@@ -112,10 +113,11 @@ rm(ID.list,
 inputName <-  read.table(text = filename.Input, sep=".")$V1 %>% as.character
 time <- Sys.time() %>% format(format = "%Y%m%d_%H%M")
 
-write.table(result.final, 
+write.table(result.TS, 
             paste0("Output/Algo1_",inputName,"_V",time,".csv"),
             sep=";",row.name=FALSE,quote=FALSE)
 
 rm(inputName,time)
 
 rm(list = ls())
+
