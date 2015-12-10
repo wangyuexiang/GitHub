@@ -11,7 +11,7 @@
 #   Input:
 #     transaction history: Input/filename.Input
 # Output:
-#   result of model Zone Window: Reference/filename.Output
+#   result of model Time Space: Reference/Algo1_ + Input + V + time
 ####################
 
 ##########
