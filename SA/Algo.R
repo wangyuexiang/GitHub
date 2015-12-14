@@ -28,9 +28,20 @@
 library(dplyr)
 library(cluster)
 
-# get arguments 
-args <- read.table("Parameters/Param_Algo.csv",sep = ";", header=TRUE) 
+# define Repository to get Parameters
+ParamRepo <- NA
+Args <- commandArgs(trailingOnly = TRUE)
+ParamRepo <- Args[1]
 
+if(is.na(ParamRepo)){
+  # get arguments 
+  args <- read.table("Parameters/Param_Algo.csv",sep = ";", header=TRUE) 
+} else {
+  # get arguments 
+  args <- read.table(paste0(ParamRepo,"/Param_Algo.csv"),sep = ";", header=TRUE) 
+}
+
+# attribute args
 filename.Input <- as.character(args[1,1])
 limit.ZonePer <- args[1,2]
 limit.ActiveDay <- args[1,3]
@@ -39,6 +50,7 @@ day.start <- as.Date(as.character(args[1,4]))
 day.end <- as.Date(as.character(args[1,5]))
 
 rm(args)
+rm(Args)
 
 # get Reference data from Reference/
 # get sens

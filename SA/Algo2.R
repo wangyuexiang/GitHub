@@ -24,8 +24,18 @@
 # load package
 library(dplyr)
 
-# get Parameter from Parameter/Param_Algo2
-args <- read.table("Parameters/Param_Algo2.csv",sep = ";", header=TRUE) 
+# define Repository to get Parameters
+ParamRepo <- NA
+Args <- commandArgs(trailingOnly = TRUE)
+ParamRepo <- Args[1]
+
+if(is.na(ParamRepo)){
+  # get arguments 
+  args <- read.table("Parameters/Param_Algo2.csv",sep = ";", header=TRUE) 
+} else {
+  # get arguments 
+  args <- read.table(paste0(ParamRepo,"/Param_Algo2.csv"),sep = ";", header=TRUE) 
+}
 
 filename.Input <- as.character(args[1,1])
 limit.ZonePer <- args[1,2]
@@ -35,6 +45,7 @@ day.start <- as.Date(as.character(args[1,4]))
 day.end <- as.Date(as.character(args[1,5]))
 
 rm(args)
+rm(Args)
 
 # input 
 input <- read.table(paste0("Input/",filename.Input), header = T, sep = ";") %>% tbl_df 

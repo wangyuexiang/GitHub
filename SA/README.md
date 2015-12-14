@@ -9,6 +9,7 @@
 		- *VIP.csv*: history of beta-testers
 	- Output
 	- Parameters
+		- *Param_Algo.csv*
 		- *Param_Algo1.csv*
 		- *Param_Algo2.csv*
 		- *Param_Algo2_makeGrid.csv*

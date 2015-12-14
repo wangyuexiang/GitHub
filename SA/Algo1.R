@@ -21,14 +21,25 @@
 library(dplyr)
 library(cluster)
 
-# get arguments 
-args <- read.table("Parameters/Param_Algo1.csv",sep = ";", header=TRUE) 
+# define Repository to get Parameters
+ParamRepo <- NA
+Args <- commandArgs(trailingOnly = TRUE)
+ParamRepo <- Args[1]
+
+if(is.na(ParamRepo)){
+  # get arguments 
+  args <- read.table("Parameters/Param_Algo1.csv",sep = ";", header=TRUE) 
+} else {
+  # get arguments 
+  args <- read.table(paste0(ParamRepo,"/Param_Algo1.csv"),sep = ";", header=TRUE) 
+}
 
 filename.Input <- as.character(args[1,1])
 day.start <- as.Date(as.character(args[1,2]))
 day.end <- as.Date(as.character(args[1,3]))
 
 rm(args)
+rm(Args)
 
 # get Reference data from Reference/
 # get sens
