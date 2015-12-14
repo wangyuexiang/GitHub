@@ -108,10 +108,10 @@ t <- t %>% group_by(ID)
 # Get 4 points
 #   NW  NE (NorthWest, NorthEast)
 #   SW  SE (SouthWest, SouthEast)
-t1 <- t %>% arrange(Row, Col)             %>% select(Row, Col) %>% slice(1) %>% rename(R_NW = Row, C_NW = Col)
-t2 <- t %>% arrange(Row, desc(Col))       %>% select(Row, Col) %>% slice(1) %>% rename(R_NE = Row, C_NE = Col)
-t3 <- t %>% arrange(desc(Row), Col)       %>% select(Row, Col) %>% slice(1) %>% rename(R_SW = Row, C_SW = Col)
-t4 <- t %>% arrange(desc(Row), desc(Col)) %>% select(Row, Col) %>% slice(1) %>% rename(R_SE = Row, C_SE = Col)
+t1 <- t %>% arrange(Row, Col)             %>% select(Row, Col)  %>% rename(R_NW = Row, C_NW = Col) %>% slice(1) %>% ungroup
+t2 <- t %>% arrange(Row, desc(Col))       %>% select(Row, Col) %>% rename(R_NE = Row, C_NE = Col) %>% slice(1) %>% ungroup
+t3 <- t %>% arrange(desc(Row), Col)       %>% select(Row, Col) %>% rename(R_SW = Row, C_SW = Col) %>% slice(1) %>% ungroup
+t4 <- t %>% arrange(desc(Row), desc(Col)) %>% select(Row, Col) %>% rename(R_SE = Row, C_SE = Col) %>% slice(1) %>% ungroup
 
 temp <- inner_join(t1, t2) %>% inner_join(t3) %>% inner_join(t4)
 rm(t1,t2,t3,t4)

@@ -37,7 +37,13 @@
 			- Zone frequently visited by each ID
 			- Window with high active visits
 3. Parameters
-  - For Algo1: *Param_Algo1.csv*
+	- For Algo: *Param_Algo.csv*
+		- InputFileName
+		- Start Date
+		- End Date 
+		- limit.ActiveDay
+		- limit.Zone
+	- For Algo1: *Param_Algo1.csv*
 	  - InputFileName
 		- Start Date
 		- End Date
@@ -51,5 +57,6 @@
 		- gridStep
 		- zoneStep
 4. Running Command example
+	*rscript Algo.r*
 	*rscript Algo1.r*
 	*rscript Algo2.r*
