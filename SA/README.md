@@ -1,3 +1,13 @@
+Ref_sens.csv: sens pour les tragets ESCOTA
+Ref_gares.csv: update tous les gares
+
+Ref_GridLimit.csv: remplacer avec GeoHash
+Ref_ODtoGrid.csv: remplacer avec GeoHash
+
+Algo.R: a modifier quand on utlise GeoHash
+Algo2.R: a modifier quand on utlise GeoHash
+
+###########
 1. Files
 2. Data Structure
 3. Parameters
@@ -20,10 +30,11 @@
 		- *Ref_GridLimit.csv*
 		- *Ref_ODtoGrid.csv*
 	- Rscript
+		-	*Algo.R*: main script for Algo, combine Algo1, Algo2
+		-	*Algo1.R*: main script for Algo1_TimeSpace
 	  - *Algo1_DataPreparation.R*: prepare the data from input file to usable R object
 		-	*Algo1_Functions.R*: all the functions
-		-	*Algo1.R*: main script for Algo1_TimeSpace
-		-	*mainWithoutArgs.R*: pour tourner dans RStudio
+		-	*Algo2.R*: main script for Algo2_ZoneWindow
 2. Data Structure
   - Input file:
 	  - EVA
