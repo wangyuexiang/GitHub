@@ -303,3 +303,17 @@ t1 <- sens %>% filter(Entr == 0) %>% transmute(Entr, Sor, Sens = SensSor) %>% di
 trajetSO <- inner_join(t,t1) %>% mutate(OD = paste0(Entr,"-",Sor,"-",Sens))
 write.table(trajetSO,"trajetSO.csv",sep=";",row.name=FALSE,quote=FALSE)
 rm(t,t1)
+
+
+##########
+### gares
+##########
+t0 <- read.table("Ref_gares_v0.csv", sep = ";", header = TRUE) %>% tbl_df
+t1 <- read.table("Ref_gares_v1.csv", sep = ";", header = TRUE,quote = "") %>% tbl_df %>%
+  mutate(Lat = as.numeric(Lat),
+         Lng = as.numeric(Lng)
+         )
+
+ggplot() +
+  geom_point(data = t0, aes(Lng, Lat, col = "New", size = 2, alpha = .5)) +
+  geom_point(data = t1, aes(Lng, Lat, col = "Old", alpha = .5)) 
