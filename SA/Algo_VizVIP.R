@@ -22,10 +22,11 @@ library(ggplot2)
 
 # import reference
 GridLimit <- read.table("Reference/Ref_GridLimit.csv", header = T, sep = ";") %>% tbl_df
-gares <- read.table("Reference/Ref_gares.csv", header = T, sep = ";") %>% tbl_df 
+gares <- read.table("Reference/Ref_gares.csv", sep = ";", header = TRUE, quote = "") %>% tbl_df
 ref <- read.table("Reference/Ref_VIPn.csv", header = T, sep = ";") %>%
   tbl_df %>% mutate(ID = as.character(ID))
 
+# TODO: remove irrelavant ID == 980022310004
 ##########
 ### viz Result.TS
 ##########
@@ -53,20 +54,23 @@ rm(t,t1,t2)
 # viz
 ggplot(viz.TS) +
   geom_segment(aes(x=Elng,xend=Slng,
-                   y=Elat,yend=Slat, alpha = noPsg )
-               ) +
+                   y=Elat,yend=Slat, alpha = noPsg )) +
   facet_wrap(~Nom)
 
 ##########
 ### viz Result.ZW
 ##########
+# adjust step
+t <- GridLimit %>% slice(1)
+gridStep <- t$u - t$d
+
 # Zone
 t <- left_join(trxZoneActive, ref)
 viz.ZW <- t %>% inner_join(GridLimit)
 
 # Display
 ggplot(viz.ZW) + 
-  geom_tile(aes(r,u, alpha = Per)) +
+  geom_tile(aes(l + gridStep/2,d + gridStep/2, alpha = Per)) +
   facet_wrap(~Nom)
 
 # Window
@@ -78,38 +82,91 @@ ggplot(t1) + geom_tile(aes(DOW,H, fill = freq)) + facet_wrap(~Nom)
 ##########
 ### viz both
 ##########
-
+# for all VIP 
 ggplot() +
   geom_segment(data = viz.TS, 
                aes(x=Elng,xend=Slng,
-                   y=Elat,yend=Slat, alpha = noPsg )
-  ) +
-  geom_tile(data = viz.ZW, aes(l,d, alpha = Per)) +
+                   y=Elat,yend=Slat, alpha = noPsg )) +
+  geom_tile(data = viz.ZW, 
+            aes(l + gridStep/2,d + gridStep/2, alpha = Per)) +
   facet_wrap(~Nom)
 
 # add gares
 ggplot() +
+  geom_tile(data = viz.ZW, 
+            aes(l + gridStep/2, d + gridStep/2, alpha = Per)) +  
+  geom_point(data= gares %>% filter(Societe != 5), 
+             aes(Lng, Lat, col = as.factor(Societe)),
+             alpha = .5) +
   geom_segment(data = viz.TS, 
                aes(x=Elng,xend=Slng,
-                   y=Elat,yend=Slat
-                   ),
+                   y=Elat,yend=Slat),
                colour = "red",
                size = 2
-               ) +
+  ) +
   geom_point(data = viz.TS %>% filter(Entr == 0), 
+             aes(Slng,Slat),
+             colour = "red",
+             size = 4
+  ) +
+  facet_wrap(~Nom)  +
+  xlim(1,8) + ylim(42,45)
+
+
+# individual
+k = 50
+# for every one
+for(k in 1:nrow(ref)){
+  t <- ggplot() +
+    geom_tile(data = viz.ZW %>% filter(N == k), 
+              aes(r,u, alpha = Per)
+    ) +  
+    geom_point(data= gares %>% filter(Societe != 5), 
+               aes(Lng, Lat, 
+                   col = as.factor(Societe))) +
+    geom_segment(data = viz.TS %>% filter(N == k), 
+                 aes(x=Elng,xend=Slng,
+                     y=Elat,yend=Slat
+                 ),
+                 colour = "red",
+                 size = 2
+    ) +
+    geom_point(data = viz.TS %>% filter(Entr == 0, N == k), 
                aes(Slng,
                    Slat
                ),
                colour = "red",
-               size = 3
-  ) +
-  geom_tile(data = viz.ZW, 
+               size = 4
+    ) +
+    facet_wrap(~Nom) 
+  
+  ggsave(filename = paste(ref$Nom[ref$N == k], '.jpg', sep=""),
+         plot = t)
+}
+
+
+
+t <- ggplot() +
+  geom_tile(data = viz.ZW %>% filter(N == k), 
             aes(r,u, alpha = Per)
-            ) +
-  facet_wrap(~Nom) +
-  geom_point(data= gares %>% filter(Societe != 5,
-                                    Lat < 45,
-                                    Lng >3), 
+  ) 
+t1 <- t+  geom_point(data= gares %>% filter(Societe != 5), 
              aes(Lng, Lat, 
-                 col = as.factor(Societe),
-                 alpha = .2))
+                 col = as.factor(Societe))) +
+  geom_segment(data = viz.TS %>% filter(N == k), 
+               aes(x=Elng,xend=Slng,
+                   y=Elat,yend=Slat
+               ),
+               colour = "red",
+               size = 2
+  ) +
+  geom_point(data = viz.TS %>% filter(Entr == 0, N == k), 
+             aes(Slng,
+                 Slat
+             ),
+             colour = "red",
+             size = 4
+  ) +
+  facet_wrap(~Nom) 
+
+

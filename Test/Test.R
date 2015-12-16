@@ -17,3 +17,20 @@ gare.essence <- t
 
 ggplot(gare.essence) + geom_point(aes(Lng,Lat, col = Region))
 ggplot(gare.essence) + geom_point(aes(Lng,Lat, col = Region)) + facet_wrap(~Enseigne)
+
+
+##########
+### geom_tile: GridLimit
+##########
+ggplot(GridLimit) + geom_tile(aes(l,d,fill = d))
+t <- GridLimit %>% mutate(Test = (Col == 20))
+ggplot(t) + geom_tile(aes(l,d,fill = Test))
+ggplot(t) + geom_tile(aes(l,u,fill = Test))
+ggplot(t) + geom_raster(aes(l + .25,u - .25,fill = Test))
+
+ggplot(t %>% filter(Col == 1)) + geom_tile(aes(l,u,fill = Zone))
+
+ggplot(t) + 
+  geom_tile(aes(l,d, fill = "ld", alpha = .5)) +
+  geom_tile(aes(l,u, fill = "lu", alpha = .5))
+

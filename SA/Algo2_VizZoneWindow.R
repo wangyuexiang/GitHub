@@ -25,13 +25,16 @@ result.TS <- read.table("Output/Algo1_VIP_v20151210_V20151210_1703.csv", header 
 ##########
 ### Zone
 ##########
+t <- GridLimit %>% slice(1)
+gridStep <- t$u - t$d
+
 # Connect AcitveZone with GridLimit
 t <- trxZoneActive %>% inner_join(GridLimit)
 # Get the first 9 users
 k <- (t %>% select(ID) %>% distinct %>% slice(1:16))$ID
 # Display
 ggplot(t %>% filter(ID %in% k)) + 
-  geom_tile(aes(l,d, alpha = Per)) + 
+  geom_tile(aes(l + gridStep/2,d + gridStep/2, alpha = Per)) + 
   xlim(c(-2,8)) + ylim(c(42,49)) + 
   facet_wrap(~ID) +
   geom_point(data= gares, aes(Lng, Lat, col = as.factor(Societe)))

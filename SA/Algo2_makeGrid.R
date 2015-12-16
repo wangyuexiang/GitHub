@@ -29,7 +29,7 @@ rm(args)
 
 # get Reference data from Reference/
 ## TODO: update Ref_gares.csv, many missing Lng & Lat, wrong Code
-gares <- read.table("Reference/Ref_gares.csv",sep = ";", header=TRUE) %>% 
+gares <- read.table("Reference/Ref_gares.csv", sep = ";", header = TRUE, quote = "") %>%
   tbl_df %>%
   transmute(Ste = Societe,
             Cde,Lng, Lat)
