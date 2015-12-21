@@ -131,4 +131,3 @@ write.table(result.TS,
 rm(inputName,time)
 
 rm(list = ls())
-

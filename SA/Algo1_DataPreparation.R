@@ -17,19 +17,6 @@
 ####################
 
 ##########
-### input
-##########
-trx <- input %>%
-  mutate(
-    ID = as.character(Badge * 100000 + Porteur),
-    Date = as.Date(as.character(Date)),
-    Sens = ifelse(Entr == 0,
-                  ifelse(Voie <=20, 1,2),
-                  0))
-
-trx <- trx %>% filter(Date >= day.start)
-
-##########
 ### ID segmentation
 ##########
 ID <- trx %>% 
@@ -96,16 +83,3 @@ if(nrow(t) > 0){
   trx <- inner_join(trx,t)
   rm(t)
 }
-
-##########
-### add sens & create OD
-##########
-trx <- trx %>% mutate(Voie = ifelse(Entr == 0, Voie, 0))
-trx <- trx %>% left_join(sens)
-trx <- trx %>% mutate(SensEntr = ifelse(is.na(SensEntr), 0, SensEntr),
-                      SensSor = ifelse(is.na(SensSor), 0, SensSor))
-rm(sens)
-trx <- trx %>% mutate(OD = paste0(Entr,"-",Sor,"-",SensEntr,"-",SensSor))
-
-output <- trx
-rm(trx)

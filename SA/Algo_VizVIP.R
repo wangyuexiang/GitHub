@@ -112,61 +112,48 @@ ggplot() +
   facet_wrap(~Nom)  +
   xlim(1,8) + ylim(42,45)
 
-
-# individual
-k = 50
 # for every one
 for(k in 1:nrow(ref)){
-  t <- ggplot() +
-    geom_tile(data = viz.ZW %>% filter(N == k), 
-              aes(r,u, alpha = Per)
-    ) +  
-    geom_point(data= gares %>% filter(Societe != 5), 
-               aes(Lng, Lat, 
-                   col = as.factor(Societe))) +
-    geom_segment(data = viz.TS %>% filter(N == k), 
-                 aes(x=Elng,xend=Slng,
-                     y=Elat,yend=Slat
-                 ),
-                 colour = "red",
-                 size = 2
-    ) +
-    geom_point(data = viz.TS %>% filter(Entr == 0, N == k), 
-               aes(Slng,
-                   Slat
-               ),
-               colour = "red",
-               size = 4
-    ) +
-    facet_wrap(~Nom) 
-  
-  ggsave(filename = paste(ref$Nom[ref$N == k], '.jpg', sep=""),
+  t.ZW <- viz.ZW %>% filter(N == k)
+  t.TS <- viz.TS %>% filter(N == k)
+  if(nrow(t.ZW) > 0 | nrow(t.TS) > 0){
+    t <- ggplot() + xlim(1,8) + ylim(42,45)
+    if(nrow(t.ZW) > 0) {
+        t <- t + 
+          geom_tile(data = t.ZW,
+                    aes(r,u, alpha = Per)) +
+          geom_point(data= gares %>% filter(Societe != 5), 
+                     aes(Lng, Lat, 
+                         col = as.factor(Societe)))
+      }  
+    if(nrow(t.TS) > 0){
+      t <- t +
+        geom_segment(data = viz.TS %>% filter(N == k), 
+                     aes(x=Elng,xend=Slng,
+                         y=Elat,yend=Slat
+                     ),
+                     colour = "red",
+                     size = 2)
+    }
+    if(nrow(t.TS %>% filter(Entr == 0)) > 0){
+      t <- t +
+        geom_point(data = viz.TS %>% filter(Entr == 0, N == k), 
+                   aes(Slng, Slat),
+                   colour = "red",
+                   size = 4)
+    }
+    t <- t + facet_wrap(~Nom) 
+
+    ggsave(filename = paste(ref$Nom[ref$N == k], '.jpg', sep=""),
          plot = t)
+  }
 }
 
+# prepare TimeWindow
+viz.Window <- left_join(trxZoneActiveH,ref) %>% group_by(Nom,ID,N,DOW,H) %>% summarise(freq = n())
 
 
-t <- ggplot() +
-  geom_tile(data = viz.ZW %>% filter(N == k), 
-            aes(r,u, alpha = Per)
-  ) 
-t1 <- t+  geom_point(data= gares %>% filter(Societe != 5), 
-             aes(Lng, Lat, 
-                 col = as.factor(Societe))) +
-  geom_segment(data = viz.TS %>% filter(N == k), 
-               aes(x=Elng,xend=Slng,
-                   y=Elat,yend=Slat
-               ),
-               colour = "red",
-               size = 2
-  ) +
-  geom_point(data = viz.TS %>% filter(Entr == 0, N == k), 
-             aes(Slng,
-                 Slat
-             ),
-             colour = "red",
-             size = 4
-  ) +
-  facet_wrap(~Nom) 
-
-
+# viz
+k = 8
+viz.TS %>% filter(N ==k)
+ggplot(viz.Window %>% filter(N %in% k)) + geom_tile(aes(DOW,H, fill = freq)) + facet_wrap(~Nom)

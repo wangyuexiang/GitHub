@@ -22,9 +22,8 @@
 ####################
 
 ##########
-### Step 0: Prepare
+### Step 0.1: General Prepare 
 ##########
-print("Log: Step 0")
 # load package
 library(dplyr)
 library(cluster)
@@ -49,6 +48,8 @@ limit.ActiveDay <- args[1,3]
 # limit.WindowFreq <- 5
 day.start <- as.Date(as.character(args[1,4]))
 day.end <- as.Date(as.character(args[1,5]))
+# filter input file
+filter <- args[1,6]
 
 rm(args)
 rm(Args)
@@ -62,7 +63,38 @@ input <- read.table(paste0("Input/",filename.Input), header = T, sep = ";") %>% 
 
 # load function
 source('Algo1_Functions.R', encoding = 'UTF-8')
-source('Algo1_DataPreparation.R', encoding = 'UTF-8')
+
+##########
+### Step 0.2: Prepare input file
+##########
+#   create ID from Badge + Porteur
+#   correct Date type
+#   correct Sens
+trx <- input %>%
+  mutate(
+    ID = as.character(Badge * 100000 + Porteur),
+    Date = as.Date(as.character(Date)),
+    Sens = ifelse(Entr == 0,
+                  ifelse(Voie <=20, 1,2),
+                  0)
+    ) %>%
+  filter(Date >= day.start)
+
+# filter
+if(filter == TRUE){
+  source('Algo1_DataPreparation.R', encoding = 'UTF-8')
+}
+
+# add sens & create OD
+trx <- trx %>% mutate(Voie = ifelse(Entr == 0, Voie, 0))
+trx <- trx %>% left_join(sens)
+trx <- trx %>% mutate(SensEntr = ifelse(is.na(SensEntr), 0, SensEntr),
+                      SensSor = ifelse(is.na(SensSor), 0, SensSor))
+rm(sens)
+trx <- trx %>% mutate(OD = paste0(Entr,"-",Sor,"-",SensEntr,"-",SensSor))
+
+output <- trx
+rm(trx)
 
 # prepare period
 train.period <- data.frame(Date = seq(day.start, day.end - 30, "day"))
@@ -78,7 +110,6 @@ ID.list <- output %>% group_by(ID) %>% summarise()
 ##########
 ### Step 1: train & evaluate model
 ##########
-print("Log: Step 1")
 # find first digit for Model
 models.units <- getModel.units( output )
 
@@ -134,7 +165,6 @@ rm(ID.list,
 ##########
 ### Step 2: Prepare for Algo2 - Get Trx not in Result.TS
 ##########
-print("Log: Step 2")
 t <- input %>%
   mutate(
     ID = as.character(Badge * 100000 + Porteur),
@@ -174,7 +204,6 @@ GridLimit <- read.table("Reference/Ref_GridLimit.csv", header = T, sep = ";") %>
 ##########
 ### Step 3: find Zone frequently visited
 ##########
-print("Log: Step 3")
 # transform Entr-Sor to Zone
 trxZone <- trx %>% inner_join(ODtoGrid)
 
@@ -199,7 +228,6 @@ rm(t1,t2)
 ##########
 ### Step 4: find ID with only one big zone  
 ##########
-print("Log: Step 4")
 # get Grid detailed info for trxZoneActive
 t <- inner_join(trxZoneActive, GridLimit)
 # group them by ID
@@ -226,7 +254,6 @@ temp <- temp %>% mutate(Left = (C_NW == C_SW),
 ##########
 ### Step 5: get Hourheatmap for OneZone
 ##########
-print("Log: Step 5")
 # get ID with only one zone
 t <- temp %>%
   filter(OneZone == TRUE) %>%
@@ -244,8 +271,6 @@ trxZoneActiveH <- t %>%
          H_2 = H - H %% 2
   ) 
 
-print("Step 5.1")
-
 # get time window frequency >= limit.WindowFreq
 result.ZW <- trxZoneActiveH %>% 
   group_by(ID,DOW,H) %>% 
@@ -254,12 +279,9 @@ result.ZW <- trxZoneActiveH %>%
 #   filter(freq >= limit.WindowFreq)
 rm(temp,ODtoGrid,GridLimit)
 
-print("Step 6")
-
 ##########
 ### Step 6: Output in Output/
 ##########
-print("Log: Step 6")
 inputName <-  read.table(text = filename.Input, sep=".")$V1 %>% as.character
 time <- Sys.time() %>% format(format = "%Y%m%d_%H%M")
 
