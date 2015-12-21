@@ -12,15 +12,35 @@
 ##########
 # ??? parameters to be justified or modified
 # GetInd:
-param.ind3 <- 5 # weight of Ind3 in calculation of Ind
 # Model:
-param.min.uniqueTimeSor = 5    #low limit for using clustering
-param.min.noPsg = 5            # low limit for choosing the result
-param.min.nb.for.cluster = 10  # lower than which we won't clustering
-param.max.nb.cluster = 4			 # the max number of cluster we'll test when choosing the number of cluster
-param.model.2 = .3						 # low limit for choosing the ID-OD for Model.2 Space - Time
+
+if(is.na(ParamRepo)){
+  # get arguments 
+  args <- read.table("Parameters/Param_Function.csv",sep = ";", header=TRUE) 
+} else {
+  # get arguments 
+  args <- read.table(paste0(ParamRepo,"/Param_Function.csv"),sep = ";", header=TRUE) 
+}
+
+# param.min.uniqueTimeSor = 5    #low limit for using clustering
+# param.min.noPsg = 5            # low limit for choosing the result
+# param.min.nb.for.cluster = 10  # lower than which we won't clustering
+# param.max.nb.cluster = 4			 # the max number of cluster we'll test when choosing the number of cluster
+# param.model.2 = .3						 # low limit for choosing the ID-OD for Model.2 Space - Time
+# #getModelunits : 
+# param.SDWprnoW <- 0.060
+# param.ind3 <- 5 # weight of Ind3 in calculation of Ind
+
+param.min.uniqueTimeSor = args[1,1]    #low limit for using clustering
+param.min.noPsg = args[1,2]            # low limit for choosing the result
+param.min.nb.for.cluster = args[1,3]   # lower than which we won't clustering
+param.max.nb.cluster = args[1,4]			 # the max number of cluster we'll test when choosing the number of cluster
+param.model.2 = args[1,5]						   # low limit for choosing the ID-OD for Model.2 Space - Time
 #getModelunits : 
-param.SDWprnoW <- 0.060
+param.SDWprnoW <- args[1,6]
+param.ind3 <- args[1,7]                # weight of Ind3 in calculation of Ind
+
+rm(args)
 
 GetNumberDays <- function (period){
   result <- period %>%
