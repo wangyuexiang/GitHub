@@ -13,6 +13,7 @@
 # ??? parameters to be justified or modified
 # GetInd:
 # Model:
+##########
 
 if(is.na(ParamRepo)){
   # get arguments 
@@ -31,14 +32,14 @@ if(is.na(ParamRepo)){
 # param.SDWprnoW <- 0.060
 # param.ind3 <- 5 # weight of Ind3 in calculation of Ind
 
-param.min.uniqueTimeSor = args[1,1]    #low limit for using clustering
-param.min.noPsg = args[1,2]            # low limit for choosing the result
-param.min.nb.for.cluster = args[1,3]   # lower than which we won't clustering
-param.max.nb.cluster = args[1,4]			 # the max number of cluster we'll test when choosing the number of cluster
-param.model.2 = args[1,5]						   # low limit for choosing the ID-OD for Model.2 Space - Time
+param.min.uniqueTimeSor = args$min.uniqueTimeSor[1]    # low limit for using clustering
+param.min.noPsg = args$min.noPsg[1]                    # low limit for choosing the result
+param.min.nb.for.cluster = args$min.nb.for.cluster[1]  # lower than which we won't clustering
+param.max.nb.cluster = args$max.nb.cluster[1]			     # the max number of cluster we'll test when choosing the number of cluster
+param.model.2 = args$model.2[1]						             # low limit for choosing the ID-OD for Model.2 Space - Time
 #getModelunits : 
-param.SDWprnoW <- args[1,6]
-param.ind3 <- args[1,7]                # weight of Ind3 in calculation of Ind
+param.SDWprnoW <- args$SDWprnoW[1]                     # limit for decide model
+param.ind3 <- args$ind3[1]                             # weight of Ind3 in calculation of Ind
 
 rm(args)
 

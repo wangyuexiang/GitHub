@@ -8,8 +8,9 @@
 # Input: 
 #   Args (from Parameter/Param_Algo2_main.csv :
 #     filename.Input: 
-#     limit.ZonePer
-#     limit.ActiveDay
+#			limit.Algo1.noPsg
+#     limit.Algo2.ZonePer
+#     limit.Algo2.ActiveDay
 #     day.start
 #     day.end
 #   Input:
@@ -42,14 +43,15 @@ if(is.na(ParamRepo)){
 }
 
 # attribute args
-filename.Input <- as.character(args[1,1])
-limit.ZonePer <- args[1,2]
-limit.ActiveDay <- args[1,3]
+filename.Input <- as.character(args$filename.Input[1])
+limit.Algo1.noPsg <- args$limit.Algo1.noPsg[1]
+limit.Algo2.ZonePer <- args$limit.Algo2.ZonePer[1]
+limit.Algo2.ActiveDay <- args$limit.Algo2.ActiveDay[1]
 # limit.WindowFreq <- 5
-day.start <- as.Date(as.character(args[1,4]))
-day.end <- as.Date(as.character(args[1,5]))
+day.start <- as.Date(as.character(args$day.start[1]))
+day.end <- as.Date(as.character(args$day.end[1]))
 # filter input file
-filter <- args[1,6]
+filter <- args$filter[1]
 
 rm(args)
 rm(Args)
@@ -154,7 +156,7 @@ result.TS <- inner_join(result, Ind.final) %>%
   arrange (ID, desc(noPsg), Tmin) %>%
   select(-Model) %>%
   mutate(ID = as.character(as.numeric(ID))) %>%
-  filter(noPsg > 5) %>%
+  filter(noPsg > limit.Algo1.noPsg) %>%
   distinct
 
 rm(Ind, Ind.final, models.units)
@@ -217,12 +219,12 @@ t2 <- trxZone %>%
   summarise(Day = n_distinct(Date))
 
 # get ID,Zone with (Zone frequently visited)
-#   - ActiveDay >= limit.ActiveDay 
-#   - Per >= limit.ZonePer
+#   - ActiveDay >= limit.Algo2.ActiveDay 
+#   - Per >= limit.Algo2.ZonePer
 trxZoneActive <- inner_join(t1,t2) %>% 
   mutate(Per = Day / ActiveDay) %>%
-  filter(ActiveDay >= limit.ActiveDay,
-         Per >= limit.ZonePer)
+  filter(ActiveDay >= limit.Algo2.ActiveDay,
+         Per >= limit.Algo2.ZonePer)
 rm(t1,t2)
 
 ##########
@@ -274,7 +276,7 @@ trxZoneActiveH <- t %>%
 # get time window frequency >= limit.WindowFreq
 result.ZW <- trxZoneActiveH %>% 
   group_by(ID,DOW,H) %>% 
-  summarise(freq = n()) 
+  summarise(noPsg = n()) 
 # %>%
 #   filter(freq >= limit.WindowFreq)
 rm(temp,ODtoGrid,GridLimit)

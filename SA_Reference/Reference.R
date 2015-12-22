@@ -17,7 +17,8 @@ JF$Date <- as.Date(as.character(JF$Date))
 save(JF, file="JF.RData")
 
 ##########
-### Old
+### Old_viz_gares: update with Ref_gares.csv
+##########
 # g1 <- read.table("Gares_1.csv", header = T, sep = ";", dec = ",") %>% tbl_df()
 # names(g1) <- c("Ste", "Lib", "Autoroute", "Cde", "Sens", "PK", "Lat", "Lng")
 # 
@@ -31,7 +32,7 @@ save(JF, file="JF.RData")
 # rm(g1, g2, g3)
 
 ##########
-### LngLat
+### Old_LngLat: update with Ref_gares.csv
 ##########
 gares.LngLat <- read.table("garesLngLat.csv", header = T, sep = ",") %>% tbl_df()
 names(gares.LngLat)[1] <- "Ste"
@@ -54,7 +55,7 @@ GetLngLat <- function(transaction) {
 }
 
 ##########
-### ESCOTA - Ref sur les voies 
+### OLD_ESCOTA - Ref sur les voies: replace with new ESCOTA table
 ##########
 ESCOTA.ref <- read.table("Gares_ESCOTA_ref.csv", header = T, sep = ";") %>% tbl_df()
 names(ESCOTA.ref)[2] <- "ES"
@@ -67,7 +68,7 @@ ESCOTA.ref <- ESCOTA.ref %>%
 ESCOTA.temp <- ESCOTA.ref %>% distinct(gare, ES) %>% transmute(gare, ES, Cde = 25006000 + gare)
 
 ##########
-### ESCOTA - Ref sur Tarif
+### OLD_ESCOTA - Ref sur Tarif: replace with new ESCOTA table
 ##########
 ESCOTA.SF <-  read.table("SF_2014.csv", header = T,  sep = ";", dec = ".") %>% tbl_df()
 tSF.E <- ESCOTA.SF %>% distinct(Entr) %>% transmute(gare = Entr, Lib = Entree, ES = "E" , Cde = 25006000 + Entr) 
@@ -240,7 +241,7 @@ ESCOTA.sens.SO <- rbind(t1,t2,t3,t4)
 rm(t,t1,t2,t3,t4, tSO)
 
 ##########
-### ESCOTA.sens
+### OLD_ESCOTA.sens: replace with new ESCOTA table
 ##########
 t1 <- ESCOTA.sens.SF %>%
   select(Entr, Sor, SensEntr, SensSor) %>%
@@ -286,7 +287,7 @@ rm(ASF.sens, ESCOTA.sens)
 rm(t,t3,t5,temp)
 
 ##########
-### Prepare for PlugIt
+### OLD_Prepare for PlugIt
 ##########
 ### SF
 t1 <- sens %>% filter(Entr != 0) %>% select(Entr, Sor)
@@ -306,7 +307,7 @@ rm(t,t1)
 
 
 ##########
-### gares
+### gares update Ref_gares.csv
 ##########
 t0 <- read.table("Ref_gares_v0.csv", sep = ";", header = TRUE) %>% tbl_df
 t1 <- read.table("Ref_gares_v1.csv", sep = ";", header = TRUE,quote = "") %>% tbl_df %>%
