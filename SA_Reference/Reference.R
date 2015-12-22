@@ -307,14 +307,12 @@ rm(t,t1)
 
 
 ##########
-### gares update Ref_gares.csv
+### OLD_gares update Ref_gares.csv
 ##########
 t0 <- read.table("Ref_gares_v0.csv", sep = ";", header = TRUE) %>% tbl_df
-t1 <- read.table("Ref_gares_v1.csv", sep = ";", header = TRUE,quote = "") %>% tbl_df %>%
-  mutate(Lat = as.numeric(Lat),
-         Lng = as.numeric(Lng)
-         )
+t1 <- read.table("Ref_gares_v1.csv", sep = ";", header = TRUE, quote = "") %>% tbl_df 
 
 ggplot() +
   geom_point(data = t0, aes(Lng, Lat, col = "New", size = 2, alpha = .5)) +
   geom_point(data = t1, aes(Lng, Lat, col = "Old", alpha = .5)) 
+	
