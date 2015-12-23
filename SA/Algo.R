@@ -26,6 +26,7 @@
 ### Step 0.1: General Prepare 
 ##########
 # load package
+.libPaths("RPackages")
 library(dplyr)
 library(cluster)
 
@@ -79,8 +80,29 @@ trx <- input %>%
     Sens = ifelse(Entr == 0,
                   ifelse(Voie <=20, 1,2),
                   0)
-    ) %>%
-  filter(Date >= day.start)
+    ) 
+
+# construct segmentation for a summary of each client with TotalNoPsg, TotalNoActiveDay
+segmentation <- trx %>% group_by(ID) %>%
+  summarize(TotalNoPsg= n(),
+            TotalNoActiveDay = n_distinct(Date),
+            TotalNoPsgPerActiveDay = TotalNoPsg / TotalNoActiveDay)
+	
+trx <- trx %>% filter(Date >= day.start & Date <= day.end)
+
+# add NoPsgInPeriod, NoActiveDayInPeriod to segmentation
+t <- trx %>% group_by(ID) %>% 
+  summarise(NoPsgInPeriod = n(),
+            NoActiveDayInPeriod = n_distinct(Date),
+            NoPsgPerActiveDayInPeriod = NoPsgInPeriod / NoActiveDayInPeriod)
+
+segmentation <- left_join(segmentation, t)
+# add NoOD10 to segmentation
+t <- trx %>% group_by(ID, Entr, Sor, Sens) %>% summarise(noPsg = n())
+# TODO: replace 10 with parameter modifiable or proportional to Period
+t1 <- t %>% filter(noPsg >= 10) %>% group_by(ID) %>% summarise(NoOD10 = n())
+segmentation <- left_join(segmentation, t1)
+rm(t,t1)
 
 # filter
 if(filter == TRUE){
@@ -163,6 +185,10 @@ rm(Ind, Ind.final, models.units)
 rm(ID.list,
    test,train,
    test.period,train.period)
+
+# add NoODTS (number of OD in result.TS) to segmentation
+t <- result.TS %>% group_by(ID) %>% summarise(NoODTS = n_distinct(OD))
+segmentation <- left_join(segmentation, t)
 
 ##########
 ### Step 2: Prepare for Algo2 - Get Trx not in Result.TS
@@ -292,5 +318,8 @@ write.table(result.TS,
             sep=";",row.name=FALSE,quote=FALSE)
 write.table(result.ZW, paste0("Output/Algo_",inputName,"_V",time,"_Window.csv"),sep=";",row.name=FALSE,quote=FALSE)
 write.table(trxZoneActive, paste0("Output/Algo_",inputName,"_V",time,"_Zone.csv"),sep=";",row.name=FALSE,quote=FALSE)
+
+segmentation[is.na(segmentation)] <- 0
+write.table(segmentation, paste0("Output/Algo_",inputName,"_V",time,"_Segmentation.csv"),sep=";",row.name=FALSE,quote=FALSE)
 
 rm(inputName,time)
