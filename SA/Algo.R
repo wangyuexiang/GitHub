@@ -32,8 +32,18 @@ library(cluster)
 
 # define Repository to get Parameters
 ParamRepo <- NA
+filename.Input <- NA
 Args <- commandArgs(trailingOnly = TRUE)
-ParamRepo <- Args[1]
+
+if(length(Args) > 1){
+  filename.Input <- Args[1]
+  ParamRepo <- Args[2]
+} else if (length(grep(".csv",Args[1])) > 0){
+  filename.Input <- Args[1]
+} else{
+  filename.Input <- "VIP_v20151210.csv"
+  ParamRepo <- Args[1]
+}
 
 if(is.na(ParamRepo)){
   # get arguments 
@@ -44,7 +54,7 @@ if(is.na(ParamRepo)){
 }
 
 # attribute args
-filename.Input <- as.character(args$filename.Input[1])
+# filename.Input <- as.character(args$filename.Input[1])
 limit.Algo1.noPsg <- args$limit.Algo1.noPsg[1]
 limit.Algo2.ZonePer <- args$limit.Algo2.ZonePer[1]
 limit.Algo2.ActiveDay <- args$limit.Algo2.ActiveDay[1]

@@ -23,6 +23,7 @@ if(is.na(ParamRepo)){
   args <- read.table(paste0(ParamRepo,"/Param_Function.csv"),sep = ";", header=TRUE) 
 }
 
+##########
 # param.min.uniqueTimeSor = 5    #low limit for using clustering
 # param.min.noPsg = 5            # low limit for choosing the result
 # param.min.nb.for.cluster = 10  # lower than which we won't clustering
@@ -32,6 +33,7 @@ if(is.na(ParamRepo)){
 # param.SDWprnoW <- 0.060
 # param.ind3 <- 5 # weight of Ind3 in calculation of Ind
 
+##########
 param.min.uniqueTimeSor = args$min.uniqueTimeSor[1]    # low limit for using clustering
 param.min.noPsg = args$min.noPsg[1]                    # low limit for choosing the result
 param.min.nb.for.cluster = args$min.nb.for.cluster[1]  # lower than which we won't clustering
