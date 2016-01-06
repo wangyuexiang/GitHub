@@ -67,6 +67,8 @@ filter <- args$filter[1]
 rm(args)
 rm(Args)
 
+if(day.start >= day.end) stop("La date debut est apres la date fin!")
+
 # get Reference data from Reference/
 # get sens
 sens = read.table("Reference/Ref_sens.csv",sep = ";", header=TRUE)
@@ -98,7 +100,48 @@ segmentation <- trx %>% group_by(ID) %>%
             TotalNoActiveDay = n_distinct(Date),
             TotalNoPsgPerActiveDay = TotalNoPsg / TotalNoActiveDay)
 	
-trx <- trx %>% filter(Date >= day.start & Date <= day.end)
+trx <- trx %>% filter(Date > day.start & Date <= day.end)
+
+inputName <-  read.table(text = filename.Input, sep=".")$V1 %>% as.character
+if (nrow(trx) == 0) {
+  print(paste0("Aucun trajets sur la periode du ", day.start, " au ", day.end, " !"))
+  
+  result.TS <- data.frame(
+    ID = character(),
+    OD = character(),
+    DOW = integer(),
+    Tmin = double(),
+    Tmax = double(),
+    noPsg = double()
+    )
+  
+  result.ZW <- data.frame(
+    ID = character(),
+    DOW = integer(),
+    H = double(),
+    noPsg = integer()
+    )
+  
+  trxZoneActive <- data.frame(
+    ID = character(),
+    ActiveDay = integer(),
+    Zone = character(),
+    Day = integer(),
+    Per = double()
+  )
+  
+  segmentation <- data.frame(
+    ID = character(),
+    TotalNoPsg = integer(),
+    TotalNoActiveDay = integer(),
+    TotalNoPsgPerActiveDay = double(),
+    NoPsgInPeriod = double(),
+    NoActiveDayInPeriod = double(),
+    NoPsgPerActiveDayInPeriod = double(),
+    NoOD10 = double(),
+    NoODTS = double()
+  )
+} else {
 
 # add NoPsgInPeriod, NoActiveDayInPeriod to segmentation
 t <- trx %>% group_by(ID) %>% 
@@ -115,9 +158,8 @@ segmentation <- left_join(segmentation, t1)
 rm(t,t1)
 
 # filter
-if(filter == TRUE){
-  source('Algo1_DataPreparation.R', encoding = 'UTF-8')
-}
+if(filter == TRUE) source('Algo1_DataPreparation.R', encoding = 'UTF-8')
+if(nrow(trx) == 0) stop("Aucun trajet apres le filtrage, mettez le parametre filter = FALSE!")
 
 # add sens & create OD
 trx <- trx %>% mutate(Voie = ifelse(Entr == 0, Voie, 0))
@@ -129,6 +171,8 @@ trx <- trx %>% mutate(OD = paste0(Entr,"-",Sor,"-",SensEntr,"-",SensSor))
 
 output <- trx
 rm(trx)
+
+if( (day.end - day.start) <= 30 ) stop("La periode est trop courte!")
 
 # prepare period
 train.period <- data.frame(Date = seq(day.start, day.end - 30, "day"))
@@ -316,6 +360,7 @@ result.ZW <- trxZoneActiveH %>%
 # %>%
 #   filter(freq >= limit.WindowFreq)
 rm(temp,ODtoGrid,GridLimit)
+}
 
 ##########
 ### Step 6: Output in Output/
