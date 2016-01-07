@@ -37,6 +37,12 @@ tSF <- t %>%
          To = tolower(as.character(To)))
 write.table(tSF, "Rsens_SF_after.csv",sep=";",row.name=FALSE,quote=FALSE)
 
+tSF <- read.table("Rsens_SF_after_v1.csv", header = T, sep = ";", quote = "", strip.white=TRUE) %>% 
+  tbl_df %>%
+  mutate(AutoE = as.character(AutoE), 
+         AutoS = as.character(AutoS),
+         From = tolower(as.character(From)),
+         To = tolower(as.character(To)))
 ##########
 ### Voie
 ##########
@@ -65,7 +71,7 @@ tDirection <- read.table("Rsens_Direction.csv", header = T, sep = ";", quote = "
 t <- tSF
 t1 <- tDirection %>% transmute(AutoE = Autoroute, From, SensEntr = Sens)
 t2 <- left_join(t,t1)
-t1 <- tDirection %>% transmute(AutoS = Autoroute, From, SensSor = Sens)
+t1 <- tDirection %>% transmute(AutoS = Autoroute, To, SensSor = Sens)
 t2 <- left_join(t2,t1)
 # Sens.SF <- t2 %>% select(Entr,Sor,SensEntr,SensSor)
 Sens.SF <- t2 %>% select(Entr, AutoE, LibE, SensEntr,
@@ -86,8 +92,15 @@ Sens.SO <- rbind(Sens.SO, t3)
 rm(t,t1,t2,t3)
 
 # display problems with SF
-Sens.SF %>% filter(is.na(SensEntr) | is.na(SensSor)) %>% count(AutoE, AutoS, LibE, LibS, SensEntr, SensSor)
+Sens.SF %>% filter(is.na(SensEntr) | is.na(SensSor)) %>% count(AutoE, AutoS, LibE, LibS, SensEntr, SensSor) 
 Sens.SF %>% filter(is.na(SensEntr) | is.na(SensSor)) %>% count(AutoE, AutoS, SensEntr, SensSor)
 # display problems with SO
 Sens.SO %>% count(Cde, Lib, Autoroute, To, Sens) %>% filter(is.na(Sens))
 
+write.table(Sens.SF, "Reference_ESCOTA_SF.csv",sep=";",row.name=FALSE,quote=FALSE)
+write.table(Sens.SO, "Reference_ESCOTA_SO.csv",sep=";",row.name=FALSE,quote=FALSE)
+
+t1 <- Sens.SF %>% select(Entr, Sor, SensEntr, SensSor) %>% mutate(Voie = 0)
+t2 <- Sens.SO %>% transmute(Entr = 0, Sor = Cde, Voie, SensEntr = 0, SensSor = Sens)
+Sens.Escota <- rbind(t1,t2)
+write.table(Sens.Escota, "Reference_ESCOTA.csv",sep=";",row.name=FALSE,quote=FALSE)
