@@ -30,11 +30,13 @@
 library(dplyr)
 library(cluster)
 
-# define Repository to get Parameters
+# define repository to get Parameters
 ParamRepo <- NA
+# define input filename to get History of transactions
 filename.Input <- NA
 Args <- commandArgs(trailingOnly = TRUE)
 
+# get these two parameters from script
 if(length(Args) > 1){
   filename.Input <- Args[1]
   ParamRepo <- Args[2]
@@ -45,6 +47,7 @@ if(length(Args) > 1){
   ParamRepo <- Args[1]
 }
 
+# get the other parameters from the specified repository
 if(is.na(ParamRepo)){
   # get arguments 
   args <- read.table("Parameters/Param_Algo.csv",sep = ";", header=TRUE) 
@@ -54,7 +57,6 @@ if(is.na(ParamRepo)){
 }
 
 # attribute args
-# filename.Input <- as.character(args$filename.Input[1])
 limit.Algo1.noPsg <- args$limit.Algo1.noPsg[1]
 limit.Algo2.ZonePer <- args$limit.Algo2.ZonePer[1]
 limit.Algo2.ActiveDay <- args$limit.Algo2.ActiveDay[1]
