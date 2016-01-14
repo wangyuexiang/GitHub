@@ -77,7 +77,6 @@ t2 <- left_join(t2,t1)
 Sens.SF <- t2 %>% select(Entr, AutoE, LibE, SensEntr,
                          Sor,  AutoS, LibS, SensSor)
 
-
 ##########
 ### get Sens.SO
 ##########
@@ -104,3 +103,42 @@ t1 <- Sens.SF %>% select(Entr, Sor, SensEntr, SensSor) %>% mutate(Voie = 0)
 t2 <- Sens.SO %>% transmute(Entr = 0, Sor = Cde, Voie, SensEntr = 0, SensSor = Sens)
 Sens.Escota <- rbind(t1,t2)
 write.table(Sens.Escota, "Reference_ESCOTA.csv",sep=";",row.name=FALSE,quote=FALSE)
+
+##########
+### compare with sens given by Nicolas
+##########
+t <- Sens.Escota
+t1 <- t %>% filter(Entr == 0) %>% transmute(Entr, Sor, Voie, M1 = "new")
+
+t2 <- sens %>% filter(Sor > 25006000 & Sor < 25007000) %>% filter(Entr == 0) %>% transmute(Entr, Sor, Voie, M2 = "old")
+
+t3 <- left_join(t1,t2)
+t3 %>% count(M1,M2)
+t3 %>% filter(is.na(M2))
+
+# result
+# 25006049 is SO
+# miss SO voie
+
+##########
+### regenerate sens
+##########
+temp <- read.table("export_trjtsns_asf.csv", sep = ";", header = TRUE) %>% tbl_df()
+names(temp) <- c("E1","E2","E3","EA","SensEntr",
+                 "S1","S2","S3","SA","SensSor")
+temp <- temp %>% 
+  transmute(Entr = E1 * 100000 + E2 * 1000 + as.numeric(as.character(E3)), 
+            SensEntr, SteEntr = E2,
+            Sor = S1 * 100000 + S2 * 1000 + as.numeric(as.character(S3)), 
+            SensSor, SteSor = S2) %>%
+  filter(!is.na(Entr) & !is.na(Sor))
+
+temp %>% group_by(SteEntr) %>% summarise(n = n_distinct(Entr))
+temp %>% group_by(SteSor) %>% summarise(n = n_distinct(Sor))
+
+ASF.sens <- temp %>%
+  transmute(Entr, Sor, SensEntr, SensSor, Voie = 0)
+rm(temp)
+
+sens <- rbind(ASF.sens, Sens.Escota)
+write.table(sens, "Ref_sens.csv",sep=";",row.name=FALSE,quote=FALSE)

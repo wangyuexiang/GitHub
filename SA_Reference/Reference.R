@@ -270,10 +270,7 @@ temp <- temp %>%
 temp %>% group_by(SteEntr) %>% summarise(n = n_distinct(Entr))
 temp %>% group_by(SteSor) %>% summarise(n = n_distinct(Sor))
 
-ASF.sens <- temp
-rm(temp)
-
-ASF.sens <- ASF.sens %>%
+ASF.sens <- temp %>%
   transmute(Entr, Sor, SensEntr, SensSor, Voie = 0)
 rm(temp)
 
