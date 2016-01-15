@@ -85,7 +85,7 @@ ggplot(t1) +
 ##########
 # get 1 person
 s <- t0 %>% 
-  select(ID) %>% slice(11) %>% 
+  select(ID) %>% slice(9) %>% 
   inner_join(trxZoneActive) %>%
   left_join(GridLimit %>% select(Zone:Col))
 
@@ -177,8 +177,8 @@ while(j <= i){
   eqTab[equivalence[[j]][2],equivalence[[j]][1]] = TRUE
   j = j + 1
 }
-labelFlag = seq(length = maxLabel,0)
-equaList <- c()
+labelFlag = seq(length = maxLabel,0,0)
+equaList <- list()
 tempList <- c()
 
 for(i in 1:maxLabel){
@@ -187,14 +187,16 @@ for(i in 1:maxLabel){
   tempList <- c(tempList,i)
   j = 1
   while(j < length(tempList) + 1){
-    k = 2
-    while(k <= sum(eqTab[tempList[j], ])){
-      tempList <- c(tempList, k)
-      labelFlag[k] = length(equaList) + 1
+    k = 1
+    while(k <= length(eqTab[tempList[j], ])){
+      if(eqTab[tempList[j],k] & !labelFlag[k]){
+        tempList <- c(tempList, k)
+        labelFlag[k] = length(equaList) + 1
+      }      
       k = k + 1
     }
     j = j + 1
-    equaList <- c(equaList, tempList)
+    equaList[[length(equaList) + 1]] <- tempList
     tempList <- c()
   }
 }
