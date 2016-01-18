@@ -259,20 +259,22 @@ t <- input %>%
   filter(Date >= day.start & Date <= day.end)
 
 # find trx in result.TS
-t1 <- result.TS %>% transmute(OD =as.character(OD))
-t2 <- read.table(text = t1$OD,sep="-") %>% tbl_df %>%
-  transmute(Entr = V1, Sor = V2)
-t1 <- cbind(result.TS,t2) %>% tbl_df
-
-t3 <- inner_join(t,t1)
-t4 <- t3 %>% filter(TimeSor <= Tmax & TimeSor >= Tmin)
-t5 <- t4 %>% select(Ste: Sens) %>% distinct
-
-t5$TS <- TRUE
-trx.Algo2 <- left_join(t,t5) %>% filter(is.na(TS)) %>% select(-TS)
-rm(t1,t2,t3,t4,t5)
-
-trx <- trx.Algo2
+if(nrow(result.TS) > 0){
+  t1 <- result.TS %>% transmute(OD =as.character(OD))
+  t2 <- read.table(text = t1$OD,sep="-") %>% tbl_df %>%
+    transmute(Entr = V1, Sor = V2)
+  t1 <- cbind(result.TS,t2) %>% tbl_df
+  
+  t3 <- inner_join(t,t1)
+  t4 <- t3 %>% filter(TimeSor <= Tmax & TimeSor >= Tmin)
+  t5 <- t4 %>% select(Ste: Sens) %>% distinct
+  
+  t5$TS <- TRUE
+  trx.Algo2 <- left_join(t,t5) %>% filter(is.na(TS)) %>% select(-TS)
+  rm(t1,t2,t3,t4,t5)
+  
+  trx <- trx.Algo2
+} else {trx <- t}
 
 # get Reference data from Reference/
 # run Algo2_makeGrid to have "Ref_ODtoGrid.csv" and "Ref_GridLimit.csv" 

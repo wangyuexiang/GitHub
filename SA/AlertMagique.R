@@ -96,15 +96,16 @@ m0 <- matrix(0, nrow = numRow, ncol = numCol)
 # prepare the matrix
 for(i in 1:nrow(s)) m0[s$Row[i],s$Col[i]] <- 1
 
-
-
-
+# test 1
 m0 <- matrix(0, nrow = 3, ncol = 6)
 m0[c(2,4,5,6,8,9,10,11,14,16,17)] <- 1
+
+# test 2
+m0 <- matrix(0, nrow = 5, ncol = 6)
+m0[c(2,6,7,12,15,18:20,23,28)] <- 1
 m0
 numRow = nrow(m0)
 numCol = ncol(m0)
-
 
 # find all Runs
 NumberOfRuns <- 0;
@@ -200,3 +201,21 @@ for(i in 1:maxLabel){
     tempList <- c()
   }
 }
+
+ZoneLabel <- data.frame(Row = 0, Col = 0, Label = 0)
+for(i in 1:length(rowRun)){
+  temp1 <- data.frame(Row = i, Col = seq(stRun[i],enRun[i],1), Label = runLabels[i])
+  ZoneLabel <- rbind(ZoneLabel,temp1)
+}
+rm(temp1)
+ZoneLabel <- ZoneLabel %>% slice(-1)
+
+temp <- data.frame(Label = 0, Zone = 0)
+for(i in 1:length(equaList)){
+  temp1 <- data.frame(Label = equaList[[i]], Zone = i)
+  temp <- rbind(temp,temp1)
+}
+rm(temp1)
+temp <- temp %>% slice(-1)
+
+ZoneLabel <- left_join(ZoneLabel, temp)
