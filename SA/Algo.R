@@ -58,7 +58,7 @@ if(is.na(ParamRepo)){
 
 # attribute args
 limit.Algo1.noPsg <- args$limit.Algo1.noPsg[1]
-limit.Algo2.ZonePer <- args$limit.Algo2.ZonePer[1]
+limit.Algo2.GridPer <- args$limit.Algo2.GridPer[1]
 limit.Algo2.ActiveDay <- args$limit.Algo2.ActiveDay[1]
 # limit.WindowFreq <- 5
 day.start <- as.Date(as.character(args$day.start[1]))
@@ -127,7 +127,7 @@ if (nrow(trx) == 0) {
   trxZoneActive <- data.frame(
     ID = character(),
     ActiveDay = integer(),
-    Zone = character(),
+    Grid = character(),
     Day = integer(),
     Per = double()
   )
@@ -281,41 +281,41 @@ if(nrow(result.TS) > 0){
 # get ODtoGrid
 ODtoGrid <- read.table("Reference/Ref_ODtoGrid.csv", header = T, sep = ";") %>% 
   tbl_df %>%
-  mutate(Zone = as.character(Zone))
+  mutate(Grid = as.character(Grid))
 # get GridLimit
 GridLimit <- read.table("Reference/Ref_GridLimit.csv", header = T, sep = ";") %>% 
   tbl_df %>%
-  mutate(Zone = as.character(Zone))
+  mutate(Grid = as.character(Grid))
 
 ##########
 ### Step 3: find Zone frequently visited
 ##########
-# transform Entr-Sor to Zone
-trxZone <- trx %>% inner_join(ODtoGrid)
+# transform Entr-Sor to Grid
+trxGrid <- trx %>% inner_join(ODtoGrid)
 
 # find number of active day for each ID
-t1 <- trxZone %>%
+t1 <- trxGrid %>%
   group_by(ID) %>%
   summarise(ActiveDay = n_distinct(Date))
-# find number of active day for each ID,Zone
-t2 <- trxZone %>%
-  group_by(ID, Zone) %>%
+# find number of active day for each ID,Grid
+t2 <- trxGrid %>%
+  group_by(ID, Grid) %>%
   summarise(Day = n_distinct(Date))
 
-# get ID,Zone with (Zone frequently visited)
+# get ID,Grid with (Grid frequently visited)
 #   - ActiveDay >= limit.Algo2.ActiveDay 
-#   - Per >= limit.Algo2.ZonePer
-trxZoneActive <- inner_join(t1,t2) %>% 
+#   - Per >= limit.Algo2.GridPer
+trxGridActive <- inner_join(t1,t2) %>% 
   mutate(Per = Day / ActiveDay) %>%
   filter(ActiveDay >= limit.Algo2.ActiveDay,
-         Per >= limit.Algo2.ZonePer)
+         Per >= limit.Algo2.GridPer)
 rm(t1,t2)
 
 ##########
 ### Step 4: find ID with only one big zone  
 ##########
-# get Grid detailed info for trxZoneActive
-t <- inner_join(trxZoneActive, GridLimit)
+# get Grid detailed info for trxGridActive
+t <- inner_join(trxGridActive, GridLimit)
 # group them by ID
 t <- t %>% group_by(ID)
 
@@ -338,14 +338,14 @@ temp <- temp %>% mutate(Left = (C_NW == C_SW),
                         OneZone = Left && Right)
 
 ##########
-### Step 5: get Hourheatmap for OneZone
+### Step 5: get Hour-heatmap for OneZone
 ##########
 # get ID with only one zone
 t <- temp %>%
   filter(OneZone == TRUE) %>%
   select(ID)
 # get all grids for these ID
-t <- inner_join(t,trxZoneActive) %>% select(ID,Zone) %>% ungroup %>% distinct
+t <- inner_join(t,trxGridActive) %>% select(ID,Zone) %>% ungroup %>% distinct
 # Get all trx passing these grids for these ID
 t <- inner_join(t,trxZone)
 # transform back from Zone to Entr_Sor
@@ -376,7 +376,7 @@ write.table(result.TS,
             paste0("Output/Algo_",inputName,"_V",time,".csv"),
             sep=";",row.name=FALSE,quote=FALSE)
 write.table(result.ZW, paste0("Output/Algo_",inputName,"_V",time,"_Window.csv"),sep=";",row.name=FALSE,quote=FALSE)
-write.table(trxZoneActive, paste0("Output/Algo_",inputName,"_V",time,"_Zone.csv"),sep=";",row.name=FALSE,quote=FALSE)
+write.table(trxGridActive, paste0("Output/Algo_",inputName,"_V",time,"_Zone.csv"),sep=";",row.name=FALSE,quote=FALSE)
 
 segmentation[is.na(segmentation)] <- 0
 write.table(segmentation, paste0("Output/Algo_",inputName,"_V",time,"_Segmentation.csv"),sep=";",row.name=FALSE,quote=FALSE)

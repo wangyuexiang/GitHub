@@ -37,7 +37,6 @@ gares <- read.table("Reference/Ref_gares.csv", sep = ";", header = TRUE, quote =
 sens = read.table("Reference/Ref_sens.csv",sep = ";", header=TRUE) %>% tbl_df
 
 ##########
-### Step 1: create Grid
 ##########
 # divide lattitude by 0.5 degree
 # u = upper
@@ -62,7 +61,7 @@ t.lng$t <- 1
 # Create GridLimit, define the 4 bounds of each rectangle in Grid System
 GridLimit <- inner_join(t.lat, t.lng) %>% 
   tbl_df %>%
-  mutate(Zone = paste0(Row,"-",Col))
+  mutate(Grid = paste0(Row,"-",Col))
 rm(t.lat, t.lng)
 
 ##########
@@ -119,7 +118,7 @@ ODtoGrid <- inner_join(GridLimit,temp1, by = "t") %>%
          d < U,
          r > L,
          l < R) %>%
-  select(Entr,Sor,Zone)
+  select(Entr,Sor,Grid)
 
 rm(temp1, delta.Lng, delta.Lat)
 
@@ -127,7 +126,7 @@ rm(temp1, delta.Lng, delta.Lat)
 ### 3 Output result
 ##########
 GridLimit <- GridLimit %>% 
-  select(Zone,
+  select(Grid,
          Row,Col,
          u,d,l,r)
 

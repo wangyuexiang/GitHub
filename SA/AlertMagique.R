@@ -62,7 +62,7 @@ ggplot(t2) +
 ##########
 # get sample
 t0 <- trxZoneActive %>% group_by(ID) %>% summarise( noZone = n()) %>% arrange(desc(noZone)) %>% ungroup %>% slice(17:32)
-t <- trxZoneActive %>% inner_join(t0 %>% select(ID))
+t <- trxZoneActive %>% inner_join(t0 %>% select(ID)) %>% rename(Grid = Zone)
 
 # viz
 GridLimit <- read.table("Reference/Ref_GridLimit.csv", header = T, sep = ";") %>% tbl_df
@@ -80,32 +80,48 @@ ggplot(t1) +
   facet_wrap(~ID) +
   geom_point(data= gares, aes(Lng, Lat, col = as.factor(Societe)))
 
+
+transaction <- t2
 ##########
 ### Step 3: connect zone  
 ##########
-# get 1 person
-s <- t0 %>% 
-  select(ID) %>% slice(9) %>% 
-  inner_join(trxZoneActive) %>%
-  left_join(GridLimit %>% select(Zone:Col))
+ZoneLabel <- function(transaction) {
+  # For each ID, connect the Grid to make Zone
+  # Args:
+  #	  tansaction:	Entr, Sor, Row, Col, ...
+  # Returns:
+  #	  tansaction:	Entr, Sor, Row, Col, ..., Zone
+
+	if(nrow(transaction) == 0) {
+	# if no transaction, return same data with column Zone
+		print("No frequent Grid!")
+		return(result)
+	}
+  
+  result <- transaction %>% mutate(Zone = 0) %>% slice(0)
+  
+ID.list <- transaction %>% ungroup %>% select(ID) %>% distinct
 
 numRow <- max(GridLimit$Row)
 numCol <- max(GridLimit$Col)
-m0 <- matrix(0, nrow = numRow, ncol = numCol)
 
-# prepare the matrix
-for(i in 1:nrow(s)) m0[s$Row[i],s$Col[i]] <- 1
+# get 1 personl
+for(l in ID.list$ID){
+	tempOnePerson <- transaction %>% filter(ID == l)
+	m <- matrix(0, nrow = numRow, ncol = numCol)
+	
+	# prepare the matrix
+for(i in 1:nrow(tempOnePerson)) m[tempOnePerson$Row[i],tempOnePerson$Col[i]] <- 1
 
-# test 1
-m0 <- matrix(0, nrow = 3, ncol = 6)
-m0[c(2,4,5,6,8,9,10,11,14,16,17)] <- 1
-
-# test 2
-m0 <- matrix(0, nrow = 5, ncol = 6)
-m0[c(2,6,7,12,15,18:20,23,28)] <- 1
-m0
-numRow = nrow(m0)
-numCol = ncol(m0)
+# # test 1
+# m <- matrix(0, nrow = 3, ncol = 6)
+# m[c(2,4,5,6,8,9,10,11,14,16,17)] <- 1
+# # test 2
+# m <- matrix(0, nrow = 5, ncol = 6)
+# m[c(2,6,7,12,15,18:20,23,28)] <- 1
+# m
+# numRow = nrow(m)
+# numCol = ncol(m)
 
 # find all Runs
 NumberOfRuns <- 0;
@@ -114,7 +130,7 @@ stRun <- c()
 enRun <- c()
 
 for(i in 1:numRow){
-  rowData <- m0[i,]
+  rowData <- m[i,]
   if(rowData[1] == 1){
     NumberOfRuns <- NumberOfRuns + 1
     stRun <- c(stRun, 1)
@@ -170,52 +186,73 @@ for(i in 1:NumberOfRuns){
 
 # get equivalent sets
 maxLabel = max(runLabels)
-eqTab = matrix(nrow = maxLabel,ncol = maxLabel, FALSE)
-i = length(equivalence)
-j = 1
-while(j <= i){
-  eqTab[equivalence[[j]][1],equivalence[[j]][2]] = TRUE
-  eqTab[equivalence[[j]][2],equivalence[[j]][1]] = TRUE
-  j = j + 1
-}
-labelFlag = seq(length = maxLabel,0,0)
-equaList <- list()
-tempList <- c()
-
-for(i in 1:maxLabel){
-  if(labelFlag[i]) next
-  labelFlag[i] = length(equaList) + 1
-  tempList <- c(tempList,i)
+if(maxLabel == 1){
+  result <- rbind(result, tempOnePerson %>% mutate(Zone = 1))
+} else{
+  eqTab = matrix(nrow = maxLabel,ncol = maxLabel, FALSE)
+  i = length(equivalence)
   j = 1
-  while(j < length(tempList) + 1){
-    k = 1
-    while(k <= length(eqTab[tempList[j], ])){
-      if(eqTab[tempList[j],k] & !labelFlag[k]){
-        tempList <- c(tempList, k)
-        labelFlag[k] = length(equaList) + 1
-      }      
-      k = k + 1
-    }
+  while(j <= i){
+    eqTab[equivalence[[j]][1],equivalence[[j]][2]] = TRUE
+    eqTab[equivalence[[j]][2],equivalence[[j]][1]] = TRUE
     j = j + 1
-    equaList[[length(equaList) + 1]] <- tempList
-    tempList <- c()
+  }
+  labelFlag = seq(length = maxLabel,0,0)
+  equaList <- list()
+  tempList <- c()
+  
+  for(i in 1:maxLabel){
+    if(labelFlag[i]) next
+    labelFlag[i] = length(equaList) + 1
+    tempList <- c(tempList,i)
+    j = 1
+    while(j < length(tempList) + 1){
+      k = 1
+      while(k <= length(eqTab[tempList[j], ])){
+        if(eqTab[tempList[j],k] & !labelFlag[k]){
+          tempList <- c(tempList, k)
+          labelFlag[k] = length(equaList) + 1
+        }      
+        k = k + 1
+      }
+      j = j + 1
+      equaList[[length(equaList) + 1]] <- tempList
+      tempList <- c()
+    }
+  }
+  
+  zoneLabel <- data.frame(Row = 0, Col = 0, Label = 0)
+  for(i in 1:length(rowRun)){
+    temp1 <- data.frame(Row = rowRun[i], Col = seq(stRun[i],enRun[i],1), Label = runLabels[i])
+    zoneLabel <- rbind(zoneLabel,temp1)
+  }
+  rm(temp1)
+  zoneLabel <- zoneLabel %>% slice(-1)
+  
+  temp <- data.frame(Label = 0, Zone = 0)
+  for(i in 1:length(equaList)){
+    temp1 <- data.frame(Label = equaList[[i]], Zone = i)
+    temp <- rbind(temp,temp1)
+  }
+  rm(temp1)
+  temp <- temp %>% slice(-1)
+  
+  zoneLabel <- left_join(zoneLabel, temp) %>% select(-Label)
+  
+  tempOnePerson <- left_join(tempOnePerson,zoneLabel)
+  result <- rbind(result, tempOnePerson)
+  
   }
 }
-
-ZoneLabel <- data.frame(Row = 0, Col = 0, Label = 0)
-for(i in 1:length(rowRun)){
-  temp1 <- data.frame(Row = i, Col = seq(stRun[i],enRun[i],1), Label = runLabels[i])
-  ZoneLabel <- rbind(ZoneLabel,temp1)
+  return(result)	
 }
-rm(temp1)
-ZoneLabel <- ZoneLabel %>% slice(-1)
 
-temp <- data.frame(Label = 0, Zone = 0)
-for(i in 1:length(equaList)){
-  temp1 <- data.frame(Label = equaList[[i]], Zone = i)
-  temp <- rbind(temp,temp1)
-}
-rm(temp1)
-temp <- temp %>% slice(-1)
+t2 <- t1 %>% select(ID:Col)
+t3 <- ZoneLabel(t2)
 
-ZoneLabel <- left_join(ZoneLabel, temp)
+t4 <- t3 %>% left_join(GridLimit)
+ggplot(t4) + 
+  geom_tile(aes(l + gridStep/2,d + gridStep/2, fill = as.factor(Zone))) + 
+  xlim(c(-2,8)) + ylim(c(42,49)) + 
+  facet_wrap(~ID) +
+  geom_point(data= gares, aes(Lng, Lat, col = as.factor(Societe)))
