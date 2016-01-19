@@ -9,17 +9,21 @@
 #   Args (from Parameter/Param_Algo2_main.csv :
 #     filename.Input: 
 #			limit.Algo1.noPsg
-#     limit.Algo2.ZonePer
+#     limit.Algo2.GridPer
 #     limit.Algo2.ActiveDay
 #     day.start
 #     day.end
 #   Input:
 #     transaction history: Input/filename.Input
 # Output:
-#   result of model Time Space: Reference/Algo1_ + Input + V + time
+#   result of model Time Space: 
+#			without filtrage & with noPsg: Output/Algo1_ + (Input) + V + (time).log
+#			with filtrage & without noPsg: Output/Algo1_ + (Input) + V + (time).csv
 #   result of model Zone Window: 
-#       Reference/Algo2_ + Input + V + time + Zone
-#       Reference/Algo2_ + Input + V + time + Window
+#     reference Zone-Grid: Output/Algo2_ + (Input) + V + (time) + Zone.csv
+#     without filtrage & with noPsg: Output/Algo2_ + (Input) + V + (time) + Window.log
+#     with filtrage & without noPsg for day:   Output/Algo2_ + (Input) + V + (time) + Day.csv
+#     															for night: Output/Algo2_ + (Input) + V + (time) + Night.csv
 ####################
 
 ##########
@@ -50,20 +54,23 @@ if(length(Args) > 1){
 # get the other parameters from the specified repository
 if(is.na(ParamRepo)){
   # get arguments 
+  # args <- read.table("Parameters/Param_Algo.csv",sep = ";", header=TRUE) 
   args <- read.table("Parameters/Param_Algo.csv",sep = ";", header=TRUE) 
 } else {
   # get arguments 
   args <- read.table(paste0(ParamRepo,"/Param_Algo.csv"),sep = ";", header=TRUE) 
 }
 
-# attribute args
+# limit args: under which the OD or Zone are considered unimportant
 limit.Algo1.noPsg <- args$limit.Algo1.noPsg[1]
 limit.Algo2.GridPer <- args$limit.Algo2.GridPer[1]
 limit.Algo2.ActiveDay <- args$limit.Algo2.ActiveDay[1]
+limit.Algo2.Day <- args$limit.Algo2.Day[1]
+limit.Algo2.Night <- args$limit.Algo2.Night[1]
 # limit.WindowFreq <- 5
 day.start <- as.Date(as.character(args$day.start[1]))
 day.end <- as.Date(as.character(args$day.end[1]))
-# filter input file
+# filter input file: decide whether or not ID with less trx will be removed
 filter <- args$filter[1]
 
 rm(args)
@@ -80,6 +87,7 @@ input <- read.table(paste0("Input/",filename.Input), header = T, sep = ";") %>% 
 
 # load function
 source('Algo1_Functions.R', encoding = 'UTF-8')
+source('Algo2_Functions.R', encoding = 'UTF-8')
 
 ##########
 ### Step 0.2: Prepare input file
@@ -117,19 +125,26 @@ if (nrow(trx) == 0) {
     noPsg = double()
     )
   
-  result.ZW <- data.frame(
+  result.TS.before <- result.TS
+  
+  result.ZW.Zone <- data.frame(
     ID = character(),
-    DOW = integer(),
-    H = double(),
-    noPsg = integer()
+    Zone = double(),
+    Grid = character()
     )
   
-  trxZoneActive <- data.frame(
+  result.ZW.Day <- data.frame(
     ID = character(),
-    ActiveDay = integer(),
-    Grid = character(),
+    Zone = double()
+  )
+  
+  result.ZW.Night <- result.ZW.Day
+  
+  result.ZW.Frequency <- data.frame(
+    ID = character(),
+    Zone = double(),
     Day = integer(),
-    Per = double()
+    Night = integer()
   )
   
   segmentation <- data.frame(
@@ -141,7 +156,8 @@ if (nrow(trx) == 0) {
     NoActiveDayInPeriod = double(),
     NoPsgPerActiveDayInPeriod = double(),
     NoOD10 = double(),
-    NoODTS = double()
+    Algo1_NoOD = integer(),
+    Algo2_NoZone = integer()
   )
 } else {
 
@@ -230,20 +246,21 @@ rm(result.model.decade.0, test.model.0, ind.model.0,
    result.model.decade.1, test.model.1, ind.model.1,
    result.model.decade.2, test.model.2, ind.model.2)
 
-result.TS <- inner_join(result, Ind.final) %>%
+result.TS.before <- inner_join(result, Ind.final) %>%
   arrange (ID, desc(noPsg), Tmin) %>%
   select(-Model) %>%
   mutate(ID = as.character(as.numeric(ID))) %>%
-  filter(noPsg > limit.Algo1.noPsg) %>%
-  distinct
+	distinct
+
+result.TS <- result.TS.before %>% filter(noPsg > limit.Algo1.noPsg)
 
 rm(Ind, Ind.final, models.units)
 rm(ID.list,
    test,train,
    test.period,train.period)
 
-# add NoODTS (number of OD in result.TS) to segmentation
-t <- result.TS %>% group_by(ID) %>% summarise(NoODTS = n_distinct(OD))
+# add Algo1_NoOD (number of OD in result.TS) to segmentation
+t <- result.TS %>% group_by(ID) %>% summarise(Algo1_NoOD = n_distinct(OD))
 segmentation <- left_join(segmentation, t)
 
 ##########
@@ -270,10 +287,8 @@ if(nrow(result.TS) > 0){
   t5 <- t4 %>% select(Ste: Sens) %>% distinct
   
   t5$TS <- TRUE
-  trx.Algo2 <- left_join(t,t5) %>% filter(is.na(TS)) %>% select(-TS)
+  trx <- left_join(t,t5) %>% filter(is.na(TS)) %>% select(-TS)
   rm(t1,t2,t3,t4,t5)
-  
-  trx <- trx.Algo2
 } else {trx <- t}
 
 # get Reference data from Reference/
@@ -306,64 +321,56 @@ t2 <- trxGrid %>%
 #   - ActiveDay >= limit.Algo2.ActiveDay 
 #   - Per >= limit.Algo2.GridPer
 trxGridActive <- inner_join(t1,t2) %>% 
-  mutate(Per = Day / ActiveDay) %>%
-  filter(ActiveDay >= limit.Algo2.ActiveDay,
-         Per >= limit.Algo2.GridPer)
+    mutate(Per = Day / ActiveDay) %>%
+    filter(ActiveDay >= limit.Algo2.ActiveDay,
+           Per >= limit.Algo2.GridPer)
+
 rm(t1,t2)
 
+
 ##########
-### Step 4: find ID with only one big zone  
+### Step 4: connect Zone  
 ##########
-# get Grid detailed info for trxGridActive
-t <- inner_join(trxGridActive, GridLimit)
-# group them by ID
-t <- t %>% group_by(ID)
+# connect Grid to make Zone
+t <- inner_join(trxGridActive,
+                GridLimit %>% select(Grid, Row, Col)) %>%
+  ZoneLabel
 
-# Get 4 points
-#   NW  NE (NorthWest, NorthEast)
-#   SW  SE (SouthWest, SouthEast)
-t1 <- t %>% arrange(Row, Col)             %>% select(Row, Col)  %>% rename(R_NW = Row, C_NW = Col) %>% slice(1) %>% ungroup
-t2 <- t %>% arrange(Row, desc(Col))       %>% select(Row, Col) %>% rename(R_NE = Row, C_NE = Col) %>% slice(1) %>% ungroup
-t3 <- t %>% arrange(desc(Row), Col)       %>% select(Row, Col) %>% rename(R_SW = Row, C_SW = Col) %>% slice(1) %>% ungroup
-t4 <- t %>% arrange(desc(Row), desc(Col)) %>% select(Row, Col) %>% rename(R_SE = Row, C_SE = Col) %>% slice(1) %>% ungroup
+result.ZW.Zone <- t %>% select(ID, Zone, Grid)
 
-temp <- inner_join(t1, t2) %>% inner_join(t3) %>% inner_join(t4)
-rm(t1,t2,t3,t4)
-
-# Compare to get One_Zone
-#   C_NW & C_SW
-#   C_NE & C_SE
-temp <- temp %>% mutate(Left = (C_NW == C_SW),
-                        Right = (C_NE == C_SE),
-                        OneZone = Left && Right)
+# add Algo2_NoZone (number of Zone in result.ZW.Zone) to segmentation
+t1 <- result.ZW.Zone %>% group_by(ID) %>% summarise(Algo2_NoZone = max(Zone))
+segmentation <- left_join(segmentation, t1)
 
 ##########
 ### Step 5: get Hour-heatmap for OneZone
 ##########
-# get ID with only one zone
-t <- temp %>%
-  filter(OneZone == TRUE) %>%
-  select(ID)
-# get all grids for these ID
-t <- inner_join(t,trxGridActive) %>% select(ID,Zone) %>% ungroup %>% distinct
-# Get all trx passing these grids for these ID
-t <- inner_join(t,trxZone)
-# transform back from Zone to Entr_Sor
-t <- t %>% select(-Zone) %>% ungroup %>% distinct
+# get all trx with Entr_Sor info passing these gridActive
+t <- inner_join(t %>% select(ID, Grid, Zone),
+                trxGrid) %>%
+								select(-Grid) %>% ungroup %>% distinct
 
-# get time window
-trxZoneActiveH <- t %>%
-  mutate(H = round(TimeSor, digits = 0),
-         H_2 = H - H %% 2
-  ) 
+# add H
+t <- t %>% mutate(H = round(TimeSor, digits = 0))
+# add Time: Day/Night
+if(nrow(t) > 0){
+  t$Time <- "Night"
+  if(nrow(t %>% filter(H >= 6 & H <= 22)) > 0) t[t$H >= 6 & t$H <= 22,]$Time <- "Day"
+}
 
-# get time window frequency >= limit.WindowFreq
-result.ZW <- trxZoneActiveH %>% 
-  group_by(ID,DOW,H) %>% 
-  summarise(noPsg = n()) 
-# %>%
-#   filter(freq >= limit.WindowFreq)
-rm(temp,ODtoGrid,GridLimit)
+# get result
+t1 <- t %>%
+	group_by(ID, Zone) %>%
+	summarise(Day = sum(Time == "Day"),
+						Night = sum(Time == "Night")
+	)
+result.ZW.Frequency <- t1
+
+# get result with limit.Algo2.Day/Night
+result.ZW.Day <- t1 %>% filter(Day > limit.Algo2.Day) %>% select(ID, Zone) 
+result.ZW.Night <- t1 %>% filter(Night > limit.Algo2.Night) %>% select(ID, Zone) 
+
+rm(t,t1,ODtoGrid,GridLimit)
 }
 
 ##########
@@ -372,13 +379,17 @@ rm(temp,ODtoGrid,GridLimit)
 inputName <-  read.table(text = filename.Input, sep=".")$V1 %>% as.character
 time <- Sys.time() %>% format(format = "%Y%m%d_%H%M")
 
-write.table(result.TS, 
-            paste0("Output/Algo_",inputName,"_V",time,".csv"),
-            sep=";",row.name=FALSE,quote=FALSE)
-write.table(result.ZW, paste0("Output/Algo_",inputName,"_V",time,"_Window.csv"),sep=";",row.name=FALSE,quote=FALSE)
-write.table(trxGridActive, paste0("Output/Algo_",inputName,"_V",time,"_Zone.csv"),sep=";",row.name=FALSE,quote=FALSE)
+# save result of Algo1_TS
+write.table(result.TS.before, paste0("Output/Algo1_TS_",inputName,"_V",time,".log"),sep=";",row.name=FALSE,quote=FALSE)
+write.table(result.TS,        paste0("Output/Algo1_TS_",inputName,"_V",time,".csv"),sep=";",row.name=FALSE,quote=FALSE)
+# save result of Algo2_ZW
+write.table(result.ZW.Zone,      paste0("Output/Algo2_ZW_",inputName,"_V",time,"_Zone.csv"),sep=";",row.name=FALSE,quote=FALSE)
+write.table(result.ZW.Day,       paste0("Output/Algo2_ZW_",inputName,"_V",time,"_Day.csv"),sep=";",row.name=FALSE,quote=FALSE)
+write.table(result.ZW.Night,     paste0("Output/Algo2_ZW_",inputName,"_V",time,"_Night.csv"),sep=";",row.name=FALSE,quote=FALSE)
+write.table(result.ZW.Frequency, paste0("Output/Algo2_ZW_",inputName,"_V",time,"_Frequence.log"),sep=";",row.name=FALSE,quote=FALSE)
 
+# save summary of Result
 segmentation[is.na(segmentation)] <- 0
-write.table(segmentation, paste0("Output/Algo_",inputName,"_V",time,"_Segmentation.csv"),sep=";",row.name=FALSE,quote=FALSE)
+write.table(segmentation, paste0("Output/Algo_Summary_",inputName,"_V",time,".csv"),sep=";",row.name=FALSE,quote=FALSE)
 
 rm(inputName,time)

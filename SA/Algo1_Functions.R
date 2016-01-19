@@ -1,7 +1,7 @@
 ##########
 ##########
-# SA_function.R
-# define all functions
+# Algo1_Functions.R
+# define all functions for Algo1_TimeSpace
 ##########
 ### List of all functions
 # GetLngLat:	get the longitude and lattitude of the transaction
@@ -15,6 +15,9 @@
 # Model:
 ##########
 
+##########
+# get parameters
+##########
 if(is.na(ParamRepo)){
   # get arguments 
   args <- read.table("Parameters/Param_Function.csv",sep = ";", header=TRUE) 
@@ -23,6 +26,8 @@ if(is.na(ParamRepo)){
   args <- read.table(paste0(ParamRepo,"/Param_Function.csv"),sep = ";", header=TRUE) 
 }
 
+##########
+# default parameters
 ##########
 # param.min.uniqueTimeSor = 5    #low limit for using clustering
 # param.min.noPsg = 5            # low limit for choosing the result
