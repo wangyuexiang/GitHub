@@ -1,0 +1,145 @@
+---
+title: "VA"
+author: "Yuexiang Wang"
+date: "21 July, 2015"
+output: html_document
+---
+# VIP: general
+
+## Duree
+```{r, echo=FALSE, cache=TRUE, fig.width=12, fig.height=6, warning=FALSE}
+ggplot(duree.double) + geom_segment(aes(x=Dmin, xend= Dmax, y = ID, yend = ID, size = 3, col = Source)) 
+```
+
+## Date~Time
+```{r, echo=FALSE, cache=TRUE, fig.width=12, fig.height=12, warning=FALSE}
+ggplot(VIP2) + 
+  geom_point(aes(Date, TimeSor, col = Source)) +
+  facet_wrap(~ID) + ggtitle("Date~Time")
+
+ggplot(VIP2) +
+  geom_point(aes(Date, Elng, col = "Elng", shape = "Elng", alpha = .1)) +
+  geom_point(aes(Date, Slng, col = "Slng", shape = "Slng", alpha = .1)) +
+  geom_segment(aes(x=Date, xend=Date, y=Elng, yend=Slng, alpha =.3)) +
+  facet_wrap(~ID) + ylab("Lng") + ggtitle("Date~Lng")
+```
+
+## Lng
+```{r, echo=FALSE, cache=TRUE, fig.width=12, fig.height=12, warning=FALSE}
+ggplot(VIP2) +
+  geom_point(aes(TimeEntr, Elng, col = "Elng", shape = "Elng", alpha = .1)) +
+  geom_point(aes(TimeSor, Slng, col = "Slng", shape = "Slng", alpha = .1)) +
+  geom_segment(aes(x=TimeEntr, xend=TimeSor, y=Elng, yend=Slng, alpha =.3)) +
+  facet_wrap(~ID) + ylab("Lng") + ggtitle("Time~Lng")
+```
+
+## Lat
+```{r, echo=FALSE, cache=TRUE, fig.width=12, fig.height=12, warning=FALSE}
+ggplot(VIP2) +
+  geom_point(aes(TimeEntr, Elat, col = "Elat", shape = "Elat", alpha = .1)) +
+  geom_point(aes(TimeSor, Slat, col = "Slat", shape = "Slat", alpha = .1)) +
+  geom_segment(aes(x=TimeEntr, xend=TimeSor, y=Elat, yend=Slat, alpha =.3)) +
+  facet_wrap(~ID) + ylab("Lat") + ggtitle("Time~Lat")
+```
+
+# Case by Case: FF & NP
+
+
+## NPFF
+```{r, echo=FALSE, cache=TRUE, fig.width=12, fig.height=6, warning=FALSE}
+ggplot(NPFF) +
+  geom_point(aes(TimeEntr, Elat, col = "Elat", shape = "Elat", alpha = .1)) +
+  geom_point(aes(TimeSor, Slat, col = "Slat", shape = "Slat", alpha = .1)) +
+  geom_segment(aes(x=TimeEntr, xend=TimeSor, y=Elat, yend=Slat, alpha =.3, col = as.factor(result))) +
+  facet_wrap(~ID) + ylab("Lat") + ggtitle("Time~Lat")
+```
+
+```{r, echo=FALSE, cache=TRUE, fig.width=12, fig.height=15, warning=FALSE}
+ggplot(NPFF) +
+  geom_point(aes(TimeEntr, Elat, col = "Elat", shape = "Elat", alpha = .1)) +
+  geom_point(aes(TimeSor, Slat, col = "Slat", shape = "Slat", alpha = .1)) +
+  geom_segment(aes(x=TimeEntr, xend=TimeSor, y=Elat, yend=Slat, alpha =.3, col = as.factor(result))) +
+  facet_grid(DOW~ID) + ylab("Lat") + ggtitle("Time~Lat")
+```
+
+
+## NP
+```{r, echo=FALSE, cache=TRUE, fig.width=12, fig.height=12, warning=FALSE}
+ggplot(VIP2 %>% filter(ID == "NP")) +
+  geom_point(aes(TimeEntr, Elat, col = "Elat", shape = "Elat", alpha = .1)) +
+  geom_point(aes(TimeSor, Slat, col = "Slat", shape = "Slat", alpha = .1)) +
+  geom_segment(aes(x=TimeEntr, xend=TimeSor, y=Elat, yend=Slat, alpha =.3)) +
+  facet_wrap(~DOW, ncol = 2) + ylab("Lat") + ggtitle("Time~Lat")
+```
+## FF
+```{r, echo=FALSE, cache=TRUE, fig.width=12, fig.height=12, warning=FALSE}
+ggplot(VIP2 %>% filter(ID == "FF")) +
+  geom_point(aes(TimeEntr, Elat, col = "Elat", shape = "Elat", alpha = .1)) +
+  geom_point(aes(TimeSor, Slat, col = "Slat", shape = "Slat", alpha = .1)) +
+  geom_segment(aes(x=TimeEntr, xend=TimeSor, y=Elat, yend=Slat, alpha =.3)) +
+  facet_wrap(~DOW, ncol = 2) + ylab("Lat") + ggtitle("Time~Lat")
+```
+
+
+
+# Case by Case: CC
+## CC
+```{r, echo=TRUE, cache=TRUE, fig.width=12, fig.height=12, warning=FALSE}
+CC.ref <- CC %>% group_by(Entr,Sor, DOW) %>% summarise(total = n())
+CC.ref[order(CC.ref$total, decreasing = T),]
+```
+
+```{r, echo=FALSE, cache=TRUE, fig.width=12, fig.height=6, warning=FALSE}
+ggplot(CC) +
+  geom_point(aes(Date, Elng, col = "Elng", shape = "Elng", alpha = .1)) +
+  geom_point(aes(Date, Slng, col = "Slng", shape = "Slng", alpha = .1)) +
+  geom_segment(aes(x=Date, xend=Date, y=Elng, yend=Slng, alpha =.3)) +
+  ylab("Lng") + ggtitle("Date~lng")
+
+ggplot(CC) +
+  geom_point(aes(Date, Elat, col = "Elat", shape = "Elat", alpha = .1)) +
+  geom_point(aes(Date, Slat, col = "Slat", shape = "Slat", alpha = .1)) +
+  geom_segment(aes(x=Date, xend=Date, y=Elat, yend=Slat, alpha =.3)) +
+  ylab("Lat") + ggtitle("Date~lat")
+
+ggplot(CC) +
+  geom_point(aes(Date, TimeEntr, col = "TimeEntr", shape = "TimeEntr", alpha = .1)) +
+  geom_point(aes(Date, TimeSor, col = "TimeSor", shape = "TimeSor", alpha = .1)) +
+  geom_segment(aes(x=Date, xend=Date, y=TimeEntr, yend=TimeSor, alpha =.3)) +
+  ylab("Time") + ggtitle("Date~Time")
+
+ggplot(CC) +
+  geom_point(aes(TimeEntr, Elng, col = "Elng", shape = "Elng", alpha = .1)) +
+  geom_point(aes(TimeSor, Slng, col = "Slng", shape = "Slng", alpha = .1)) +
+  geom_segment(aes(x=TimeEntr, xend=TimeSor, y=Elng, yend=Slng, alpha =.3)) +
+  ylab("Lng") + ggtitle("Time~lng")
+
+ggplot(CC) +
+  geom_point(aes(TimeEntr, Elat, col = "Elat", shape = "Elat", alpha = .1)) +
+  geom_point(aes(TimeSor, Slat, col = "Slat", shape = "Slat", alpha = .1)) +
+  geom_segment(aes(x=TimeEntr, xend=TimeSor, y=Elat, yend=Slat, alpha =.3)) +
+  ylab("Lat") + ggtitle("Time~Lat")
+```
+
+
+```{r, echo=FALSE, cache=TRUE, fig.width=12, fig.height=12, warning=FALSE}
+ggplot(VIP2 %>% filter(ID == "CC")) +
+  geom_point(aes(TimeEntr, Elat, col = "Elat", shape = "Elat", alpha = .1)) +
+  geom_point(aes(TimeSor, Slat, col = "Slat", shape = "Slat", alpha = .1)) +
+  geom_segment(aes(x=TimeEntr, xend=TimeSor, y=Elat, yend=Slat, alpha =.3)) +
+  facet_wrap(~DOW, ncol = 2) + ylab("Lat") + ggtitle("Time~Lat")
+```
+
+
+
+
+
+# Case by Case: PC
+## PC
+```{r, echo=FALSE, cache=TRUE, fig.width=12, fig.height=12, warning=FALSE}
+ggplot(VIP2 %>% filter(ID == "PC")) +
+  geom_point(aes(TimeEntr, Elat, col = "Elat", shape = "Elat", alpha = .1)) +
+  geom_point(aes(TimeSor, Slat, col = "Slat", shape = "Slat", alpha = .1)) +
+  geom_segment(aes(x=TimeEntr, xend=TimeSor, y=Elat, yend=Slat, alpha =.3)) +
+  facet_wrap(~DOW, ncol = 2) + ylab("Lat") + ggtitle("Time~Lat")
+```

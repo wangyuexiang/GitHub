@@ -1,0 +1,87 @@
+---
+title: "Kmeans"
+author: "WANG Yuexiang"
+date: "23 juillet 2015"
+output: html_document
+---
+
+
+## Kmeans 
+```{r, cache = TRUE, fig.width = 10, fig.height = 5, warning = FALSE}
+ggplot(train) + geom_point(aes(Date, TimeSor, shape = as.factor(DOW)))
+ggplot(train) + geom_point(aes(Date, TimeSor, shape = as.factor(DOW))) + facet_wrap(~ID)
+
+for(i in 1:nrow(ID.list)){
+  temp <- train %>% filter(ID == ID.list$ID[i])
+  set.seed(1234)
+  t.kmeans <- lapply(1:6, function(i){
+    kmeans(temp[, "TimeSor"], centers = i)
+  })
+  
+  print(ID.list$ID[i])
+  print(lapply(t.kmeans, function(z) z$withinss))
+  within.ss <- sapply(t.kmeans, function(z) sum(z$withinss))
+  plot(1:6, type="b", xlab = paste0("Number of clusters for:", ID.list$ID[i]), ylab = "Within SS", within.ss)
+
+  clus<- clusGap(temp[,"TimeSor"], kmeans, 10)
+  print(clus)
+  plot(clus)
+}
+```
+
+## Nb of Clusters from 1 to 6
+```{r, cache = TRUE, fig.width = 14, fig.height = 5, warning = FALSE}
+set.seed(1234)
+for (i in 1:6){
+  cl1 <- kmeans(train[, "TimeSor"], i)
+  centers1 <- as.data.frame(cl1$centers)
+  centers1$cluster <- seq(1:i)
+  
+  gg1 <- ggplot(train) +
+    geom_point(aes(Date, TimeSor, col = as.factor(cl1$cluster), shape = as.factor(DOW))) +
+    geom_abline(aes(intercept=TimeSor, slope = 0, col = as.factor(cluster)),data=centers1) 
+
+  cl2 <- kmeans(train[, c("DOW","TimeSor")], i)
+  centers2 <- as.data.frame(cl2$centers)
+  centers2$cluster <- seq(1:i)
+ 
+  gg2 <- ggplot(train) +
+    geom_point(aes(Date, TimeSor, col = as.factor(cl2$cluster), shape = as.factor(DOW))) +
+    geom_abline(aes(intercept=TimeSor, slope = 0, col = as.factor(cluster)),data=centers2)
+  
+  grid.arrange(gg1, gg2, ncol = 2)
+  
+  cat("Cluster by TimeSor: ", cl1$size, "\n")
+  cat("Cluster by TimeSor & DOW: ", cl2$size)
+} 
+```
+
+
+## Decomposer: Nb of Clusters from 1 to 6
+```{r, cache = TRUE, fig.width = 14, fig.height = 5, warning = FALSE}
+set.seed(1234)
+for (i in 1:6){
+  cl1 <- kmeans(train_decompose[, "TimeSor"], i)
+  centers1 <- as.data.frame(cl1$centers)
+  centers1$cluster <- seq(1:i)
+  names(centers1)[1] <- "TimeSor"
+  
+  gg1 <- ggplot(train_decompose) +
+    geom_point(aes(Date, TimeSor, col = as.factor(cl1$cluster), shape = as.factor(DOW))) +
+    geom_abline(aes(intercept=TimeSor, slope = 0, col = as.factor(cluster)),data=centers1) 
+
+  cl2 <- kmeans(train_decompose[, c("DOW","TimeSor")], i)
+  centers2 <- as.data.frame(cl2$centers)
+  centers2$cluster <- seq(1:i)
+ 
+  gg2 <- ggplot(train_decompose) +
+    geom_point(aes(Date, TimeSor, col = as.factor(cl2$cluster), shape = as.factor(DOW))) +
+    geom_abline(aes(intercept=TimeSor, slope = 0, col = as.factor(cluster)),data=centers2)
+  
+  grid.arrange(gg1, gg2, ncol = 2)
+  
+  cat("Cluster by TimeSor: ", cl1$size, "\n")
+  cat("Cluster by TimeSor & DOW: ", cl2$size)
+} 
+```
+

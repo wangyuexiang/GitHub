@@ -1,0 +1,27 @@
+---
+title: "Vaucluse_Test"
+output: html_document
+---
+
+```{r, width=80, echo=FALSE,fig.width=12,fig.height=12,cache=TRUE}
+
+test<-List[List$OD_100==2&List$P_Trx_100>.8,]
+i<-test$Label[seq(1,687,by=10)]
+test[test$Label %in% i,c(2,16:22,25)]
+
+temp_i<-temp2[temp2$Label %in% i,]
+
+ggplot(temp_i,aes(Hour,fill=as.factor(Predicted)))+geom_bar(binwidth=1)+facet_wrap(~Label, ncol=5)
+ggplot(temp_i,aes(DOW,Hour,color=as.factor(Predicted))) + 
+  geom_point() + facet_wrap(~Label,ncol=5)
+
+```
+
+```{r, width=80, echo=FALSE,fig.width=12,fig.height=12,cache=TRUE}
+j<-seq(1,5000,by=100)
+temp_j<-temp2[temp2$Label %in% j,]
+ggplot(temp_j,aes(Hour,fill=as.factor(Predicted)))+geom_bar(binwidth=1)+facet_wrap(~Label, ncol=5)
+ggplot(temp_j,aes(DOW,Hour,color=as.factor(Predicted))) + 
+  geom_point() + facet_wrap(~Label,ncol=5)
+
+```

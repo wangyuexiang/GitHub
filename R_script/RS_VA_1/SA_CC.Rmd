@@ -1,0 +1,70 @@
+---
+title: "SA_CC"
+author: "Yuexiang Wang"
+date: "30 July, 2015"
+output: html_document
+---
+
+# Models Results
+
+## CC
+
+```{r, echo = FALSE, cache = TRUE, fig.width = 10, fig.height = 4, warning = FALSE}
+CC <- trx %>% filter(ID == "CC")
+CC.list <- CC %>% group_by(Entr, Sor) %>% summarise(n = n()) %>% ungroup() %>% arrange(desc(n)) %>% slice(1:4)
+#CC.list$order <- seq(1,4)
+CC.list$order <- c("Retour: Lan-Av", "Aller: Av-Lan", "Aller: Bar-Fre", "Retour: Fre-Bar")
+
+CC.hot <- inner_join(CC, CC.list)
+
+print(CC.list)
+ggplot(CC.hot) + geom_point(aes(Date, TimeSor, col = as.factor(order))) + ggtitle("Date ~ TimeSor")
+ggplot(CC.hot) + geom_bar(aes(DOW), binwidth = 1) + facet_wrap(~order) + ggtitle("Distribution by DOW")
+ggplot(CC.hot) + geom_tile(aes(Date, DOW, fill = as.factor(DOW))) + facet_wrap(~order)
+```
+
+
+## Original points
+```{r, echo = FALSE, cache = TRUE, fig.width = 10, fig.height = 4, warning = FALSE}
+ggplot() +
+	geom_point(data = train, aes(Date, TimeSor, col = "train", shape = as.factor(DOW))) +
+	geom_point(data = test, aes(Date, TimeSor, col = "test", shape = as.factor(DOW))) +
+  facet_wrap(~ID) 
+```
+
+## Result Time Interval by DOW
+```{r, echo = FALSE, cache = TRUE, fig.width = 16, fig.height = 8, warning = FALSE}
+ggplot(result) + 
+  geom_point(aes(DOW, Tmin, col = "Tmin")) +  
+  geom_point(aes(DOW, Tmax, col = "Tmax")) +
+  geom_segment(aes(x=DOW, xend=DOW, y=Tmin, yend=Tmax)) +
+  facet_grid(ID~Model) + ggtitle("Result: Time Interval by DOW")
+```
+
+## Result Geo-representation
+```{r, echo = FALSE, cache = TRUE, fig.width = 16, fig.height = 8, warning = FALSE}
+ggplot(result.LngLat) +  
+  geom_point(aes(ELng, ELat, col = "Entr")) +
+  geom_point(aes(SLng, SLat, col = "Sor")) +
+  geom_segment(aes(x = ELng, xend = SLng, y = ELat, yend = SLat)) + 
+#	geom_point(data = gares %>% filter(Societe %in% c(4,6)), aes(Lat, Lng, col = as.factor(Societe))) +
+  facet_grid(ID~Model) + ggtitle("Result: Geo-representation")
+```
+
+## Result Geo-representation for CC
+```{r, echo = FALSE, cache = TRUE, fig.width = 10, fig.height = 8, warning = FALSE}
+ggplot(result.LngLat %>% filter(ID == "CC")) +
+  geom_point(aes(ELng, ELat, col = "Entr")) + 
+  geom_point(aes(SLng, SLat, col = "Sor")) + 
+  geom_segment(aes(x = ELng, xend = SLng, y = ELat, yend = SLat)) + 
+#	geom_point(data = gares %>% filter(Societe %in% c(4,6)), aes(Lat, Lng, col = as.factor(Societe))) +
+  facet_grid(DOW~Model) + ggtitle("Result: Geo-representation by DOW")
+```
+
+
+## Result of CC in details
+```{r, cache = TRUE, fig.width = 10, fig.height = 8, warning = FALSE}
+print(Ind, n = 24)
+Ind.result
+print(result.final %>% filter(ID == "CC"), n = 100) 
+```

@@ -1,0 +1,167 @@
+---
+title: "VIP_FF"
+date: "May 27th,2015"
+output: html_document
+---
+
+# FF
+## AR-DT
+
+```{r,echo=FALSE,fig.width=8,fig.height=15, cache=TRUE}
+
+ggplot(FF[FF$Hour %in% c(5:7), ], aes(Slng,Slat)) + 
+  geom_point(alpha = .1, size = 3, col = "Red") + 
+  geom_point(data=gares_geo[gares_geo$Societe < 5, ],aes(Lng,Lat),size=2,alpha=.1,shape=3) +
+  facet_grid(DOW~Hour) + 
+  ggtitle("Matin")
+```
+
+```{r,echo=FALSE,fig.width=12,fig.height=15, cache=TRUE}
+ggplot(FF[FF$Hour %in% c(16:20), ], aes(Slng,Slat)) + 
+  geom_point(alpha = .1, size = 3, col = "Red") + 
+  geom_point(data=gares_geo[gares_geo$Societe < 5, ],aes(Lng,Lat),size=2,alpha=.1,shape=3) +
+  facet_grid(DOW~Hour) +
+  ggtitle("Soir")
+```
+
+### 1 OD1(49-2/220-211):
+
+```{r,echo=FALSE,fig.width=10,fig.height=3, cache=TRUE}
+i<-4
+temp_AR<-ID_OD[ID_OD$Nom==ID_ref$Nom[i] & 
+                 ((ID_OD$Entr==25004220 & ID_OD$Sor==25004211)|
+          (ID_OD$Entr==25004211 & ID_OD$Sor==25004220)|
+    		  (ID_OD$Entr==25006049 & ID_OD$Sor==25006002)|
+				  (ID_OD$Entr==25006002 & ID_OD$Sor==25006049)|
+				  (ID_OD$Sor==25006010)),]
+
+temp_Aller<-temp_AR[(temp_AR$Entr==25004220 & temp_AR$Sor==25004211)|
+  				(temp_AR$Entr==25006049 & temp_AR$Sor==25006002),]
+ 
+# ggplot(temp_Aller,aes(Hour,fill=as.factor(Predicted)))+geom_bar(binwidth=1) + xlim(c(0,25))
+ggplot(temp_Aller[temp_Aller$Year==2014 & temp_Aller$DOW %in% jrOuvert,],aes(WOY,DOW,fill=as.factor(Predicted)))+geom_tile()
+```
+
+```{r,echo=FALSE,fig.width=10,fig.height=4, cache=TRUE}
+p1<-ggplot(temp_Aller,aes(Hour,fill=as.factor(DOW)))+geom_bar(binwidth=1) + xlim(c(0,25))
+p2<-ggplot(temp_Aller,aes(factor(DOW),y=Time))+geom_boxplot()+ ylim(c(0,25))
+p3<-ggplot(temp_Aller,aes(factor(Month),y=Time))+geom_boxplot()+ ylim(c(0,25))
+p4<-ggplot(temp_Aller[temp_Aller$DOW %in% 1:5,],aes(factor(Month),y=Time))+geom_boxplot()+ ylim(c(0,25))
+grid.arrange(p1,p2,p3,p4,ncol=2)
+
+```
+### 2 OD2(211-220/2-49)
+
+```{r,echo=FALSE,fig.width=10,fig.height=3, cache=TRUE}
+temp_Aller<-temp_AR[(temp_AR$Entr==25004211 & temp_AR$Sor==25004220)|
+					(temp_AR$Entr==25006002 & temp_AR$Sor==25006049),]
+#ggplot(temp_Aller,aes(Hour,fill=as.factor(Predicted)))+geom_bar(binwidth=1) + xlim(c(0,25))
+ggplot(temp_Aller[temp_Aller$Year==2014 & temp_Aller$DOW %in% jrOuvert,],aes(WOY,DOW,fill=as.factor(Predicted)))+geom_tile()
+```
+
+```{r,echo=FALSE,fig.width=10,fig.height=4, cache=TRUE}
+p1<-ggplot(temp_Aller,aes(Hour,fill=as.factor(DOW)))+geom_bar(binwidth=1) + xlim(c(0,25))
+p2<-ggplot(temp_Aller,aes(factor(DOW),y=Time))+geom_boxplot()+ ylim(c(0,25))
+p3<-ggplot(temp_Aller,aes(factor(Month),y=Time))+geom_boxplot()+ ylim(c(0,25))
+p4<-ggplot(temp_Aller[temp_Aller$DOW %in% 1:5,],aes(factor(Month),y=Time))+geom_boxplot()+ ylim(c(0,25))
+grid.arrange(p1,p2,p3,p4,ncol=2)
+```
+
+
+
+### 4 Then, we''ll focus on OD3(N.A. - 10):
+
+```{r,echo=FALSE,fig.width=10,fig.height=3, cache=TRUE}
+temp_Aller<-temp_AR[temp_AR$Sor==25006010 & temp_Aller$DOW %in% jrOuvert, ]
+ggplot(temp_Aller[temp_Aller$Year==2014 & temp_Aller$DOW %in% jrOuvert,],aes(WOY,fill=as.factor(DOW)))+geom_bar(binwidth=1) 
+```
+
+```{r,echo=FALSE,fig.width=10,fig.height=4, cache=TRUE}
+
+p1<-ggplot(temp_Aller[temp_Aller$DOW %in% jrOuvert,],aes(Hour,fill=as.factor(DOW)))+geom_bar(binwidth=1) + xlim(c(0,25))
+p2<-ggplot(temp_Aller,aes(factor(DOW),y=Time))+geom_boxplot()+ ylim(c(0,25))
+
+p3<-ggplot(temp_Aller[temp_Aller$Hour<12,],aes(factor(DOW),y=Time))+geom_boxplot()+ ylim(c(0,25))
+p4<-ggplot(temp_Aller[temp_Aller$Hour>=12,],aes(factor(DOW),y=Time))+geom_boxplot()+ ylim(c(0,25))
+grid.arrange(p1,p2,p3,p4,ncol=2)
+
+p1<-ggplot(temp_Aller[temp_Aller$Hour<12,],aes(factor(Month),y=Time))+geom_boxplot()+ ylim(c(0,25))
+p2<-ggplot(temp_Aller[temp_Aller$Hour>=12,],aes(factor(Month),y=Time))+geom_boxplot()+ ylim(c(0,25))
+p3<-ggplot(temp_Aller[temp_Aller$Hour<12 & temp_Aller$DOW %in% 1:5,],aes(factor(Month),y=Time))+geom_boxplot()+ ylim(c(0,25))
+p4<-ggplot(temp_Aller[temp_Aller$Hour>=12 & temp_Aller$DOW %in% 1:5,],aes(factor(Month),y=Time))+geom_boxplot()+ ylim(c(0,25))
+grid.arrange(p1,p2,p3,p4,ncol=2)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+```{r,echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+### 3 Together:
+##########
+# temp_Aller<-temp_AR[ temp_AR$DOW %in% jrOuvert & 
+#          ((temp_AR$Entr==25004220 & temp_AR$Sor==25004211)|
+# 					(temp_AR$Entr==25006049 & temp_AR$Sor==25006002)|
+# 					(temp_AR$Entr==25004211 & temp_AR$Sor==25004220)|
+# 					(temp_AR$Entr==25006002 & temp_AR$Sor==25006049)),]
+# ggplot(temp_Aller,aes(Hour,fill=as.factor(DOW)))+geom_bar(binwidth=1) + xlim(c(0,25))
+# ggplot(temp_Aller[temp_Aller$Year==2014 & temp_Aller$DOW %in% jrOuvert,],aes(WOY,fill=as.factor(DOW)))+geom_bar(binwidth=1)
+```
+
+
+
+
+
+
+```{r ,echo=FALSE,fig.width=10,fig.height=3}
+# Previous Study
+
+## Daily Passage
+
+##########
+# datebreaks_week <- seq(as.Date("2013-12-30"), as.Date("2015-3-31"), by="1 week")
+# d1<-as.Date("2015-1-1")
+# d2<-as.Date("2015-2-27")
+# 
+# temp_noPassage<-noPassage_FF[noPassage_FF$Date>d1 & noPassage_FF$Date<d2,]
+# temp_date<-datebreaks_week[datebreaks_week>d1 &datebreaks_week<d2]
+# 
+# ggplot(temp_noPassage,aes(Date))+
+#   geom_line(aes(y=OD1, color ="0-10")) +
+#   geom_line(aes(y=OD2, color ="49-2")) +
+#   geom_line(aes(y=OD3, color ="220-211")) +
+#   geom_line(aes(y=OD4, color ="211-220")) +
+#   geom_line(aes(y=OD5, color ="2-49")) +
+#   xlab("") + ylab("# of Daily Passages") +
+#   scale_x_date(breaks=datebreaks) +
+#   geom_vline(xintercept = as.numeric(temp_date), color="black")
+# 
+# ggplot(temp_noPassage,aes(Date))+
+#   geom_line(aes(y=OD1, color ="0-10")) +
+#   xlab("") + ylab("# of Daily Passages") +
+#   scale_x_date(breaks=datebreaks) +
+#   geom_vline(xintercept = as.numeric(temp_date), color="black")
+#   
+#  ggplot(temp_noPassage,aes(Date))+
+#   geom_line(aes(y=OD2, color ="49-2")) +
+#   geom_line(aes(y=OD5, color ="2-49")) +
+#   xlab("") + ylab("# of Daily Passages") +
+#   scale_x_date(breaks=datebreaks) +
+#   geom_vline(xintercept = as.numeric(temp_date), color="black")
+# 
+# ggplot(temp_noPassage,aes(Date))+
+#   geom_line(aes(y=OD3, color ="220-211")) +
+#   geom_line(aes(y=OD4, color ="211-220")) +
+#   xlab("") + ylab("# of Daily Passages") +
+#   scale_x_date(breaks=datebreaks) +
+#   geom_vline(xintercept = as.numeric(temp_date), color="black")
+```
+
+

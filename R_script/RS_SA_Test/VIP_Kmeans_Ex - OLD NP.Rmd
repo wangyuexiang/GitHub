@@ -1,0 +1,62 @@
+---
+title: "Kmeans"
+author: "WANG Yuexiang"
+date: "Wednesday, June 17, 2015"
+output: html_document
+---
+
+## Kmeans_NP 
+```{r, cache=TRUE}
+temp<-NP[,18:19]
+names(temp)<-c("x","y")
+
+ggplot(temp,aes(x,y))+geom_point()
+
+gare.kmeans<-lapply(1:20,function(i){
+  kmeans(temp[,c("x","y")],centers=i)
+})
+
+lapply(gare.kmeans,function(z) z$withinss)
+gare.within.ss<-sapply(gare.kmeans, function(z) sum(z$withinss))
+
+plot(1:20, type="b",xlab = "Number of clusters", ylab = "Within SS",gare.within.ss)
+```
+
+## Nb of Clusters from 1 to 10
+
+
+```{r, cache=TRUE,fig.width=5,fig.height=5}
+for (i in 1:5){
+  cl <- kmeans(temp1,i)
+  cl$cluster
+  plot(temp1$Slng,temp1$Slat,col=cl$cluster)
+  points(cl$centers, pch=16)
+  
+  print(cl$size)
+}
+
+```
+
+
+
+```{r, cache=TRUE,fig.width=5,fig.height=5}
+gare.kmeans<-lapply(1:10,function(i){
+  kmeans(temp[,c("x","y")],centers=i)
+})
+
+cluster.colors<-lapply(gare.kmeans,function (z) z$cluster)
+
+# library(plry)
+ l_ply(cluster.colors, function(colors){
+   plot(x~y,temp,col=colors,main=paste(nlevels(factor(colors))),pch=16)
+ })
+
+# l_ply(cluster.colors,
+#       function(colors) {
+#           plot.dat <- cbind(temp, cluster = factor(colors))
+# 
+#           gg.obj <- ggplot(plot.dat, aes(x,y, color = cluster)) +
+#               geom_point() + labs(title = paste(nlevels(factor(colors))))
+#           print(gg.obj)
+#       })
+```

@@ -47,7 +47,7 @@ if(length(Args) > 1){
 } else if (length(grep(".csv",Args[1])) > 0){
   filename.Input <- Args[1]
 } else{
-  filename.Input <- "VIP_v20151210.csv"
+  filename.Input <- "App.csv"
   ParamRepo <- Args[1]
 }
 
@@ -55,7 +55,7 @@ if(length(Args) > 1){
 if(is.na(ParamRepo)){
   # get arguments 
   # args <- read.table("Parameters/Param_Algo.csv",sep = ";", header=TRUE) 
-  args <- read.table("Parameters/Param_Algo.csv",sep = ";", header=TRUE) 
+  args <- read.table("Param_App/Param_Algo.csv",sep = ";", header=TRUE) 
 } else {
   # get arguments 
   args <- read.table(paste0(ParamRepo,"/Param_Algo.csv"),sep = ";", header=TRUE) 

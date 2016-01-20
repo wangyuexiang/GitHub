@@ -1,0 +1,116 @@
+---
+title: "App_segmentation_general"
+author: "WANG Yuexiang"
+date: "18 septembre 2015"
+output: html_document
+---
+
+## Segmentation 
+* Parmi 376 clients, nous avons les resultats pour 56 personnes (15%)
+* Pour les restes 320 clients (85%)
+  * 98 sont des nouveaux abonnes (abonnes depuis moins d'un mois, 26%, **New**)
+  * 57 ont moins de 10 transactions ou moins de 5 jours d'active ou inactive depuis un mois (15%, **Small or Inactive**)
+  * 7 ont au moins un trajet assez frequentes et tres reguliers (1.9%, **High Potential**)
+  * 158 sont ni **New**, ni **Small or Inactive**, ni **High Potential** (42%, **Low Potential**)
+
+### 376 Clients qui s'authentifient sur l'appli
+* chaque ligne represente une personne
+  * debut de la ligne: la premiere transaction
+  * fin de la ligne: la derniere transaction
+
+```{r, echo=FALSE,cache=TRUE,fig.width= 16, fig.height=6, warning = FALSE}
+g1 <- ggplot(app.segment) + geom_segment(aes(x=Dmin, xend=Dmax, y=ord, yend=ord)) + 
+  labs(x = "Date", y = "") + ylim(c(1,376)) +
+  ggtitle("First & Last Transaction") + theme(plot.title = element_text(size=20, face="bold", vjust=2))
+
+g2 <- ggplot(app.segment) + geom_bar(aes(nOD), binwidth = 100)+
+  labs(x = "Nbre Trx par personne", y = "Nbre de personnes") +
+  ggtitle("Distribution de Nbre Trx par personne") + theme(plot.title = element_text(size=20, face="bold", vjust=2))
+
+grid.arrange(g1, g2, ncol = 2)
+```
+
+|Type | Number| Percentage |
+|-----|------| -----|
+|Result | 56 | 15% |
+|. Good | 16 | 4.3% |
+|. Bad | 40 | 10.6% |
+|No Result | 320 | 85% |
+|.  New | 98 | 26.1% |
+|.  Small or Inactive | 57 | 15.2% |
+|.  High Potential | 7 | 1.9% |
+|.  Low Potential | 158 | 42% |
+
+### On a des resultats pour 15% des clients 
+```{r, echo=FALSE,cache=TRUE,fig.width= 16, fig.height=6, warning = FALSE}
+g1 <- ggplot(app.segment) + geom_segment(aes(x=Dmin, xend=Dmax, y=ord, yend=ord, col = as.factor(Result))) + 
+  labs(x = "Date", y = "") + ylim(c(1,376)) +
+  ggtitle("Si nous avons des resultats avec les modeles actuels") + 
+  theme(plot.title = element_text(size=20, face="bold", vjust=2), legend.position=("none"))
+
+g2 <- ggplot(app.segment) + geom_bar(aes(nOD, fill = as.factor(Result)), binwidth = 100)+
+  labs(x = "Nbre Trx par personne", y = "Nbre de personnes") +
+  ggtitle("Result") + theme(plot.title = element_text(size=20, face="bold", vjust=2))
+
+grid.arrange(g1, g2, ncol = 2)
+```
+
+### Pour les restes des clients 85% sur lesquels nous avons pas de resultats
+```{r, echo=FALSE,cache=TRUE,fig.width= 12, fig.height=6, warning = FALSE}
+g1 <- ggplot(app.segment %>% filter(Result == FALSE)) +
+# ggplot(app.segment ) +
+  geom_segment(aes(x=Dmin, xend=Dmax, y=ord, yend=ord, col = as.factor(Label))) + 
+  labs(x = "Date", y = "") + ylim(c(1,376)) +
+  ggtitle("Les clients sans resultats") + 
+  theme(plot.title = element_text(size=20, face="bold", vjust=2), legend.position="none")
+
+g2 <- ggplot(app.segment %>% filter(Result == FALSE)) +
+  geom_bar(aes(nOD, fill = as.factor(Label)), binwidth = 100)+
+  labs(x = "Nbre Trx par personne", y = "Nbre de personnes") +
+  ggtitle("Type") + theme(plot.title = element_text(size=20, face="bold", vjust=2))
+
+grid.arrange(g1, g2, ncol = 2)
+```
+
+### Les clients a captures dans la prochaine etape (28%)
+```{r, echo=FALSE,cache=TRUE,fig.width= 12, fig.height=6, warning = FALSE}
+ggplot(app.segment %>% filter(Result == FALSE & (Potential == TRUE | New == TRUE))) +
+  geom_segment(aes(x=Dmin, xend=Dmax, y=ord, yend=ord, col = as.factor(Label))) + 
+  labs(x = "Date", y = "") + ylim(c(1,376)) +
+  ggtitle("With or with not result") + theme(plot.title = element_text(size=20, face="bold", vjust=2))
+```
+
+
+
+```{r, echo=FALSE,cache=TRUE,fig.width= 20, fig.height=8, warning = FALSE}
+# ggplot(app.ID) + geom_segment(aes(x=Dmin, xend=Dmax, y=ord, yend=ord)) + 
+#   labs(x = "Date", y = "") +
+#   ggtitle("First & Last Trx") + theme(plot.title = element_text(size=20, face="bold", vjust=2))
+# 
+# g1 <- ggplot(app.ID) + geom_segment(aes(x=Dmin, xend=Dmax, y=ord, yend=ord, col = as.factor(Result))) + 
+#   labs(x = "Date", y = "") +
+#   ggtitle("Result") + theme(plot.title = element_text(size=20, face="bold", vjust=2))
+# 
+# g2 <- ggplot(app.ID) + geom_bar(aes(nOD, fill = as.factor(Result)), binwidth = 100)+
+#   labs(x = "Nbre Trx par personne", y = "Nbre de personnes") +
+#   ggtitle("Result") + theme(plot.title = element_text(size=20, face="bold", vjust=2))
+# 
+# grid.arrange(g1, g2, ncol = 2)
+# 
+# g1 <- ggplot(app.ID %>% filter(result == 1)) + geom_segment(aes(x=Dmin, xend=Dmax, y=ord, yend=ord, col = as.factor(ind))) +
+#   labs(x = "Date", y = "") +
+#   ggtitle("Segmentation") + theme(plot.title = element_text(size=20, face="bold", vjust=2))
+# 
+# g2 <- ggplot(app.ID) + geom_bar(aes(nOD, fill = as.factor(ind)), binwidth = 100)+
+#   labs(x = "Nbre Trx par personne", y = "Nbre de personnes") +
+#   ggtitle("Segmentation") + theme(plot.title = element_text(size=20, face="bold", vjust=2))
+# 
+# grid.arrange(g1, g2, ncol = 2)
+
+# ggplot(app.ID %>% filter(all > .5)) + geom_segment(aes(x=Dmin, xend=Dmax, y=ord, yend=ord, col = as.factor(ind)))
+#
+# ggplot(app.ID ) + geom_segment(aes(x=Dmin, xend=Dmax, y=ord, yend=ord, col = as.factor(ind))) +
+#   labs(x = "Date", y = "") +
+#   ggtitle("Segmentation") + theme(plot.title = element_text(size=20, face="bold", vjust=2))
+
+```

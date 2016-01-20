@@ -1,0 +1,7 @@
+p<-"---title: \"UserProfile_ID\" date: \"Friday, June 19, 2015\" output: pdf_document ---"
+
+write(paste(p,"\n test"),file="test.Rmd")
+
+q<-scan("test.txt", character(0), sep = "\n") # separate each line
+q<-scan("test.Rmd", character(0), sep = "\n") # separate each line
+write(paste(q,"\n test2"),file="test2.Rmd")

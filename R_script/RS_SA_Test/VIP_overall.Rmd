@@ -1,0 +1,281 @@
+---
+title: "VIP_overall"
+output: html_document
+---
+## VIPs Traffic pattern:
+* Periode dans la journee
+    + AR-DT:
+        * normal: 5-7h, 17-18h
+        * early bird: 5h
+        * late night: 19h
+    + Day: 10h-15h
+    + Peace: <5h & >20h
+* **% of Psg during Weekend is higher during the "Day Peirod"**
+
+```{r, echo=FALSE,fig.width=10,fig.height=5, cache=TRUE} 
+ggplot(ID_OD,aes(Hour,fill=as.factor(DOW)))+geom_bar(binwidth=1) + xlim(c(0,25)) 
+```
+
+* **Result by Simple Model**
+
+```{r, echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+count(ID_OD,"Predicted")
+ggplot(ID_OD,aes(Hour,fill=as.factor(Predicted)))+geom_bar(binwidth=1) + xlim(c(0,25)) 
+```
+
+* **Treated by ML Model**
+
+```{r, echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+count(ID_OD,"ML")
+ggplot(ID_OD,aes(Hour,fill=as.factor(ML)))+geom_bar(binwidth=1) + xlim(c(0,25)) 
+```
+
+
+### Focus sur AR-DT (DOW: 1-5)
+```{r,echo=FALSE, cache=TRUE}
+total<-nrow(ID_OD)
+periodAller<-c(5:7)
+periodRetour<-c(16:18)
+jrOuvert<-c(1:5)
+
+# nombre de passages d'Aller dans la semaine
+noAller<-nrow(ID_OD[ID_OD$Hour %in% periodAller & ID_OD$DOW %in% jrOuvert,])
+# nombre de passages de Retour dans la semaine
+noRetour<-nrow(ID_OD[ID_OD$Hour %in% periodRetour & ID_OD$DOW %in% jrOuvert,])
+
+# nombre de passages au milieu du jour
+periodMilieu<-c(8:15)
+noMilieu<-nrow(ID_OD[ID_OD$Hour %in% periodMilieu & ID_OD$DOW %in% jrOuvert,])
+```
+#### Aller: 5-7h (pourcentage de Trx d'Aller-DT)
+```{r,echo=FALSE, cache=TRUE}
+# pourcentage
+noAller/total
+```
+#### Retour: 16-18h (pourcentage de Trx de Retour-DT)
+```{r,echo=FALSE, cache=TRUE}
+noRetour/total
+```
+#### Milieu: 10-15h (pourcentage de Trx en milieu du jour)
+```{r,echo=FALSE, cache=TRUE}
+# pourcentage
+noMilieu/total
+```
+
+### Travel Pattern by VIP
+
+```{r,echo=FALSE,fig.width=15,fig.height=12, cache=TRUE}
+ggplot()+geom_segment(data=na.omit(ID_OD),aes(x=Elng, y=Elat,xend=Slng, yend=Slat), col="darkgreen",alpha=.2,lwd=1)+
+  geom_point(data=ID_OD,aes(Slng,Slat),col="darkblue",alpha=.2)+
+  facet_wrap(~Nom,ncol=2)+
+   geom_point(data=gares_geo[gares_geo$Societe != 5,],aes(Lng,Lat),alpha=.2)
+```
+
+```{r,echo=FALSE,fig.width=10,fig.height=10, cache=TRUE}
+ggplot(ID_OD,aes(Hour,fill=(as.factor(DOW)))) +  geom_bar(binwidth=1) + ggtitle("VIPs: #/ (H) ") +  facet_wrap(~Nom, ncol=2)
+ggplot(ID_OD,aes(Hour,fill=as.factor(Predicted)))+geom_bar(binwidth=1)+facet_wrap(~Nom, ncol=2)
+
+#ggplot(ID_OD,aes(DOW,Hour))+geom_point(alpha=.1) +facet_wrap(~Nom, ncol=2)
+ggplot(ID_OD,aes(Date))+geom_bar(binwidth=1)+facet_wrap(~Nom,ncol=1)
+```
+
+```{r,echo=FALSE, cache=TRUE}
+temp<-""
+for (i in 1:nrow(ID_ref)){
+ temp<-paste0(temp,ID_ref$Nom[i],"-% Aller: ")
+ temp<-paste(temp, nrow(ID_OD[ID_OD$Nom==ID_ref$Nom[i] & ID_OD$Hour %in% periodAller & ID_OD$DOW %in% jrOuvert,])/nrow(ID_OD[ID_OD$Nom==ID_ref$Nom[i],]),"   ")
+ temp<-paste0(temp,ID_ref$Nom[i],"-% Retour:")
+ temp<-paste(temp, nrow(ID_OD[ID_OD$Nom==ID_ref$Nom[i] & ID_OD$Hour %in% periodRetour & ID_OD$DOW %in% jrOuvert,])/
+        nrow(ID_OD[ID_OD$Nom==ID_ref$Nom[i],]),"\n")
+}
+writeLines(temp)
+```
+
+
+#### Category I
+##### NP
+Son AR-DT est entre Cavaillon(220) et Avignon(211): 
+```{r,echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+i=2
+nrow(ID_OD[ID_OD$Nom==ID_ref$Nom[i],])
+count(ID_OD[ID_OD$Nom==ID_ref$Nom[i] & ID_OD$noPsg>seuil & ID_OD$Hour %in% periodAller & ID_OD$DOW %in% jrOuvert,],c("Nom","Entr","Sor"))
+count(ID_OD[ID_OD$Nom==ID_ref$Nom[i] & ID_OD$noPsg>seuil & ID_OD$Hour %in% periodRetour & ID_OD$DOW %in% jrOuvert,],c("Nom","Entr","Sor"))
+
+temp_AR<-ID_OD[ID_OD$Nom==ID_ref$Nom[i] & 
+                 ((ID_OD$Entr==25004220 & ID_OD$Sor==25004211)|
+                 (ID_OD$Entr==25004211 & ID_OD$Sor==25004220)),]
+temp_title<-"NP: Aller-25004220-25004211 & Retour-25004211-25004220 "
+ggplot(temp_AR,aes(Hour,fill=as.factor(DOW)))+geom_bar(binwidth=1) + xlim(c(0,25)) + ggtitle(temp_title)  
+ggplot(temp_AR[temp_AR$Year==2014 & temp_AR$DOW %in% jrOuvert,],aes(WOY,fill=as.factor(DOW)))+geom_bar(binwidth=1) + ggtitle(temp_title)
+```
+
+##### PC
+His AR-DT is between Cavaillon(220) and Avignon(211): 
+```{r,echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+i=3
+nrow(ID_OD[ID_OD$Nom==ID_ref$Nom[i],])
+count(ID_OD[ID_OD$Nom==ID_ref$Nom[i] & ID_OD$noPsg>seuil & ID_OD$Hour %in% periodAller & ID_OD$DOW %in% jrOuvert,],c("Nom","Entr","Sor"))
+count(ID_OD[ID_OD$Nom==ID_ref$Nom[i] & ID_OD$noPsg>seuil & ID_OD$Hour %in% periodRetour & ID_OD$DOW %in% jrOuvert,],c("Nom","Entr","Sor"))
+
+temp_AR<-ID_OD[ID_OD$Nom==ID_ref$Nom[i] & 
+                 (
+                   ID_OD$Sor==25006001 |
+                  (ID_OD$Entr==25004220 & ID_OD$Sor==25004211)|
+                  (ID_OD$Entr==25004211 & ID_OD$Sor==25004220)),]
+temp_title<-"PC: Aller-220-211 & Retour-211-220 + 001"
+ggplot(temp_AR,aes(Hour,fill=as.factor(DOW)))+geom_bar(binwidth=1) + xlim(c(0,25)) + ggtitle(temp_title)  
+ggplot(temp_AR[temp_AR$Year==2014 & temp_AR$DOW %in% jrOuvert,],aes(WOY,fill=as.factor(DOW)))+geom_bar(binwidth=1) + ggtitle(temp_title)
+```
+
+PC 25006038 25006036   18
+```{r,echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+i=3
+
+temp_AR<-ID_OD[ID_OD$Nom==ID_ref$Nom[i] & ID_OD$Entr==25006038 & ID_OD$Sor==25006036 & ID_OD$Hour %in% periodAller,]
+temp_title<-"PC: Aller-25006038-25006036"
+ggplot(temp_AR,aes(Hour,fill=as.factor(DOW)))+geom_bar(binwidth=1) + xlim(c(0,25)) + ggtitle(temp_title)  
+ggplot(temp_AR,aes(Date,fill=as.factor(DOW)))+geom_bar(binwidth=1) + ggtitle(temp_title)
+```
+
+##### MD
+His AR-DT is between Bollene(209) and Avignon(211): 
+```{r,echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+i=1
+nrow(ID_OD[ID_OD$Nom==ID_ref$Nom[i],])
+count(ID_OD[ID_OD$Nom==ID_ref$Nom[i] & ID_OD$noPsg>seuil & ID_OD$Hour %in% periodAller & ID_OD$DOW %in% jrOuvert,],c("Nom","Entr","Sor"))
+count(ID_OD[ID_OD$Nom==ID_ref$Nom[i] & ID_OD$noPsg>seuil & ID_OD$Hour %in% periodRetour & ID_OD$DOW %in% jrOuvert,],c("Nom","Entr","Sor"))
+
+temp_AR<-ID_OD[ID_OD$Nom==ID_ref$Nom[i] & 
+                 (ID_OD$Entr==25004209 & ID_OD$Sor==25004211 |
+                  ID_OD$Entr==25004211 & ID_OD$Sor==25004209  )
+                  ,]
+temp_title<-"MD: Aller-209-211 & Retour-211-209"
+ggplot(temp_AR,aes(Hour,fill=as.factor(DOW)))+geom_bar(binwidth=1) + xlim(c(0,25)) + ggtitle(temp_title)  
+ggplot(temp_AR[temp_AR$Year==2015 & temp_AR$DOW %in% jrOuvert,],aes(WOY,fill=as.factor(DOW)))+geom_bar(binwidth=1) + ggtitle(temp_title)
+```
+
+##### MC
+His AR-DT is 009-002-220-211: 
+```{r,echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+i=6
+nrow(ID_OD[ID_OD$Nom==ID_ref$Nom[i],])
+count(ID_OD[ID_OD$Nom==ID_ref$Nom[i] & ID_OD$noPsg>seuil & ID_OD$Hour %in% periodAller & ID_OD$DOW %in% jrOuvert,],c("Nom","Entr","Sor"))
+count(ID_OD[ID_OD$Nom==ID_ref$Nom[i] & ID_OD$noPsg>seuil & ID_OD$Hour %in% periodRetour & ID_OD$DOW %in% jrOuvert,],c("Nom","Entr","Sor"))
+
+temp_AR<-ID_OD[ID_OD$Nom==ID_ref$Nom[i] & 
+                 (
+                  (ID_OD$Entr==25006002 & ID_OD$Sor==25006009)|
+                  (ID_OD$Entr==25006009 & ID_OD$Sor==25006002)|
+                  (ID_OD$Entr==25004220 & ID_OD$Sor==25004211)|
+                  (ID_OD$Entr==25004211 & ID_OD$Sor==25004220)),]
+temp_title<-"MC: AR-009-002-220-211"
+ggplot(temp_AR,aes(Hour,fill=as.factor(DOW)))+geom_bar(binwidth=1) + xlim(c(0,25)) + ggtitle(temp_title)  
+ggplot(temp_AR[temp_AR$Year==2014 & temp_AR$DOW %in% jrOuvert,],aes(WOY,fill=as.factor(DOW)))+geom_bar(binwidth=1) + ggtitle(temp_title)
+```
+
+##### JP
+His AR-DT is 009-002-220-211: 
+```{r,echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+i=7
+nrow(ID_OD[ID_OD$Nom==ID_ref$Nom[i],])
+count(ID_OD[ID_OD$Nom==ID_ref$Nom[i] & ID_OD$noPsg>seuil & ID_OD$Hour %in% periodAller & ID_OD$DOW %in% jrOuvert,],c("Nom","Entr","Sor"))
+count(ID_OD[ID_OD$Nom==ID_ref$Nom[i] & ID_OD$noPsg>seuil & ID_OD$Hour %in% periodRetour & ID_OD$DOW %in% jrOuvert,],c("Nom","Entr","Sor"))
+
+temp_AR<-ID_OD[ID_OD$Nom==ID_ref$Nom[i] & 
+                 (
+                  (ID_OD$Entr==25006042 & ID_OD$Sor==25006009)|
+                  (                      ID_OD$Sor==25006031)|
+                  (ID_OD$Entr==25006009 & ID_OD$Sor==25006042)),]
+temp_title<-"JP: AR-031-049-009"
+ggplot(temp_AR,aes(Hour,fill=as.factor(DOW)))+geom_bar(binwidth=1) + xlim(c(0,25)) + ggtitle(temp_title)  
+ggplot(temp_AR[temp_AR$Year==2014 & temp_AR$DOW %in% jrOuvert,],aes(WOY,fill=as.factor(DOW)))+geom_bar(binwidth=1) + ggtitle(temp_title)
+```
+
+#### Category II: FF
+
+His passage form is like the following graph:
+```{r,echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+i=4
+
+nrow(ID_OD[ID_OD$Nom==ID_ref$Nom[i],])
+count(ID_OD[ID_OD$Nom==ID_ref$Nom[i] & ID_OD$noPsg>seuil & ID_OD$Hour %in% periodAller & ID_OD$DOW %in% jrOuvert,],c("Nom","Entr","Sor"))
+count(ID_OD[ID_OD$Nom==ID_ref$Nom[i] & ID_OD$noPsg>seuil & ID_OD$Hour %in% periodRetour & ID_OD$DOW %in% jrOuvert,],c("Nom","Entr","Sor"))
+ggplot(ID_OD[ID_OD$Nom==ID_ref$Nom[i],],aes(Hour,fill=as.factor(DOW)))+geom_bar(binwidth=1) + xlim(c(0,25)) 
+
+ggplot(ID_OD[ID_OD$Nom==ID_ref$Nom[i],],aes(Hour,fill=as.factor(Predicted)))+geom_bar(binwidth=1) + xlim(c(0,25)) 
+```
+
+His AR-DT consists of 3 important OD:
+* OD1: Frejus Ouest-La Barque-Cavaillon-Avignon (49-2/220-211)
+* OD2: Avignon-Cavaillon-La Barque-Frejus Ouest (211-220/2-49)
+* OD3: Frejus (0-10)
+```{r,echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+i=4
+
+temp_title<-"FF - all passage"
+ggplot(ID_OD[ID_OD$Nom==ID_ref$Nom[i],] ,aes(Hour,fill=as.factor(DOW)))+geom_bar(binwidth=1) + xlim(c(0,25)) + ggtitle(temp_title)
+temp_AR<-ID_OD[ID_OD$Nom==ID_ref$Nom[i] & 
+                 ((ID_OD$Entr==25004220 & ID_OD$Sor==25004211)|
+          (ID_OD$Entr==25004211 & ID_OD$Sor==25004220)|
+  			  (ID_OD$Entr==25006049 & ID_OD$Sor==25006002)|
+				  (ID_OD$Entr==25006002 & ID_OD$Sor==25006049)|
+				  (ID_OD$Sor==25006010)),]
+temp_title<-"FF - Aller/Retour-Domicile/Travail"
+  #"FF: Aller-06049_06002_04220-04211 or NA-06010 & Retour-04211-04220-06002_06049 or NA-06010 "
+ggplot(temp_AR,aes(Hour,fill=as.factor(DOW)))+geom_bar(binwidth=1) + xlim(c(0,25)) + ggtitle(temp_title)  
+ggplot(temp_AR[temp_AR$Year==2014 & temp_AR$DOW %in% jrOuvert,],aes(WOY,fill=as.factor(DOW)))+geom_bar(binwidth=1) + ggtitle(temp_title)
+
+ggplot(temp_AR,aes(Hour,fill=as.factor(Predicted)))+geom_bar(binwidth=1) + xlim(c(0,25)) + ggtitle(temp_title)  
+ggplot(temp_AR[temp_AR$Year==2014 & temp_AR$DOW %in% jrOuvert,],aes(WOY,fill=as.factor(Predicted)))+geom_bar(binwidth=1) + ggtitle(temp_title)
+
+```
+
+**FF: AR-DT**
+
+```{r,echo=FALSE,fig.width=10,fig.height=6, cache=TRUE}
+
+ggplot(temp_AR[temp_AR$Year==2014 & temp_AR$DOW %in% jrOuvert,],aes(WOY,fill=as.factor(DOW))) +
+  geom_bar(binwidth=1) + 
+  facet_wrap(~Sor,ncol=1)
+```
+
+2.1 Let''s first look at the OD1(49-2/220-211) and OD2(211-220/2-49)
+
+2.1.1 OD1(49-2/220-211):
+
+```{r,echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+temp_Aller<-temp_AR[(temp_AR$Entr==25004220 & temp_AR$Sor==25004211)|
+					(temp_AR$Entr==25006049 & temp_AR$Sor==25006002),]
+ggplot(temp_Aller,aes(Hour,fill=as.factor(DOW)))+geom_bar(binwidth=1) + xlim(c(0,25))
+ggplot(temp_Aller,aes(Hour,fill=as.factor(Predicted)))+geom_bar(binwidth=1) + xlim(c(0,25))
+ggplot(temp_Aller[temp_Aller$Year==2014 & temp_Aller$DOW %in% jrOuvert,],aes(WOY,DOW,fill=as.factor(Predicted)))+geom_tile()
+```
+2.1.2 OD2(211-220/2-49)
+
+```{r,echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+temp_Aller<-temp_AR[(temp_AR$Entr==25004211 & temp_AR$Sor==25004220)|
+					(temp_AR$Entr==25006002 & temp_AR$Sor==25006049),]
+ggplot(temp_Aller,aes(Hour,fill=as.factor(DOW)))+geom_bar(binwidth=1) + xlim(c(0,25))
+ggplot(temp_Aller,aes(Hour,fill=as.factor(Predicted)))+geom_bar(binwidth=1) + xlim(c(0,25))
+ggplot(temp_Aller[temp_Aller$Year==2014 & temp_Aller$DOW %in% jrOuvert,],aes(WOY,DOW,fill=as.factor(Predicted)))+geom_tile()
+```
+
+2.1.3 Together:
+
+```{r,echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+temp_Aller<-temp_AR[ temp_AR$DOW %in% jrOuvert & 
+         ((temp_AR$Entr==25004220 & temp_AR$Sor==25004211)|
+					(temp_AR$Entr==25006049 & temp_AR$Sor==25006002)|
+					(temp_AR$Entr==25004211 & temp_AR$Sor==25004220)|
+					(temp_AR$Entr==25006002 & temp_AR$Sor==25006049)),]
+ggplot(temp_Aller,aes(Hour,fill=as.factor(DOW)))+geom_bar(binwidth=1) + xlim(c(0,25))
+ggplot(temp_Aller[temp_Aller$Year==2014 & temp_Aller$DOW %in% jrOuvert,],aes(WOY,fill=as.factor(DOW)))+geom_bar(binwidth=1)
+```
+
+2.2 Then, we''ll focus on OD3(N.A. - 10):
+
+```{r,echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+temp_Aller<-temp_AR[temp_AR$Sor==25006010 & temp_Aller$DOW %in% jrOuvert, ]
+ggplot(temp_Aller[temp_Aller$DOW %in% jrOuvert,],aes(Hour,fill=as.factor(DOW)))+geom_bar(binwidth=1) + xlim(c(0,25))
+ggplot(temp_Aller[temp_Aller$Year==2014 & temp_Aller$DOW %in% jrOuvert,],aes(WOY,fill=as.factor(DOW)))+geom_bar(binwidth=1) 
+```

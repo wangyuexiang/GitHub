@@ -1,0 +1,35 @@
+---
+title: "Profile"
+author: "WANG Yuexiang"
+date: "6 juillet 2015"
+output: html_document
+---
+
+```{r set-options, echo=FALSE, cache=FALSE}
+options(width = 100)
+```
+
+```{r, echo=FALSE,cache=FALSE,fig.width= 20, fig.height=10, warning = FALSE}
+for (i in c(1:5)) {
+  print(paste0("ID_",i))
+  ID_test <- trx.2014 %>% filter(Label == i)
+  print(summary(ID_test %>% select(Entr, Sor, Tar_TCC, KMS, Month, Day, Hour, Time, Date, DOW)))
+  
+  Sor<-count(ID_test,Sor)
+  names(Sor)[1]<-"Cde"
+  Sor<-merge(x=Sor,gares_geo,by="Cde")
+  
+  g1 <- ggplot(ID_test) +  geom_point(aes(Date, Time, shape = as.factor(DOW))) + ggtitle("Date & Time")
+  g2 <- ggplot(ID_test)+
+    geom_segment(aes(x=Elng, y=Elat,xend=Slng, yend=Slat), alpha=.4,lwd=1,
+                 col="#FFCC33",arrow=arrow(length = unit(0.1,"cm")))+
+    geom_point(data = Sor,aes(Lng, Lat,size = n), col="Red")+
+    geom_point(data = gares_geo,aes(Lng,Lat),size = 3,alpha = .2, shape = 3)+
+    geom_point(data = gare_SO,aes(Lng, Lat, color="S.O."), size=3, shape = 3)+
+    ylim(c(42, 46.5)) + xlim(c(-1.5,7.5))+
+    theme(legend.position = c(.95,.9),plot.title = element_text(size=20, face="bold")) +
+    ggtitle("Sor & OD")
+  
+  grid.arrange(g1,g2,ncol=2)
+}
+```

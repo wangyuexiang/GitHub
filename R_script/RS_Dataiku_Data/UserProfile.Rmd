@@ -1,0 +1,88 @@
+---
+title: "UserProfile in Vaucluse - ID2"
+date: "Wednesday, May 21, 2015"
+output: html_document
+---
+
+# User Profile in Vaucluse - ID2
+## This page shows the profile of user 'ID2'
+
+```{r ,echo=FALSE}
+opts_chunk$fig.width=10 
+opts_chunk$fig.height=3
+opts_chunk$echo=FALSE
+opts_chunk$cache=TRUE
+library(ggplot2)
+require(gridExtra)
+Test_set[1,c(1,2,7,15:19,22)]
+```
+
+```{r, fig.width= 10, fig.height=4, echo=FALSE,cache=TRUE}
+temp<-ID2_OD
+
+qplot(Year,data=temp,geom="histogram",binwidth=.5)
+```
+
+
+## His activities in 2014 are shown as followed:
+```{r, fig.width= 10, fig.height=4, echo=FALSE,cache=TRUE}
+datebreaks <- seq(as.Date("2010-1-1"), as.Date("2015-3-31"), by="3 month")
+datebreaks_week <- seq(as.Date("2009-12-28"), as.Date("2015-3-31"), by="1 week")
+d1<-as.Date("2014-1-1")
+d2<-as.Date("2014-8-31")
+temp_noPassage<-temp[temp$Date>d1 & temp$Date<d2,]
+temp_date<-datebreaks_week[datebreaks_week>d1 &datebreaks_week<d2]
+
+# General Plot
+p1<-qplot(Month,data=temp_noPassage,geom="histogram",binwidth=1,xlim=c(1,9)) +
+  ylab("Number of Passage") + ggtitle("Nb_Psge by Month")
+p2<-qplot(woy,data=temp_noPassage,geom="histogram",binwidth=1,xlim=c(0,53))+ 
+  ylab("Number of Passage") + ggtitle("Nb_Psge by WOY")
+grid.arrange(p1, p2, ncol=2)
+```
+
+```{r, fig.width= 10, fig.height=4, echo=FALSE,cache=TRUE}
+p1<-qplot(dow,data=temp_noPassage,geom="histogram",binwidth=1,xlim=c(0,7))+ 
+  ylab("Number of Passage") + ggtitle("Nb_Psge by DOW")
+
+p2<-qplot(Day,data=temp_noPassage,geom="histogram",binwidth=1,xlim=c(1,31))+ 
+  ylab("Number of Passage") + ggtitle("Nb_Psge by Day")
+grid.arrange(p1, p2, ncol=2)
+
+```
+
+
+```{r, fig.width= 10, fig.height=4, echo=FALSE,cache=TRUE}
+qplot(Hour,data=temp_noPassage,geom="histogram",binwidth=1,xlim=c(0,25))+ ylab("Number of Passage") + ggtitle("Nb_Psge by Hour")
+```
+
+```{r, fig.width= 10, fig.height=4, echo=FALSE,cache=TRUE}
+qplot(Date,data=temp_noPassage,geom="histogram",binwidth=1) + 
+  ylab("Number of Passage") + ggtitle("Daily Passage in 2014") +
+  geom_vline(xintercept = as.numeric(temp_date), color="black")  
+```
+
+```{r, fig.width= 10, fig.height=4, echo=FALSE,cache=TRUE}
+p1<-qplot(KMS,data=temp_noPassage,geom="histogram",binwidth=10)  + 
+  ylab("Number of Passage")  + 
+  ggtitle("Nb_Psge by KMS") +
+  xlim(c(0,100))
+p2<-qplot(Tarif,data=temp_noPassage,geom="histogram",binwidth=1)  + 
+  ylab("Number of Passage")  + 
+  ggtitle("Nb_Psge by Tarif")
+grid.arrange(p1, p2, ncol=2)
+```
+
+
+## This distribution of his exit points in 2014
+```{r, fig.width= 10, fig.height=4, echo=FALSE,cache=TRUE}
+ID2_gare<-ID2_gare
+ggplot(ID2_gare,aes(x=Sor))+  geom_bar(binwidth=100) +
+  xlim(c(4000,6100))
+ggplot(ID2_gare,aes(x=Sor))+  geom_bar(aes(y = (..count..)/sum(..count..)),binwidth=.5) +  
+  scale_y_continuous(labels = percent) +
+  xlim(c(4200,4230))
+ggplot(ID2_gare,aes(x=Sor))+  geom_bar(aes(y = (..count..)/sum(..count..)),binwidth=.5) +    
+  scale_y_continuous(labels = percent) +
+  xlim(c(6000,6075))
+```

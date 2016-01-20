@@ -1,0 +1,48 @@
+---
+title: "Segmentation"
+author: "WANG Yuexiang"
+date: "11 septembre 2015"
+output: html_document
+---
+<style type="text/css">
+
+body, td {
+   font-size: 15px;
+}
+code.r{
+  font-size: 15px;
+}
+pre {
+  font-size: 10px
+}
+</style>
+
+```{r set-options, echo=FALSE, cache=FALSE}
+options(width = 100)
+```
+
+
+
+```{r, echo=FALSE,cache=FALSE,fig.width= 25, fig.height=8, warning = FALSE}
+# for (i in 1:nrow(trx.after.ID)) {
+for (i in 101:376) {
+  print( as.data.frame(trx.after.ID %>% filter(ID == i))[1,])
+  
+  temp <- trx.after %>% filter(ID == i)
+  print(as.data.frame(trx.after.ref %>% 
+                        filter(ID == i & (ord <= 6 | noPsg > 50)) %>%
+                        slice(1:6)))
+  
+  g1 <- ggplot(temp) +
+    geom_point(aes(Date, TimeSor, col = as.factor(ord))) +
+    ggtitle("All w/ color") +
+    theme(legend.position = "none")
+    
+  g2 <- ggplot(temp%>% filter(ord <= 6 | noPsg > 50)) + 
+    geom_point(aes(Date, TimeSor, size = noPsg, col = as.factor(ord))) +
+    ggtitle("ord <= 6 | noPsg > 50")+
+    theme(legend.position = "none")
+
+  grid.arrange(g1,g2,ncol=2, main = paste0("User ", i))
+}
+```

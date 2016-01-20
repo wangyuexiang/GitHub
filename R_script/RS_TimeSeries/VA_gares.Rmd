@@ -1,0 +1,54 @@
+---
+title: "VA_gares"
+author: "WANG Yuexiang"
+date: "Wednesday, June 17, 2015"
+output: html_document
+---
+
+## Gares peages VA in France
+
+```{r, echo=FALSE,cache=TRUE,fig.width= 10, fig.height=10}
+myLocation<-"France"
+myMap<-get_map(location=myLocation,source="google",maptype="roadmap",zoom=6) 
+ggmap(myMap)+
+  geom_point(aes(x = Lng, y = Lat, color=as.factor(Societe),size=5),
+           data = na.omit(gares))+
+ labs(x = 'Longitude', y = 'Latitude') + ggtitle('Gares peages VA')
+```
+
+## Gares : S.O.in France
+
+```{r, echo=FALSE,cache=TRUE,fig.width= 10, fig.height=10}
+#myLocation<-"France"
+#myMap<-get_map(location=myLocation,source="google",maptype="roadmap",zoom=6) 
+ggmap(myMap)+
+  geom_point(aes(x = Lng, y = Lat, color=as.factor(Societe)),
+             data = na.omit(gares),size=5,alpha=.2)+
+  labs(x = 'Longitude', y = 'Latitude') + ggtitle('Gares SO in France')+
+  geom_point(aes(x = Lng, y = Lat, color="S.O."),
+           data = gares[gares$Cde %in% Sor_SO$Sor_SO,],size=5)
+```
+
+## Gares near Avignon
+
+```{r, echo=FALSE,cache=TRUE,fig.width= 10, fig.height=10}
+myLocation<-"Avignon"
+myMap<-get_map(location=myLocation,source="google",maptype="roadmap",zoom=8) 
+ggmap(myMap)+
+  geom_point(aes(x = Lng, y = Lat, color=as.factor(Societe),size=5),
+           data = na.omit(gares))+
+ labs(x = 'Longitude', y = 'Latitude') + ggtitle('Gares near Avignon')
+```
+
+## Gares : S.O.in Escota
+
+```{r, echo=FALSE,cache=TRUE,fig.width= 10, fig.height=10}
+myLocation<-"Frejus"
+myMap<-get_map(location=myLocation,source="google",maptype="roadmap",zoom=8) 
+ggmap(myMap)+
+  geom_point(aes(x = Lng, y = Lat, color=as.factor(Societe)),
+             data = na.omit(gares),size=5,alpha=.2)+
+  labs(x = 'Longitude', y = 'Latitude') + ggtitle('Gares SO in France')+
+  geom_point(aes(x = Lng, y = Lat, color="S.O."),
+           data = gares[gares$Cde %in% Sor_SO$Sor_SO,],size=5)
+```

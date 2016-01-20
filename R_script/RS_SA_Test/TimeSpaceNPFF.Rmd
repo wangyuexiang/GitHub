@@ -1,0 +1,161 @@
+---
+title: "TimeSpaceNPFF"
+author: "WANG Yuexiang"
+date: "16 juillet 2015"
+output: html_document
+---
+
+# Time Space
+## NP
+```{r, echo=FALSE, cache=TRUE, fig.width=10, fig.height=6, warning=FALSE}
+ggplot(NP) +
+  geom_point(aes(Date, Elng, col = "Elng", shape = "Elng", alpha = .3)) +
+  geom_point(aes(Date, Slng, col = "Slng", shape = "Slng", alpha = .3)) +
+  geom_segment(aes(x = Date, xend = Date, y = Elng, yend = Slng, alpha = .2)) +
+  ggtitle("Date~Lng") + theme(plot.title = element_text(size = rel(1)))
+
+ggplot(NP) +
+  geom_point(aes(Date, Elat, col = "Elat", shape = "Elat", alpha = .3)) +
+  geom_point(aes(Date, Slat, col = "Slat", shape = "Slat", alpha = .3)) +
+  geom_segment(aes(x = Date, xend = Date, y = Elat, yend = Slat, alpha = .2)) +
+  ggtitle("Date~Lat") + theme(plot.title = element_text(size = rel(1)))
+
+ggplot(NP) +
+  geom_point(aes(Date, Time)) +
+  ggtitle("Date~Time") + theme(plot.title = element_text(size = rel(1)))
+
+ggplot(NP) +
+  geom_point(aes(Time, Elng, col = "Elng", shape = "Elng", alpha = .3)) +
+  geom_point(aes(Time, Slng, col = "Slng", shape = "Slng", alpha = .3)) +
+  geom_segment(aes(x = Time, xend = Time, y = Elng, yend = Slng, alpha = .2)) +
+  ggtitle("Time~Lng") + theme(plot.title = element_text(size = rel(1)))
+
+ggplot(NP) +
+  geom_point(aes(Time, Elat, col = "Elat", shape = "Elat", alpha = .3)) +
+  geom_point(aes(Time, Slat, col = "Slat", shape = "Slat", alpha = .3)) +
+  geom_segment(aes(x = Time, xend = Time, y = Elat, yend = Slat, alpha = .2)) +
+  ggtitle("Time~Lat") + theme(plot.title = element_text(size = rel(1)))
+```
+
+
+```{r, echo=FALSE, cache=TRUE, fig.width=10, fig.height=6, warning=FALSE}
+ggplot(NP) +
+  geom_point(aes(Date, Entr, col = "Entr", shape = "Entr", alpha = .3)) +
+  geom_point(aes(Date, Sor, col = "Sor", shape = "Sor", alpha = .3)) +
+  geom_segment(aes(x = Date, xend = Date, y = Entr, yend = Sor, alpha = .2)) +
+  ggtitle("Date~Lng") + theme(plot.title = element_text(size = rel(1)))
+```
+
+
+## FF
+```{r, echo=FALSE, cache=TRUE, fig.width=10, fig.height=6, warning=FALSE}
+ggplot(FF) +
+  geom_point(aes(Date, Elng, col = "Elng", shape = "Elng", alpha = .3)) +
+  geom_point(aes(Date, Slng, col = "Slng", shape = "Slng", alpha = .3)) +
+  geom_segment(aes(x = Date, xend = Date, y = Elng, yend = Slng, alpha = .2)) +
+  ggtitle("Date~Lng") + theme(plot.title = element_text(size = rel(1)))
+
+ggplot(FF) +
+  geom_point(aes(Date, Elat, col = "Elat", shape = "Elat", alpha = .3)) +
+  geom_point(aes(Date, Slat, col = "Slat", shape = "Slat", alpha = .3)) +
+  geom_segment(aes(x = Date, xend = Date, y = Elat, yend = Slat, alpha = .2)) +
+  ggtitle("Date~Lat") + theme(plot.title = element_text(size = rel(1)))
+
+ggplot(FF) +
+  geom_point(aes(Date, Time)) +
+  ggtitle("Date~Time") + theme(plot.title = element_text(size = rel(1)))
+
+ggplot(FF) +
+  geom_point(aes(Time, Elng, col = "Elng", shape = "Elng", alpha = .3)) +
+  geom_point(aes(Time, Slng, col = "Slng", shape = "Slng", alpha = .3)) +
+  geom_segment(aes(x = Time, xend = Time, y = Elng, yend = Slng, alpha = .2)) +
+  ggtitle("Time~Lng") + theme(plot.title = element_text(size = rel(1)))
+
+ggplot(FF) +
+  geom_point(aes(Time, Elat, col = "Elat", shape = "Elat", alpha = .3)) +
+  geom_point(aes(Time, Slat, col = "Slat", shape = "Slat", alpha = .3)) +
+  geom_segment(aes(x = Time, xend = Time, y = Elat, yend = Slat, alpha = .2)) +
+  ggtitle("Time~Lat") + theme(plot.title = element_text(size = rel(1)))
+```
+
+```{r, echo=FALSE, cache=TRUE, fig.width=10, fig.height=6, warning=FALSE}
+ggplot(FF) +
+  geom_point(aes(Date, Entr, col = "Entr", shape = "Entr", alpha = .3)) +
+  geom_point(aes(Date, Sor, col = "Sor", shape = "Sor", alpha = .3)) +
+  geom_segment(aes(x = Date, xend = Date, y = Entr, yend = Sor, alpha = .2)) +
+  ggtitle("Date~Lng") + theme(plot.title = element_text(size = rel(1)))
+```
+
+## FF par DOW
+```{r, echo=FALSE, cache=TRUE, fig.width=10, fig.height=6, warning=FALSE}
+ggplot(FF) +
+  geom_point(aes(Date, Elng, col = "Elng", shape = "Elng", alpha = .3)) +
+  geom_point(aes(Date, Slng, col = "Slng", shape = "Slng", alpha = .3)) +
+  geom_segment(aes(x = Date, xend = Date, y = Elng, yend = Slng, alpha = .2)) +
+  ggtitle("Date~Lng") + theme(plot.title = element_text(size = rel(1))) +
+  facet_wrap(~DOW, ncol = 4)
+
+ggplot(FF) +
+  geom_point(aes(Date, Elat, col = "Elat", shape = "Elat", alpha = .3)) +
+  geom_point(aes(Date, Slat, col = "Slat", shape = "Slat", alpha = .3)) +
+  geom_segment(aes(x = Date, xend = Date, y = Elat, yend = Slat, alpha = .2)) +
+  ggtitle("Date~Lat") + theme(plot.title = element_text(size = rel(1)))+
+  facet_wrap(~DOW, ncol = 4)
+
+ggplot(FF) +
+  geom_point(aes(Date, Time)) +
+  ggtitle("Date~Time") + theme(plot.title = element_text(size = rel(1)))+
+  facet_wrap(~DOW, ncol = 4)
+
+ggplot(FF) +
+  geom_point(aes(Time, Elng, col = "Elng", shape = "Elng", alpha = .3)) +
+  geom_point(aes(Time, Slng, col = "Slng", shape = "Slng", alpha = .3)) +
+  geom_segment(aes(x = Time, xend = Time, y = Elng, yend = Slng, alpha = .2)) +
+  ggtitle("Time~Lng") + theme(plot.title = element_text(size = rel(1)))+
+  facet_wrap(~DOW, ncol = 4)
+
+ggplot(FF) +
+  geom_point(aes(Time, Elat, col = "Elat", shape = "Elat", alpha = .3)) +
+  geom_point(aes(Time, Slat, col = "Slat", shape = "Slat", alpha = .3)) +
+  geom_segment(aes(x = Time, xend = Time, y = Elat, yend = Slat, alpha = .2)) +
+  ggtitle("Time~Lat") + theme(plot.title = element_text(size = rel(1)))+
+  facet_wrap(~DOW, ncol = 4)
+```
+
+
+
+## NPFF
+```{r, echo=FALSE, cache=TRUE, fig.width=18, fig.height=6, warning=FALSE}
+ggplot(NPFF) +
+  geom_point(aes(Date, Elng, col = "Elng", shape = "Elng", alpha = .3)) +
+  geom_point(aes(Date, Slng, col = "Slng", shape = "Slng", alpha = .3)) +
+  geom_segment(aes(x = Date, xend = Date, y = Elng, yend = Slng, alpha = .2)) +
+  ggtitle("Date~Lng") + theme(plot.title = element_text(size = rel(1))) +
+  facet_wrap(~Nom, ncol = 2)
+
+ggplot(NPFF) +
+  geom_point(aes(Date, Elat, col = "Elat", shape = "Elat", alpha = .3)) +
+  geom_point(aes(Date, Slat, col = "Slat", shape = "Slat", alpha = .3)) +
+  geom_segment(aes(x = Date, xend = Date, y = Elat, yend = Slat, alpha = .2)) +
+  ggtitle("Date~Lat") + theme(plot.title = element_text(size = rel(1)))+
+  facet_wrap(~Nom, ncol = 2)
+
+ggplot(NPFF) +
+  geom_point(aes(Date, Time)) +
+  ggtitle("Date~Time") + theme(plot.title = element_text(size = rel(1)))+
+  facet_wrap(~Nom, ncol = 2)
+
+ggplot(NPFF) +
+  geom_point(aes(Time, Elng, col = "Elng", shape = "Elng", alpha = .3)) +
+  geom_point(aes(Time, Slng, col = "Slng", shape = "Slng", alpha = .3)) +
+  geom_segment(aes(x = Time, xend = Time, y = Elng, yend = Slng, alpha = .2)) +
+  ggtitle("Time~Lng") + theme(plot.title = element_text(size = rel(1)))+
+  facet_wrap(~Nom, ncol = 2)
+
+ggplot(NPFF) +
+  geom_point(aes(Time, Elat, col = "Elat", shape = "Elat", alpha = .3)) +
+  geom_point(aes(Time, Slat, col = "Slat", shape = "Slat", alpha = .3)) +
+  geom_segment(aes(x = Time, xend = Time, y = Elat, yend = Slat, alpha = .2)) +
+  ggtitle("Time~Lat") + theme(plot.title = element_text(size = rel(1)))+
+  facet_wrap(~Nom, ncol = 2)
+```

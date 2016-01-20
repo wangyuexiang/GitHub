@@ -1,0 +1,83 @@
+---
+title: "UserProfile_Test"
+date: "Wednesday, June 17, 2015"
+output: html_document
+---
+
+```{r, echo=TRUE,cache=TRUE}
+i<-2
+ID_test<-ID_OD_2014[ID_OD_2014$Label==i,]
+# ggplot(ID_test,aes(Sor))+geom_bar()
+
+Sor<-count(ID_test,"Sor")
+Sor<-Sor[order(Sor$freq,decreasing=TRUE),]
+Entr<-count(ID_test,"Entr")
+Entr<-Entr[order(Entr$freq,decreasing=TRUE),]
+OD<-count(ID_test,c("Entr","Sor"))
+OD<-OD[order(OD$freq,decreasing=TRUE),]
+```
+
+## Users: `r i`
+
+```{r set-options, echo=FALSE, cache=TRUE}
+options(width=80)
+options(cache=FALSE)
+options(echo=FALSE)
+```
+
+ID_test has `r nrow(ID_test)` transaction from Jan. to Aug. in 2014, among which `r nrow(ID_test[ID_test$Entr %in% zone & ID_test$Sor %in% zone,])` is in the "zone defined". And `r nrow(ID_test[ID_test$Sor %in% zone,])` transactions have the exit end in the "zone defined".
+
+
+```{r, echo=TRUE,cache=TRUE}
+Entr[1:10,]
+Sor[1:10,]
+OD[1:10,]
+```
+
+### Result of Simple Model on OD & Zone
+```{r, echo=FALSE,cache=TRUE,fig.width= 15, fig.height=4}
+p1<-ggplot(ID_test,aes(Hour,fill=as.factor(DOW)))+geom_bar(binwidth=1)+guides(fill=FALSE)
+p2<-ggplot(ID_test,aes(Hour,fill=as.factor(Predicted)))+geom_bar(binwidth=1)
+grid.arrange(p1,p2,ncol=2)
+```
+
+
+```{r, echo=FALSE,cache=TRUE,fig.width= 15, fig.height=4}
+ggplot(ID_test,aes(Date,fill=as.factor(Predicted)))+geom_bar(binwidth=1)
+# p1<-ggplot(ID_test,aes(Date,fill=as.factor(DOW)))+geom_bar(binwidth=1)+guides(fill=FALSE)
+# p2<-ggplot(ID_test,aes(Date,fill=as.factor(Predicted)))+geom_bar(binwidth=1)+guides(fill=FALSE)
+# grid.arrange(p1,p2,ncol=1)
+```
+
+### Viz of Gares & OD
+```{r, echo=FALSE,cache=TRUE,fig.width= 12, fig.height=6}
+# ggplot(ID_test)+geom_segment(aes(x=Elng, y=Elat,xend=Slng, yend=Slat,color=as.factor(zone)),alpha=.2,lwd=2)+
+#   geom_point(data=gares_geo[gares_geo %in% zone,],aes(Lng,Lat),color="red",alpha=.4,size=3)+
+#   geom_point(data=gares_geo,aes(Lng,Lat),alpha=.2,size=3)
+```
+
+#### Sor
+```{r, echo=FALSE,cache=TRUE,fig.width= 8, fig.height=6}
+p1<-ggplot(ID_test)+geom_point(aes(Elng, Elat), col="Green",alpha=.4,size=4)+
+  geom_point(data=gares_geo,aes(Lng,Lat),alpha=.2,size=3)
+
+p2<-ggplot(ID_test)+geom_point(aes(Slng, Slat), col="Red",alpha=.4,size=4)+
+  geom_point(data=gares_geo,aes(Lng,Lat),alpha=.2,size=3)
+
+grid.arrange(p1,p2,ncol=2)
+```
+
+#### OD
+```{r, echo=FALSE,cache=TRUE,fig.width= 8, fig.height=6}
+ggplot(ID_test)+geom_segment(aes(x=Elng, y=Elat,xend=Slng, yend=Slat), col="darkgreen",alpha=.2,lwd=2)+
+  geom_point(data=gares_geo,aes(Lng,Lat),alpha=.2,size=3)
+```
+
+```{r, echo=FALSE,cache=TRUE,fig.width= 15, fig.height=15}
+#### Over France
+# myLocation<-"Avignon"
+# myMap<-get_map(location=myLocation,source="google",maptype="roadmap",zoom=7) 
+# ggmap(myMap)+
+#   geom_segment(data=na.omit(ID_test),aes(x=Elng, y=Elat,xend=Slng, yend=Slat),color="firebrick",lwd=2)+
+#   geom_point(data=gares_geo,aes(Lng,Lat,color=as.factor(Societe)),size=3)
+```

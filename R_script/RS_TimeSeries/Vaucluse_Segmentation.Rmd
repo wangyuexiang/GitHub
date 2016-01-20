@@ -1,0 +1,69 @@
+---
+title: "Vaucluse_segmentation"
+output: html_document
+---
+List the following Users in Vaucluse
+## 1-100: 		 3840 - 1091
+## 101-200:		 1091 -  864
+## 801-900:		 504 -  482
+## 1301-1400:	 410 -  399
+## 2801-2900:	 302 -  298
+## 4901-5000:	 226 -  
+
+
+## 1-100:      3840 - 1091
+```{r, echo=FALSE,fig.width=10,fig.height=8,cache=TRUE}
+ID_test<-List[1:100,1]
+ID_OD_test<-ID_OD_2014[ID_OD_2014$ID %in% ID_test,] 
+# 
+# ggplot(ID_OD_test,aes(Hour,fill=as.factor(dow))) +
+#   geom_bar(binwidth=1) + 
+#   facet_wrap(~Label,ncol=3)
+# 
+# ggplot(ID_OD_test,aes(woy,fill=as.factor(dow))) +
+#   geom_bar(binwidth=1) + 
+#   facet_wrap(~Label,ncol=3)
+ggplot(ID_OD_test,aes(Hour))+geom_density()+facet_wrap(~Label,ncol=10)
+ggplot(ID_OD_test,aes(dow))+geom_density()+facet_wrap(~Label,ncol=10)
+
+```
+
+## 101-200:  	 1091 -  864
+```{r, echo=FALSE,fig.width=10,fig.height=8,cache=TRUE}
+ID_test<-List[101:200,1]
+ID_OD_test<-ID_OD_2014[ID_OD_2014$ID %in% ID_test,] 
+ggplot(ID_OD_test,aes(Hour))+geom_density()+facet_wrap(~Label,ncol=10)
+ggplot(ID_OD_test,aes(dow))+geom_density()+facet_wrap(~Label,ncol=10)
+```
+
+## 801-900:  	 504 -  482
+```{r, echo=FALSE,fig.width=10,fig.height=8,cache=TRUE}
+ID_test<-List[801:900,1]
+ID_OD_test<-ID_OD_2014[ID_OD_2014$ID %in% ID_test,] 
+ggplot(ID_OD_test,aes(Hour))+geom_density()+facet_wrap(~Label,ncol=10)
+ggplot(ID_OD_test,aes(dow))+geom_density()+facet_wrap(~Label,ncol=10)
+```
+
+## 1301-1400:   410 -  399
+```{r, echo=FALSE,fig.width=10,fig.height=8,cache=TRUE}
+ID_test<-List[1301:1400,1]
+ID_OD_test<-ID_OD_2014[ID_OD_2014$ID %in% ID_test,] 
+ggplot(ID_OD_test,aes(Hour))+geom_density()+facet_wrap(~Label,ncol=10)
+ggplot(ID_OD_test,aes(dow))+geom_density()+facet_wrap(~Label,ncol=10)
+```
+
+## 2801-2900:   302 -  298
+```{r, echo=FALSE,fig.width=10,fig.height=8,cache=TRUE}
+ID_test<-List[2801:2900,1]
+ID_OD_test<-ID_OD_2014[ID_OD_2014$ID %in% ID_test,] 
+ggplot(ID_OD_test,aes(Hour))+geom_density()+facet_wrap(~Label,ncol=10)
+ggplot(ID_OD_test,aes(dow))+geom_density()+facet_wrap(~Label,ncol=10)
+```
+
+## 4901-5000:   226 -  
+```{r, echo=FALSE,fig.width=10,fig.height=8,cache=TRUE}
+ID_test<-List[4901:5000,1]
+ID_OD_test<-ID_OD_2014[ID_OD_2014$ID %in% ID_test,] 
+ggplot(ID_OD_test,aes(Hour))+geom_density()+facet_wrap(~Label,ncol=10)
+ggplot(ID_OD_test,aes(dow))+geom_density()+facet_wrap(~Label,ncol=10)
+```

@@ -1,0 +1,62 @@
+---
+title: "ID1"
+author: "WANG Yuexiang"
+date: "6 juillet 2015"
+output: html_document
+---
+
+```{r set-options, echo=FALSE, cache=FALSE}
+options(width = 100)
+```
+
+
+## ID1
+```{r, echo = FALSE, cache = TRUE, fig.width = 10, fig.height = 5}
+summary(ID1 %>% select(Entr, Sor, Tar_TCC, KMS, Month, Day, Hour, Time, Date, DOW))
+```
+
+
+## Kmeans 
+```{r, cache = TRUE, fig.width = 10, fig.height = 5, warning = FALSE}
+temp <- ID1 
+
+ggplot(temp) +
+    geom_point(aes(Date, Time, shape = as.factor(DOW)))
+
+
+t.kmeans <- lapply(1:6, function(i){
+  kmeans(temp[, "Time"], centers = i)
+})
+
+lapply(t.kmeans, function(z) z$withinss)
+within.ss <- sapply(t.kmeans, function(z) sum(z$withinss))
+
+plot(1:6, type="b", xlab = "Number of clusters", ylab = "Within SS", within.ss)
+```
+
+## Nb of Clusters from 1 to 6
+```{r, cache = TRUE, fig.width = 14, fig.height = 5, warning = FALSE}
+set.seed(1234) 
+for (i in 1:6){
+  cl1 <- kmeans(temp[, "Time"], i)
+  centers1 <- as.data.frame(cl1$centers)
+  centers1$cluster <- seq(1:i)
+  
+  gg1 <- ggplot(temp) +
+    geom_point(aes(Date, Time, col = as.factor(cl1$cluster), shape = as.factor(DOW))) +
+    geom_abline(aes(intercept=Time, slope = 0, col = as.factor(cluster)),data=centers1) 
+
+  cl2 <- kmeans(temp[, c("DOW","Time")], i)
+  centers2 <- as.data.frame(cl2$centers)
+  centers2$cluster <- seq(1:i)
+ 
+  gg2 <- ggplot(temp) +
+    geom_point(aes(Date, Time, col = as.factor(cl2$cluster), shape = as.factor(DOW))) +
+    geom_abline(aes(intercept=Time, slope = 0, col = as.factor(cluster)),data=centers2)
+  
+  grid.arrange(gg1, gg2, ncol = 2)
+  
+  cat("Cluster by Time: ", cl1$size, "\n")
+  cat("Cluster by Time & DOW: ", cl2$size)
+} 
+```

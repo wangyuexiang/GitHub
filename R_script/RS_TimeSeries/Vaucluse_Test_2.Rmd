@@ -1,0 +1,48 @@
+---
+title: "Vaucluse_Test_"
+output: html_document
+---
+## 1
+```{r, width=80, fig.width=12,fig.height=150,cache=TRUE}
+ggplot(ID_OD_2014[ID_OD_2014$Label %in% c(1:100),]) + 
+  geom_tile(aes(Date, Hour)) + 
+  facet_wrap(~Label, ncol = 2)
+```
+
+## 201
+```{r, width=80, fig.width=12,fig.height=150,cache=TRUE}
+ggplot(ID_OD_2014[ID_OD_2014$Label %in% c(201:300),]) + 
+  geom_tile(aes(Date, Hour)) + 
+  facet_wrap(~Label, ncol = 2)
+```
+
+## 1901
+```{r, width=80, fig.width=12,fig.height=150,cache=TRUE}
+ggplot(ID_OD_2014[ID_OD_2014$Label %in% c(1901:2000),]) + 
+  geom_tile(aes(Date, Hour)) + 
+  facet_wrap(~Label, ncol = 2)
+```
+
+## 2901
+```{r, width=80, fig.width=12,fig.height=150,cache=TRUE}
+ggplot(ID_OD_2014[ID_OD_2014$Label %in% c(2901:3000),]) + 
+  geom_tile(aes(Date, Hour)) + 
+  facet_wrap(~Label, ncol = 2)
+```
+
+## 3901
+```{r, width=80, fig.width=12,fig.height=150,cache=TRUE}
+ggplot(ID_OD_2014[ID_OD_2014$Label %in% c(3901:4000),]) + 
+  geom_tile(aes(Date, Hour)) + 
+  facet_wrap(~Label, ncol = 2)
+```
+
+
+
+## 4901
+```{r, width=80, fig.width=12,fig.height=150,cache=TRUE}
+
+ggplot(ID_OD_test[ID_OD_test$Label<5001,]) + 
+  geom_tile(aes(Date, Hour)) + 
+  facet_wrap(~Label, ncol = 2)
+```

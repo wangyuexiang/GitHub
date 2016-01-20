@@ -1,0 +1,182 @@
+---
+title: "Vaucluse_Overall"
+output: html_document
+---
+
+## Vaucluse Traffic pattern:
+* Periode dans la journee
+    + AR-DT: 7-9h, 16-19h
+    + Day: 10h-15h
+    + Peace: <5h & >20h
+* % of Psg during Weekend is higher during the "Day Peirod"
+
+```{r, echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+ggplot(ID_OD_2014,aes(Hour,fill=as.factor(dow)))+geom_bar(binwidth=1) + ggtitle("Vaucluse: #/ (H & DOW) ")
+```
+
+
+```{r, echo=FALSE, cache=TRUE}
+total<-nrow(ID_OD_2014)
+periodAller<-c(7:9)
+periodRetour<-c(16:19)
+jrOuvert<-c(1:5)
+# nombre de passages d'Aller dans la semaine
+noAller<-nrow(ID_OD_2014[ID_OD_2014$Hour %in% periodAller & ID_OD_2014$dow %in% jrOuvert,])
+# nombre de passages de Retour dans la semaine
+noRetour<-nrow(ID_OD_2014[ID_OD_2014$Hour %in% periodRetour & ID_OD_2014$dow %in% jrOuvert,])
+
+# nombre de passages au milieu du jour
+periodMilieu<-c(10:15)
+noMilieu<-nrow(ID_OD_2014[ID_OD_2014$Hour %in% periodMilieu & ID_OD_2014$dow %in% jrOuvert,])
+```
+
+#### Aller: 7-9h (pourcentage de Trx d'Aller-DT)
+```{r,echo=FALSE}
+# pourcentage
+noAller/total
+```
+#### Retour: 16-19h (pourcentage de Trx de Retour-DT)
+```{r,echo=FALSE}
+noRetour/total
+```
+#### Milieu: 10-15h (pourcentage de Trx en milieu du jour)
+```{r,echo=FALSE}
+# pourcentage
+noMilieu/total
+```
+
+### Prenons exemple de ID_1
+Son AR-DT est: 
+```{r,echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+
+ggplot(temp,aes(Hour,fill=as.factor(dow))) +
+  geom_bar(binwidth=1) + 
+  ggtitle(paste0("ID_",i,": #/ (H & DOW) "))
+
+p1<-ggplot(temp_Aller,aes(Hour,fill=as.factor(dow)))+geom_bar(binwidth=1)
+p2<-ggplot(temp_Aller[temp_Aller$dow %in% jOtemp,],aes(woy,fill=as.factor(dow)))+geom_bar(binwidth=1)
+grid.arrange(p1, p2, ncol=2,main =  paste0("Label_",i,":Aller"))
+
+p1<-ggplot(temp_Retour,aes(Hour,fill=as.factor(dow)))+geom_bar(binwidth=1)
+p2<-ggplot(temp_Retour,aes(woy,fill=as.factor(dow)))+geom_bar(binwidth=1)
+grid.arrange(p1, p2, ncol=2,main =  paste0("Label_",i,":Retour"))
+```
+
+#### ID: 501-506
+```{r,echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+ID_test<-List[501:506,1]
+ID_OD_test<-ID_OD_2014[ID_OD_2014$ID %in% ID_test,] 
+
+ggplot(ID_OD_test,aes(Hour,fill=as.factor(dow))) +
+  geom_bar(binwidth=1) + 
+  facet_wrap(~Label)
+
+ggplot(ID_OD_test,aes(woy,fill=as.factor(dow))) +
+  geom_bar(binwidth=1) + 
+  facet_wrap(~Label)
+```
+
+#### ID: 1015-1020
+```{r,echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+ID_test<-List[1015:1020,1]
+ID_OD_test<-ID_OD_2014[ID_OD_2014$ID %in% ID_test,] 
+
+ggplot(ID_OD_test,aes(Hour,fill=as.factor(dow))) +
+  geom_bar(binwidth=1) + 
+  facet_wrap(~Label)
+
+ggplot(ID_OD_test,aes(woy,fill=as.factor(dow))) +
+  geom_bar(binwidth=1) + 
+  facet_wrap(~Label)
+
+```
+
+#### ID: 2001-2006
+```{r,echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+ID_test<-List[2001:2006,1]
+ID_OD_test<-ID_OD_2014[ID_OD_2014$ID %in% ID_test,] 
+
+ggplot(ID_OD_test,aes(Hour,fill=as.factor(dow))) +
+  geom_bar(binwidth=1) + 
+  facet_wrap(~Label)
+
+ggplot(ID_OD_test,aes(woy,fill=as.factor(dow))) +
+  geom_bar(binwidth=1) + 
+  facet_wrap(~Label)
+```
+
+
+#### ID: 4901-4909
+```{r,echo=FALSE,fig.width=10,fig.height=5}
+ID_test<-List[4901:4909,1]
+ID_OD_test<-ID_OD_2014[ID_OD_2014$ID %in% ID_test,] 
+
+ggplot(ID_OD_test,aes(Hour,fill=as.factor(dow))) +
+  geom_bar(binwidth=1) + 
+  facet_wrap(~Label)
+
+ggplot(ID_OD_test,aes(woy,fill=as.factor(dow))) +
+  geom_bar(binwidth=1) + 
+  facet_wrap(~Label)
+```
+
+
+#### ID: 4992:5000
+```{r,echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+ID_test<-List[4992:5000,1]
+ID_OD_test<-ID_OD_2014[ID_OD_2014$ID %in% ID_test,] 
+
+ggplot(ID_OD_test,aes(Hour,fill=as.factor(dow))) +
+  geom_bar(binwidth=1) + 
+  facet_wrap(~Label)
+
+ggplot(ID_OD_test,aes(woy,fill=as.factor(dow))) +
+  geom_bar(binwidth=1) + 
+  facet_wrap(~Label)
+```
+
+
+#### ID: 492:500
+```{r,echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+ID_test<-List[492:500,1]
+ID_OD_test<-ID_OD_2014[ID_OD_2014$ID %in% ID_test,] 
+
+ggplot(ID_OD_test,aes(Hour,fill=as.factor(dow))) +
+  geom_bar(binwidth=1) + 
+  facet_wrap(~Label)
+
+ggplot(ID_OD_test,aes(woy,fill=as.factor(dow))) +
+  geom_bar(binwidth=1) + 
+  facet_wrap(~Label)
+```
+
+
+
+#### ID: 1:12
+```{r,echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+ID_test<-List[1:12,1]
+ID_OD_test<-ID_OD_2014[ID_OD_2014$ID %in% ID_test,] 
+
+ggplot(ID_OD_test,aes(Hour,fill=as.factor(dow))) +
+  geom_bar(binwidth=1) + 
+  facet_wrap(~Label)
+
+ggplot(ID_OD_test,aes(woy,fill=as.factor(dow))) +
+  geom_bar(binwidth=1) + 
+  facet_wrap(~Label)
+```
+
+
+#### ID: 13:24
+```{r,echo=FALSE,fig.width=10,fig.height=5, cache=TRUE}
+ID_test<-List[13:24,1]
+ID_OD_test<-ID_OD_2014[ID_OD_2014$ID %in% ID_test,] 
+
+ggplot(ID_OD_test,aes(Hour,fill=as.factor(dow))) +
+  geom_bar(binwidth=1) + 
+  facet_wrap(~Label)
+
+ggplot(ID_OD_test,aes(woy,fill=as.factor(dow))) +
+  geom_bar(binwidth=1) + 
+  facet_wrap(~Lab)
+```

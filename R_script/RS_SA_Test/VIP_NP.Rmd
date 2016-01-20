@@ -1,0 +1,207 @@
+---
+title: "VIP_NP"
+output: html_document
+---
+
+# NP
+
+## Simple Stat Results
+* Nb of Trx: `r nrow(NP)`
+* First Date: `r min(NP$Date)`
+* Last Date:  `r max(NP$Date)`
+* Nb of each DOW in beween: 
+
+```{r,echo=FALSE,fig.width=5,fig.height=3,cache=TRUE,warning=FALSE}
+d1<-min(NP$Date)
+d2<-max(NP$Date)
+d <- JF[JF$Date >= d1 & JF$Date <= d2, ]
+count(d,"DOW")
+ggplot(d)+geom_bar(aes(DOW,fill=as.factor(JF)),binwidth=1)
+#count(d[d$JF==1,],c("DOW","JF"))
+```
+```{r,echo=FALSE,fig.width=8,fig.height=3,cache=TRUE,warning=FALSE}
+ggplot(NP)+geom_bar(aes(WOY),binwidth=1)+facet_wrap(~Year)
+```
+
+```{r,echo=FALSE,fig.width=5,fig.height=3,cache=TRUE,warning=FALSE}
+center_M<-aggregate(NP[,18:19],list(NP$Month),mean)
+names(center_M)[1]<-"Month"
+ggplot(NP)+
+  geom_point(aes(Slng,Slat,size=noPsg))+
+  geom_point(data=center_M,aes(Slng,Slat,color=as.factor(Month)))
+
+center_DOW<-aggregate(NP[,18:19],list(NP$DOW),mean)
+names(center_DOW)[1]<-"DOW"
+ggplot(NP)+
+  geom_point(aes(Slng,Slat,size=noPsg))+
+  geom_point(data=center_DOW,aes(Slng,Slat,color=as.factor(DOW)))
+                    
+PC<-ID_OD[ID_OD$Nom=="PC",]
+center_DOW_PC<-aggregate(PC[,18:19],list(PC$DOW),mean)
+names(center_DOW_PC)[1]<-"DOW"
+ggplot(PC)+
+  geom_point(aes(Slng,Slat,size=noPsg))+
+  geom_point(data=center_DOW_PC,aes(Slng,Slat,color=as.factor(DOW)))
+
+MD<-ID_OD[ID_OD$Nom=="MD"$ID_OD$Year==2014,]
+center_DOW_MD<-aggregate(MD[,18:19],list(MD$DOW),mean)
+names(center_DOW_MD)[1]<-"DOW"
+ggplot(MD)+
+  geom_point(aes(Slng,Slat,size=noPsg))+
+  geom_point(data=center_DOW_MD,aes(Slng,Slat,color=as.factor(DOW)))
+
+center_Month_MD<-aggregate(MD[,18:19],list(MD$Month),mean)
+names(center_Month_MD)[1]<-"Month"
+ggplot(MD)+
+  geom_point(aes(Slng,Slat,size=noPsg))+
+  geom_point(data=center_Month_MD,aes(Slng,Slat,color=as.factor(Month)))
+
+ggplot(MD)+
+  geom_bar(aes(Month),binwidth=1)+
+  facet_wrap(~Year)
+
+ggplot(MD)+
+  geom_point(aes(Slng,Slat))+
+  facet_grid(Year~Month)
+
+# ggplot(NP,aes(Slng,Slat))+geom_boxplot()
+# ggplot(NP,aes(y=Slng,x=Slat))+geom_boxplot()+coord_flip()
+```
+
+
+## 0. General Profile NP
+```{r,echo=FALSE,fig.width=10,fig.height=10, cache=TRUE,warning=FALSE}
+#NP<-ID_OD[ID_OD$Nom=="NP",] 
+
+# ggplot()+geom_segment(data=na.omit(NP),aes(x=Elng, y=Elat,xend=Slng, yend=Slat), col="darkgreen",alpha=.2,lwd=1)+
+#   geom_point(data=ID_OD,aes(Slng,Slat),col="darkblue",alpha=.2)+
+#    geom_point(data=gares_geo[gares_geo$Societe != 5,],aes(Lng,Lat),alpha=.2,size=3)+   guides(fill=FALSE)
+
+Sor<-count(NP,"Sor")
+Entr<-count(NP,"Entr")
+OD<-count(NP,c("Entr","Sor"))
+OD<-OD[order(OD$freq,decreasing=TRUE),] 
+
+names(Sor)[1]<-"Cde"
+names(Entr)[1]<-"Cde"
+Sor<-merge(x=Sor,gares_geo,by="Cde")
+Entr<-merge(Entr,gares_geo,by="Cde")
+Sor<-Sor[order(Sor$freq,decreasing=TRUE),]
+Entr<-Entr[order(Entr$freq,decreasing=TRUE),]
+
+
+ggplot(NP)+
+  geom_segment(aes(x=Elng, y=Elat,xend=Slng, yend=Slat), alpha=.4,lwd=1,
+               col="#FFCC33")+
+  geom_point(data=Sor,aes(Lng, Lat,size=freq), col="Red")+
+  geom_point(data=gares_geo,aes(Lng,Lat),size=3,alpha=.2,shape=3)+
+  geom_point(data=gare_SO,aes(Lng, Lat, color="S.O."), size=3, shape=3)+
+  ylim(c(42,46.5))+xlim(c(-1.5,7.5))+
+  theme(legend.position=c(.95,.9),plot.title = element_text(size=20, face="bold")) +
+  ggtitle("Sor & OD")
+```
+
+## Clustering Result
+```{r,echo=FALSE,fig.width=10,fig.height=10, cache=TRUE,warning=FALSE}
+
+ggplot(Kres)+
+  geom_segment(aes(x=Elng, y=Elat,xend=Slng, yend=Slat,color=as.factor(Cluster)), alpha=.4,lwd=1,arrow=arrow(length = unit(0.1,"cm")))+
+  geom_point(data=Sor,aes(Lng, Lat,size=freq), col="Red")+
+  geom_point(data=gares_geo,aes(Lng,Lat),size=3,alpha=.2,shape=3)+
+  geom_point(data=gare_SO,aes(Lng, Lat, color="S.O."), size=3, shape=3)+
+  ylim(c(42,46.5))+xlim(c(-1.5,7.5))+
+  theme(legend.position=c(.95,.9),plot.title = element_text(size=20, face="bold")) +
+  ggtitle("Sor & OD")
+```
+
+
+
+## 1. General Profile NP
+```{r,echo=FALSE,cache=TRUE,fig.width=6,fig.height=6}
+library(ggplot2)
+library(plyr)
+library(gridExtra)
+ 
+p1<-ggplot(NP,aes(Year))+geom_bar()
+p2<-ggplot(NP,aes(Hour))+geom_density()
+p3<-ggplot(NP,aes(DOW))+geom_density()
+p4<-ggplot(NP,aes(perPsg))+geom_density()
+
+grid.arrange(p1,p2,p3,p4, ncol=2)
+```
+
+## 2. NP's OD
+```{r,echo=FALSE,cache=TRUE}
+temp<-NP[NP$Year==2014,]
+temp2<-count(temp,c("Entr","Sor"))
+temp2<-temp2[order(temp2$freq,decreasing=TRUE),]
+print(paste0("number of OD by NP in 2014: ",nrow(temp2)))
+head(temp2)
+```
+ 
+### 2.1 NP's AR-DT is between Cavaillon(220) and Avignon(211): 
+**DOW/H**
+*  goes to work at 6 or 7h
+*	returns at 17h
+```{r,echo=FALSE,cache=TRUE,fig.width=10,fig.height=5}
+i=2
+nrow(ID_OD[ID_OD$Nom==ID_ref$Nom[i],])
+count(ID_OD[ID_OD$Nom==ID_ref$Nom[i] & ID_OD$noPsg>seuil & ID_OD$Hour %in% periodAller & ID_OD$DOW %in% jrOuvert,],c("Nom","Entr","Sor"))
+count(ID_OD[ID_OD$Nom==ID_ref$Nom[i] & ID_OD$noPsg>seuil & ID_OD$Hour %in% periodRetour & ID_OD$DOW %in% jrOuvert,],c("Nom","Entr","Sor"))
+
+temp_AR<-ID_OD[ID_OD$Nom==ID_ref$Nom[i] & 
+                 ((ID_OD$Entr==25004220 & ID_OD$Sor==25004211)|
+                 (ID_OD$Entr==25004211 & ID_OD$Sor==25004220)),] 
+temp_title<-"NP: Aller-Retour"
+ggplot(temp_AR,aes(Hour,fill=as.factor(DOW)))+geom_bar(binwidth=1) + xlim(c(0,25)) + ggtitle(temp_title)  
+
+ggplot(temp_AR,aes(Hour,fill=as.factor(Predicted)))+geom_bar(binwidth=1) + xlim(c(0,25)) + ggtitle(temp_title)  
+```
+
+**Hour**
+```{r,echo=FALSE,cache=TRUE,fig.width=10,fig.height=5}
+temp_Aller<-ID_OD[ID_OD$Nom==ID_ref$Nom[i] & 
+                 (ID_OD$Entr==25004220 & ID_OD$Sor==25004211) ,] 
+temp_Retour<-ID_OD[ID_OD$Nom==ID_ref$Nom[i] & 
+                 (ID_OD$Entr==25004211 & ID_OD$Sor==25004220) ,]
+
+ggplot(temp_AR,aes(Date,Time))+geom_point()
+ggplot(temp_Aller,aes(factor(DOW),y=Time))+geom_boxplot()
+ggplot(temp_Retour,aes(factor(DOW),y=Time))+geom_boxplot()
+```
+
+
+**DOW/H points**
+```{r,echo=FALSE,cache=TRUE,fig.width=10,fig.height=5}
+
+temp2<-NP[NP$Entr==25004220 & NP$Sor==25004211,]
+p1<-ggplot(temp2,aes(Hour,DOW,fill=(as.factor(Predicted))))+geom_tile(binwidth=1)+xlim(c(0,25))+ylim(c(0,7)) +ggtitle("Aller")+guides(fill=FALSE)
+
+temp3<-NP[NP$Entr==25004211 & NP$Sor==25004220,]
+p3<-ggplot(temp3,aes(Hour,DOW,fill=(as.factor(Predicted))))+geom_tile(binwidth=1)+xlim(c(0,25))+ylim(c(0,7)) +ggtitle("Retour")+guides(fill=FALSE)
+
+grid.arrange(p1,p3,ncol=2)
+```
+
+**DOW/WOY**
+*	blank line: week without AR-DT (vacations)
+*	blank spot: JF or VS or take other route (activity afterwork)
+```{r,echo=FALSE,cache=TRUE,fig.width=10,fig.height=5}
+
+ggplot(temp2,aes(WOY,DOW,fill=as.factor(DOW)))+geom_tile(binwidth=1)+xlim(c(0,52))+ylim(c(0,7)) +ggtitle("Aller")
+ggplot(temp3,aes(WOY,DOW,fill=as.factor(DOW)))+geom_tile(binwidth=1)+xlim(c(0,52))+ylim(c(0,7)) +ggtitle("Retour")
+
+ggplot(temp2,aes(WOY,DOW,fill=(as.factor(Predicted))))+geom_tile(binwidth=1)+xlim(c(0,52))+ylim(c(0,7)) +ggtitle("Aller")
+#+guides(fill=FALSE)
+ggplot(temp3,aes(WOY,DOW,fill=(as.factor(Predicted))))+geom_tile(binwidth=1)+xlim(c(0,52))+ylim(c(0,7)) +ggtitle("Retour")
+#+guides(fill=FALSE)
+```
+
+**Result**
+*   Statistics
+```{r,echo=TRUE,cache=TRUE}
+count(temp2,c("DOW","Hour","Per"))
+count(temp2,"Per")
+count(temp2,"Predicted")
+
+```

@@ -1,0 +1,91 @@
+---
+title: "UserProfile_ID"
+date: "Friday, June 19, 2015"
+output: pdf_document
+---
+
+```{r, echo=FALSE,cache=TRUE}
+i<-32
+ID_test<-ID_OD_2014[ID_OD_2014$Label==i,]
+
+Sor<-count(ID_test,"Sor")
+Entr<-count(ID_test,"Entr")
+OD<-count(ID_test,c("Entr","Sor"))
+OD<-OD[order(OD$freq,decreasing=TRUE),] 
+
+names(Sor)[1]<-"Cde"
+names(Entr)[1]<-"Cde"
+Sor<-merge(x=Sor,gares_geo,by="Cde")
+Entr<-merge(Entr,gares_geo,by="Cde")
+Sor<-Sor[order(Sor$freq,decreasing=TRUE),]
+Entr<-Entr[order(Entr$freq,decreasing=TRUE),]
+```
+
+## Users_`r i`
+```{r set-options, echo=FALSE, cache=TRUE}
+options(width=150) 
+```
+
+### General
+1. Total Nb of Trx: **`r nrow(ID_test)`**
+2. Nb of Trx by Result of Simple Model:
+```{r, echo=FALSE,cache=TRUE}
+count(ID_test,"Predicted")
+```
+
+### Result of Simple Model on OD & Zone
+```{r, echo=FALSE,cache=TRUE,fig.width= 10, fig.height=3}
+p1<-ggplot(ID_test,aes(Hour,fill=as.factor(DOW)))+geom_bar(binwidth=1)+
+	scale_fill_hue(l=40,name="DOW")+
+	theme(legend.position=c(.9,.7),plot.title = element_text(size=15, face="bold"))+
+	ggtitle("#_Trx by Hour & DOW")
+p2<-ggplot(ID_test,aes(Hour,fill=as.factor(Predicted)))+geom_bar(binwidth=1)+
+	scale_fill_discrete(name="Predicted") +
+	theme(legend.position=c(.9,.8),plot.title = element_text(size=15, face="bold"))+
+	ggtitle("Simple Model Result")
+grid.arrange(p1,p2,ncol=2)
+```
+
+
+```{r, echo=FALSE,cache=TRUE,fig.width= 15, fig.height=4}
+ggplot(ID_test,aes(Date,fill=as.factor(Predicted)))+geom_bar(binwidth=1)+
+	scale_fill_discrete(name="Predicted")+
+	theme(legend.position=c(.97,.85),plot.title = element_text(size=20, face="bold"))+
+	ggtitle("Simple Model Result")
+```
+
+### Viz of Gares & OD
+```{r, echo=FALSE,cache=TRUE,fig.width= 10, fig.height=5, warning=FALSE}
+p1<-ggplot(Entr)+geom_point(aes(Lng, Lat,size=freq), col="Green")+
+    geom_point(data=gares_geo,aes(Lng,Lat),size=3,alpha=.2,shape=3)+
+    ylim(c(42,46.5))+xlim(c(-1.5,7.5))+
+	theme(legend.position=c(.9,.9),plot.title = element_text(size=20, face="bold"))+
+	ggtitle("Entr")
+p2<-ggplot(Sor)+geom_point(aes(Lng, Lat,size=freq), col="Red")+
+    geom_point(data=gares_geo,aes(Lng,Lat),size=3,alpha=.2,shape=3)+
+    geom_point(data=gare_SO,aes(Lng, Lat, color="S.O."), size=3, shape=3)+
+    ylim(c(42,46.5))+xlim(c(-1.5,7.5))+
+	theme(legend.position=c(.9,.8),plot.title = element_text(size=20, face="bold"))+
+	ggtitle("Sor")
+grid.arrange(p1,p2,ncol=2)
+```
+
+```{r, echo=FALSE,cache=TRUE,fig.width= 10, fig.height=10, warning=FALSE}
+ggplot(ID_test)+
+  geom_segment(aes(x=Elng, y=Elat,xend=Slng, yend=Slat), alpha=.4,lwd=1,
+               col="#FFCC33",arrow=arrow(length = unit(0.1,"cm")))+
+  geom_point(data=Sor,aes(Lng, Lat,size=freq), col="Red")+
+  geom_point(data=gares_geo,aes(Lng,Lat),size=3,alpha=.2,shape=3)+
+  geom_point(data=gare_SO,aes(Lng, Lat, color="S.O."), size=3, shape=3)+
+  ylim(c(42,46.5))+xlim(c(-1.5,7.5))+
+  theme(legend.position=c(.95,.9),plot.title = element_text(size=20, face="bold")) +
+  ggtitle("Sor & OD")
+```
+
+### Gares & ODs : frequently passed
+```{r, echo=TRUE,cache=TRUE}
+Entr[1:10,-(7:8)] 
+Sor[1:10,-(7:8)]
+OD[1:10,]
+```
+

@@ -1,0 +1,52 @@
+---
+title: "Vaucluse_Test_1"
+output: html_document
+---
+
+```{r, width=80, fig.width=10,fig.height=5,cache=TRUE}
+ggplot(temp2,aes(Hour,fill=as.factor(Predicted)))+geom_bar(binwidth=1)
+```
+
+
+```{r, width=80, fig.width=5,fig.height=5,cache=TRUE}
+temp<-count(ID_OD_2014,"Predicted")
+temp$Percentage<-temp$freq/1953411
+temp
+```
+
+
+```{r, width=80, fig.width=5,fig.height=5,cache=TRUE}
+nrow(List[List$OD_100==2 & List$P_Trx_100>.8,])
+nrow(List[List$OD_100==2 & List$OD_50==0,])
+nrow(List[List$OD_100==1 & List$OD_50==0,])
+nrow(List[List$Pred.5>.8,])
+```
+
+```{r, width=80, fig.width=5,fig.height=5,cache=TRUE}
+temp2<-List[List$OD_100==2 & List$P_Trx_100>.8,]
+ggplot(temp2,aes(Pred.3))+geom_bar(binwidth=.1)
+```
+
+```{r, width=80, fig.width=5,fig.height=5,cache=TRUE}
+temp2<-List[List$OD_100==2 & List$OD_50==0,]
+ggplot(temp2,aes(Pred.3))+geom_bar(binwidth=.1)
+```
+
+```{r, width=80, fig.width=5,fig.height=5,cache=TRUE}
+temp2<-List[List$OD_100==1 & List$OD_50==0,]
+ggplot(temp2,aes(Pred.3))+geom_bar(binwidth=.1)
+```
+
+
+```{r, width=80, echo=FALSE,fig.width=12,fig.height=12,cache=TRUE}
+
+i<-List[List$Pred.5>.8,]$Label
+
+temp_i<-ID_OD_2014[ID_OD_2014$Label %in% i,]
+
+ggplot(temp_i,aes(Hour,fill=as.factor(Predicted)))+geom_bar(binwidth=1)+facet_wrap(~Label, ncol=5)
+ggplot(temp_i,aes(DOW,Hour,color=as.factor(Predicted))) + 
+  geom_point() + facet_wrap(~Label,ncol=5)
+
+```
+

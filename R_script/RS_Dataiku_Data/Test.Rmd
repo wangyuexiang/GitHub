@@ -1,0 +1,17 @@
+---
+title: "Test"
+author: "WANG Yuexiang"
+date: "Thursday, May 21, 2015"
+output: html_document
+---
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. 
+```{r}
+summary(cars)
+```
+
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+plot(cars)
+```

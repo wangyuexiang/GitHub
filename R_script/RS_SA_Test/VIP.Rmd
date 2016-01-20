@@ -1,0 +1,42 @@
+---
+title: "VIP"
+date: "June 8th,2015"
+output: html_document
+---
+
+# VIP
+## Time windows
+
+```{r ,echo=FALSE,cache=TRUE,fig.width=16,fig.height=20}
+ggplot(ID_OD) + geom_tile(aes(Date, Hour)) + facet_wrap(~Nom, ncol=2)
+```
+
+## General profiles of VIPs
+
+```{r,echo=FALSE }
+library(ggplot2)
+library(plyr)
+library(gridExtra)
+count(ID_OD,"Nom")
+count(ID_OD[ID_OD$ML==1,],"Nom")
+```
+
+```{r ,cache=TRUE,fig.width=15,fig.height=5}
+nrow(ID_OD)
+nrow(ID_OD[ID_OD$noPsg>50,])
+ggplot(ID_OD,aes(noPsg))+geom_bar(binwidth=50)
+```
+
+## VIPs
+```{r ,echo=FALSE,cache=TRUE,fig.width=15,fig.height=5}
+temp3<-ID_OD_freq[ID_OD_freq$noPsg>50,]
+temp3<-temp3[order(temp3$Nom),]
+temp3
+
+for (i in 1:nrow(temp3)){
+  temp4<-ID_OD[ID_OD$Nom==temp3[i,1] & ID_OD$Entr==temp3[i,2] & ID_OD$Sor==temp3[i,3],]
+  p1<-ggplot(temp4[temp4$Year==2014,],aes(x=WOY,y=DOW,fill=as.factor(Predicted)))+ geom_tile() +xlim(c(0,52))+ylim(c(0,6))+guides(fill=FALSE)
+  p2<-ggplot(temp4[temp4$Year==2015,],aes(x=WOY,y=DOW,fill=as.factor(Predicted)))+ geom_tile() +xlim(c(0,52))+ylim(c(0,6))
+  grid.arrange(p1,p2,ncol=2,main=paste(temp3[i,1],temp3[i,2],temp3[i,3]))
+}
+```

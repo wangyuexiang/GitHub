@@ -1,0 +1,46 @@
+---
+title: "Kmeans"
+author: "WANG Yuexiang"
+date: "Wednesday, June 17, 2015"
+output: html_document
+---
+
+## Kmeans 
+```{r, cache=TRUE}
+temp <- tOD[tOD$DOW == 1, ]
+  
+gare.kmeans<-lapply(1:6,function(i){
+  kmeans(temp[,"Time"],centers=i)
+})
+ 
+lapply(gare.kmeans,function(z) z$withinss)
+gare.within.ss<-sapply(gare.kmeans, function(z) sum(z$withinss))
+
+plot(1:6, type="b",xlab = "Number of clusters", ylab = "Within SS",gare.within.ss)
+```
+
+## Nb of Clusters from 1 to 6
+```{r, cache=TRUE,fig.width=5,fig.height=5}
+for (i in 1:6){
+  cl <- kmeans(temp[,"Time"],i)
+  cl$cluster
+  plot(temp$Time,temp$Entr,col=cl$cluster)
+  points(cl$centers, pch=16)
+  print(cl$size)
+} 
+```
+
+
+
+```{r, cache=TRUE,fig.width=5,fig.height=5}
+# gare.kmeans<-lapply(1:6,function(i){
+#   kmeans(temp[,"Time"],centers=i)
+# })
+ 
+cluster.colors<-lapply(gare.kmeans,function (z) z$cluster)
+
+#library(plyr)
+ l_ply(cluster.colors, function(colors){
+   plot(Time~Entr, temp, col = colors, main = paste(nlevels(factor(colors))), pch = 16)
+ })
+```
