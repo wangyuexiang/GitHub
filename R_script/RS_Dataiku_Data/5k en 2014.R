@@ -51,8 +51,6 @@ count(temp,c("Entr","Sor"))
 
 write.table(noPassage,file="user.csv",sep=",")
 
-
-
 qplot(freq_2014,data=Test_set,binwidth=5,geom="histogram",xlim=c(1,1000))
 
 nrow(Test_set[Test_set$freq_2014>500,])/5000
@@ -61,8 +59,6 @@ nrow(Test_set[Test_set$freq_2014<=400 & Test_set$freq_2014>300,])/5000
 nrow(Test_set[Test_set$freq_2014<=300 & Test_set$freq_2014>200,])/5000
 nrow(Test_set[Test_set$freq_2014<=250 & Test_set$freq_2014>200,])/5000
 
-
 qplot(freq_2014,data=Test_set,binwidth=50,geom="histogram",xlim=c(1,1000))
 qplot(freq_2014,data=Test_set,binwidth=50,geom="histogram")
-
       

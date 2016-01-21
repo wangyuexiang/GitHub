@@ -13,7 +13,6 @@
 # load("MODELE.RData")
 # garesorder <- rbind(A7_par_pk[,c("Lib","Cde","PK","Lat","Lng")],A8_par_pk[-1,c("Lib","Cde","PK","Lat","Lng")],A9_par_pk[,c("Lib","Cde","PK","Lat","Lng")])
 
-
 temp <- trx %>% group_by(Label) %>% 
   summarise(Dmin = min(Date), 
             Dmax = max(Date), 
@@ -26,5 +25,3 @@ temp <- trx %>% group_by(Label) %>%
             nPsg = n(),
             Dper = Day/Ddiff,
             Wper = Week/Wdiff)
-
-

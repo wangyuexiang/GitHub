@@ -95,9 +95,7 @@ hist(temp$dow,breaks=7)
 hist(temp$Hour,breaks=24)
 ##########
 
-
 temp2<-Data[Data$ID==25004001118600008,]
-
 
 par(mfrow=c(3,4))
 

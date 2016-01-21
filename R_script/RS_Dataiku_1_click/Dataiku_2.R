@@ -33,9 +33,6 @@ trx.2014$Voie <- 0
 
 save(trx.2014, file = "trx.2014.RData")    
 
-
-
-
 trx <- trx.5000
 ##########
 ### prepare trx

@@ -1,16 +1,12 @@
 library(dplyr)
 
-trx <- read.csv("Trajets_84.csv", head = T, sep =";")
-trx <- tbl_df(trx)
+trx <- read.csv("Trajets_84.csv", head = T, sep =";") %>% tbl_df
 
 names(trx) <- c("ID", "Entr", "EHoro", "Sor", "SHoro", "Prix", "KMS", "Cl")
-trx$Cl <- NULL
-trx$Prix <- NULL
-
-trx <- trx %>% filter(KMS > 0)
-trx %>% filter(Sor == 25006001)
-
-trx$Year <- substr(trx$SHoro, 1, 4)
+trx <- trx %>%
+	select(-Cl, -Prix) %>%
+	filter(KMS > 0) %>%
+	mutate(Year = substr(SHoro, 1, 4))
 
 ID.2014 <- trx %>%
   filter(Year == 2014) %>%

@@ -1,8 +1,72 @@
+
+# 1 RStudio
+# 2 Run Script
+# 3 input & output files
+# 4 Dplyr
+# 5 string
+# 6 plot
+
+#############
+#############
+# 1 RStudio
+#############
+#############
+# get function run time
+start.time <- Sys.time()
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
+
+# useful functions
+# http://www.analyticsvidhya.com/blog/2015/04/comprehensive-guide-data-exploration-r/
+library(reshape)
+melt()
+print(flights, n=20)
+
+# save workspace	
+save.image()
+
+save(, file="")
+pie(table(trx$Year))	
+	
+aggregate(d[, 3:4], list(d$Name), mean)
+
+#
+hist()
+histinfo
+
+#############
+#############
+# 2 Run Script
+#############
+#############
+
 source('~/SVN/1-click_Dev/SA_end2end.R', echo=FALSE)
 source('~/SVN/1-click_Dev/SA_function.R', encoding = 'UTF-8', echo=FALSE)
 
+#############
+#############
+# 3 Input & Output files
+#############
+#############
+# in .RData
+save(, file="")
+# in .csv, .log, .txt, etc.
+write.table(noPassage,file="user.csv",sep=",")
+
+
+#############
+#############
+# 5 String
+#############
+#############
 stringr::str_split_fixed(result$OD,"-", 5) %>% as.data.frame() %>% tbl_df
 
+#############
+#############
+# 6 plot
+#############
+#############
 ExportPlot <- function(gplot, filename, width=2, height=1.5) {
     # Export plot in PDF and EPS.
     # Notice that A4: width=11.69, height=8.27
@@ -15,69 +79,52 @@ ExportPlot <- function(gplot, filename, width=2, height=1.5) {
     dev.off()
 }
 
-BO - 20151022
-25004901446700003;25004815815900011
-
-BO - 20151001
-	25004903361400005;25004901084200002;25004819831400001;25004819831400006;25004902781100004;25004901383300004;25004901383300002
-
-BO - première vague
-	25004903597500002;25004903357700003;25004903965600001;25004902781100004;25006982804710001;25006982894800001;25006982895200001;25006980530210003
-	
-	
-### get function run time
-start.time <- Sys.time()
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-time.taken
-
 #############
 #############
-# useful functions
-# http://www.analyticsvidhya.com/blog/2015/04/comprehensive-guide-data-exploration-r/
-library(reshape)
-melt()
-#
-hist()
-histinfo
-
-#############
-#############
-# dplyr
+# 4 dplyr
 #############
 #############
 
-#############
-http://cran.r-project.org/web/packages/dplyr/vignettes/introduction.html
-#############
-select(flights, year, month, day)
+# http://cran.r-project.org/web/packages/dplyr/vignettes/introduction.html
+# http://rpubs.com/justmarkham/dplyr-tutorial
+# loading
+library(dplyr)
+# filter
+# select
+# arrange
+# mutate
+# summarise
+# group_by
+
+flights <- tbl_df(hflights)
+
+filter(year == 2015)
+filter(flights, UniqueCarrier %in% c("AA", "UA"))
+
+arrange(desc(DepDelay))
+		
 select(fligths, year:day))
 select(flights, - (year:day))
-
-rename(fligths, tail_num = tailnum)
+select(flights, Year:DayofMonth, contains("Taxi"), contains("Delay"))
 
 distinct(select(flights, tailnum))
 
-mutate(fliths,
-  gain = arr_delay - dep_delay,
-  gain_per_hour = gain / (air_time / 60)
-)
-
+rename(fligths, tail_num = tailnum)
+mutate(fliths, gain = arr_delay - dep_delay)
 transform()
 transmute()
 
-summarise(flights,
-  delay = mean(dep_delay, na.rm = TRUE))
+summarise(flights, delay = mean(dep_delay, na.rm = TRUE))
 
 ##########
 # Grouped operatoins
 #   mutation(), filter() + rank(), min(x) == x  # vignette("window-functions")
 #   slice() extracts rows within each group
-destinations <- group_by(flights, dest)
-summarise(destinations,
-  planes = n_distinct(tailnum),
-  flights = n()
-)
+destinations <- group_by(flights, dest) %>%
+	summarise(destinations,
+						planes = n_distinct(tailnum),
+						flights = n()
+						)
   
 daily <- group_by(flights, year:day)
   per_day 	<- summarise(daily, fligths = n())
@@ -86,18 +133,6 @@ daily <- group_by(flights, year:day)
 
 ##########
 # Chaining
-filter(
-  summarise(
-    select(
-	  group_by(flights, year:day),
-	  arr_delay, dep_delay
-    ),
-    arr = mean(arr_delay, na.rm = TRUE),
-    dep = mean(dep_delay, na.rm = TRUE)
-  ),
-  arr > 30 | dep > 30
-)  
-  
 # x %>% f(y)  -->  f(x, y)  
 fligths %>%
   group_by(year, month, day) %>%
@@ -109,60 +144,9 @@ fligths %>%
   filter(arr > 30 | dep > 30})
   
   
-#############
-# http://rpubs.com/justmarkham/dplyr-tutorial
-#############
-data.frame(head(flights))
-# filter
-# select
-# arrange
-# mutate
-# summarise
-# group_by
 
-#############
-## loading
-library(dplyr)
 
-flights <- tbl_df(hflights)
-# first 10 
-flights
-print(flights, n=20)
 
-#############
-## filter
-flights[flights$Month==1 & flights$DayofMonth==1, ]
-filter(flights, Month==1, DayofMonth==1)
-filter(flights, UniqueCarrier %in% c("AA", "UA"))
-#############
-## select
-flights[, c("DepTime", "ArrTime", "FlightNum")]
-select(flights, DepTime, ArrTime, FlightNum)
-select(flights, Year:DayofMonth, contains("Taxi"), contains("Delay"))
-#############
-## chaining pipelining
-filter(select(flights, UniqueCarrier, DepDelay), DepDelay > 60)
-# chaining method
-flights %>%
-    select(UniqueCarrier, DepDelay) %>%
-    filter(DepDelay > 60)
-#############
-## arrange
-# dplyr approach
-flights %>%
-    select(UniqueCarrier, DepDelay) %>%
-    arrange(DepDelay)
-# use `desc` for descending
-flights %>%
-    select(UniqueCarrier, DepDelay) %>%
-    arrange(desc(DepDelay))
-
-	
-save.image()
-save(, file="")
-pie(table(trx$Year))	
-	
-aggregate(d[, 3:4], list(d$Name), mean)
 
 #############
 # Azure

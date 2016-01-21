@@ -129,10 +129,3 @@ nrow(t1[t1$freq==5,])
 nrow(t1[t1$freq>5,])
 
 qplot(freq,data=t3,geom="histogram",binwidth=1)
-
-
-
-
-
-
-

@@ -3,7 +3,6 @@
 # Data, Data_2014, Segmentation
 ##########
 ##########
-
 Data<-ID_OD
 
 Data$Dat_Entr<-NULL
@@ -25,7 +24,6 @@ ID_OD_Year_freq<-count(Data,c("ID","Entr","Sor","Year"))
 names(ID_OD_Year_freq)[5]<-"no"
 
 #Data_avec_parking<-Data
-
 
 ##########
 ##########
@@ -65,7 +63,6 @@ noPassage$Total<-noPassage$freq_2014+
 # #_Trx/dow
 ##########
 ##########
-
 temp<-count(Data_2014,c("ID","dow"))
 
 no_0<-temp[temp$dow==0,c(1,3)]
@@ -92,7 +89,6 @@ noPassage<-merge(noPassage,no_4,by="ID",all = TRUE)
 noPassage<-merge(noPassage,no_5,by="ID",all = TRUE)
 noPassage<-merge(noPassage,no_6,by="ID",all = TRUE)
 
-
 # noPassage$T2014<-noPassage$no_0+
 #   noPassage$no_1+
 #   noPassage$no_2+
@@ -107,12 +103,9 @@ noPassage<-merge(noPassage,no_6,by="ID",all = TRUE)
 # #_Trx/ID_OD
 ##########
 ##########
-
 temp<-count(Data_2014,c("ID","Entr","Sor"))
 names(temp)[4]<-"no"
 Data_2014_freq<-temp
-
-
 
 temp<-count(Data_2014_freq[Data_2014_freq$no>100,],"ID")
 names(temp)[2]<-"OD_100"
@@ -143,8 +136,6 @@ temp<-Data_2014_freq[Data_2014_freq$no>50 & Data_2014_freq$no<=100,]
 temp1<-aggregate(temp[,4],temp["ID"],FUN=sum)
 names(temp1)[2]<-"Trx_50"
 noPassage<-merge(noPassage,temp1,by="ID",all=TRUE)
-
-
 
 noPassage[is.na(noPassage)]<-0
 noPassage<-noPassage[order(noPassage$freq_2014,decreasing=TRUE),]
