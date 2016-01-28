@@ -21,10 +21,10 @@
 ##########
 ID <- trx %>% 
   group_by(ID) %>% 
-  summarise(Dmin = min(Date), 
-            Dmax = max(Date), 
+  summarise(Dmin = min(DateSor), 
+            Dmax = max(DateSor), 
             Ddiff = Dmax - Dmin + 1, 
-            Day = n_distinct(Date), 
+            Day = n_distinct(DateSor), 
             noPsg = n())
 
 if(nrow(ID) > 0) {
@@ -55,10 +55,10 @@ if(nrow(ID) > 0) {
 ##########
 t <- trx %>%
   group_by(ID, Entr, Sor, Sens) %>% 
-  summarise(Dmin = min(Date), 
-            Dmax = max(Date), 
+  summarise(Dmin = min(DateSor), 
+            Dmax = max(DateSor), 
             Ddiff = Dmax - Dmin + 1, 
-            Day = n_distinct(Date), 
+            Day = n_distinct(DateSor), 
             noPsg = n()
   ) 
 

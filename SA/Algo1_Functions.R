@@ -86,7 +86,7 @@ GetLngLat <- function(transaction) {
 GetResult <- function(test, result) {
   # Identify the passage in the test set that the model could predict
   # Args:
-  #	  test: ID Entr Sor Date DOW WOY TimeEntr TimeSor Sens SensEntr SensSor
+  #	  test: ID Entr Sor DateSor DOW WOY TimeEntr TimeSor Sens SensEntr SensSor
   #	  result: ID Entr Sor SensEntr SensSor Sens DOW Tmin Tmax noPsg
 
   # !!! removed when modify data_preparation
@@ -105,7 +105,7 @@ GetResult <- function(test, result) {
 GetInd <- function(test, result) {
   # Get 3 indicators and combine them to evaluate each model
   # Args:
-  #	  test: ID Entr Sor Date DOW WOY TimeEntr TimeSor Sens SensEntr SensSor
+  #	  test: ID Entr Sor DateSor DOW WOY TimeEntr TimeSor Sens SensEntr SensSor
   #	  result: result of Model in format: ID, Entr, Sor, SensEntr, SensSor, Sens, (DOW,) Tmin, Tmax
   
   Ind <-  test %>%
@@ -138,25 +138,25 @@ GetInd <- function(test, result) {
 Sens <- function (Transactions){
   # Decide the direction of each transaction (A789)
   # Args:
-  #	  Transactions:	ID, Entr, Sor, Date, DOW, WOY, TimeEntr, TimeSor, Voie, SensEntr, SensSor
+  #	  Transactions:	ID, Entr, Sor, DateSor, DOW, WOY, TimeEntr, TimeSor, VoieSor, SensEntr, SensSor
   # Returns:
-  #	  Transactions:	ID, Entr, Sor, Date, DOW, WOY, TimeEntr, TimeSor, Voie, Sens, SensEntr, SensSor
-  Transactions <- Transactions %>% select(ID,Entr,Sor,TimeEntr,TimeSor,DOW,WOY,Date,Voie,SensEntr, SensSor)
+  #	  Transactions:	ID, Entr, Sor, DateSor, DOW, WOY, TimeEntr, TimeSor, VoieSor, Sens, SensEntr, SensSor
+  Transactions <- Transactions %>% select(ID,Entr,Sor,TimeEntr,TimeSor,DOW,WOY,DateSor,VoieSor,SensEntr, SensSor)
   Transactions$Sens <- 0
   for (i in 1:nrow(Transactions)){
     if (Transactions$Entr[i] == 0 & ( Transactions$Sor[i] %in% garesorder$Cde) ){ #Si Entr = 0 et Sor dans A789
       if (Transactions$Sor[i] == 25006001 | Transactions$Sor[i] == 25006014 | 
-          Transactions$Sor[i] == 25006019 | Transactions$Sor[i] == 25006026) { # Ceux dont les voies >= 20 sont en sens 1
+          Transactions$Sor[i] == 25006019 | Transactions$Sor[i] == 25006026) { # Ceux dont les VoieSors >= 20 sont en sens 1
         #Canet de mereuil, Antibes ouest, Saint Isidore Ech Ouest, La Turibe Ech Est
-        if (Transactions$Voie[i] >= 20 ){ Transactions$Sens[i] <- 1 
+        if (Transactions$VoieSor[i] >= 20 ){ Transactions$Sens[i] <- 1 
         } else 
         { Transactions$Sens[i] <- 2 }
       } else 
         if (Transactions$Sor[i] == 25006010 | Transactions$Sor[i] == 25006011 | Transactions$Sor[i] == 25006013 |
             Transactions$Sor[i] == 25006016 | Transactions$Sor[i] == 25006021 | Transactions$Sor[i] == 25006020 | 
-            Transactions$Sor[i] == 25006027 | Transactions$Sor[i] == 25006012){ #Ceux dont les voies >= 20 sont en sens 2
+            Transactions$Sor[i] == 25006027 | Transactions$Sor[i] == 25006012){ #Ceux dont les VoieSors >= 20 sont en sens 2
           #Fréjus, Les Adrets, Antibes Est, Cagnes Est, Saint Isidore ech Est, Saint Isidore PV, La Turbie PV, Antibes PV
-          if (Transactions$Voie[i] >= 20 ){ Transactions$Sens[i] <- 2 
+          if (Transactions$VoieSor[i] >= 20 ){ Transactions$Sens[i] <- 2 
           } else 
           { Transactions$Sens[i] <- 1 }
         } else 
@@ -181,8 +181,8 @@ Sens <- function (Transactions){
 }
 
 SO <- function (Transactions){
-  Transactions <- Transactions %>% select(ID,Entr,Sor,TimeEntr,TimeSor,DOW,WOY,Date,Voie,Sens, SensEntr, SensSor)
-  Transactions$Date <- as.character(Transactions$Date)
+  Transactions <- Transactions %>% select(ID,Entr,Sor,TimeEntr,TimeSor,DOW,WOY,DateSor,VoieSor,Sens, SensEntr, SensSor)
+  Transactions$DateSor <- as.character(Transactions$DateSor)
   
   #Create the useful indicators for fusion :
   # sf (bool) if the OD is in SF
@@ -190,7 +190,7 @@ SO <- function (Transactions){
   # diff = the time difference with the previous OD
   # indic (bool) : if diff <= 1, and NA are replaced with False
   intermediaire <- Transactions %>%
-    group_by(ID,Date,Sens) %>%
+    group_by(ID,DateSor,Sens) %>%
     arrange(TimeSor) %>%
     mutate(sf = (TimeEntr != 0), Time = (TimeEntr + TimeSor)-(sf*TimeSor) , diff = Time - lag(TimeSor), indic = (diff <= 1 & !is.na(diff)) )
   
@@ -206,7 +206,7 @@ SO <- function (Transactions){
   
   return( rbind(afusionner,anepasfusionner) %>%
             ungroup() %>%
-            select(ID,Entr,Sor,TimeEntr,TimeSor,DOW,WOY,Date,Voie,Sens, SensEntr, SensSor) %>%
+            select(ID,Entr,Sor,TimeEntr,TimeSor,DOW,WOY,DateSor,VoieSor,Sens, SensEntr, SensSor) %>%
 						tbl_df()
 				) 
 }
@@ -220,15 +220,15 @@ SO.aux <- function(intermediaire){
     if (intermediaire$indic[i]){
       if (intermediaire$sf[i-1]){
         newrow <- data.frame( ID = intermediaire$ID[i], Entr = intermediaire$Entr[i-1], Sor = intermediaire$Sor[i], TimeEntr = intermediaire$TimeEntr[i-1],
-                              TimeSor = intermediaire$TimeSor[i], DOW = intermediaire$DOW[i], WOY = intermediaire$WOY[i], Date = intermediaire$Date[i],
-                              Voie = -1, Sens = intermediaire$Sens[i], sf = intermediaire$sf[i], Time = intermediaire$Time[i], diff =intermediaire$diff[i],
+                              TimeSor = intermediaire$TimeSor[i], DOW = intermediaire$DOW[i], WOY = intermediaire$WOY[i], DateSor = intermediaire$DateSor[i],
+                              VoieSor = -1, Sens = intermediaire$Sens[i], sf = intermediaire$sf[i], Time = intermediaire$Time[i], diff =intermediaire$diff[i],
                               indic = intermediaire$indic[i],
 															SensEntr = intermediaire$SensEntr[i-1],
 															SensSor = intermediaire$SensSor[i])
       } else {
         newrow <- data.frame( ID = intermediaire$ID[i], Entr = intermediaire$Sor[i-1], Sor = intermediaire$Sor[i], TimeEntr = intermediaire$TimeSor[i-1],
-                              TimeSor = intermediaire$TimeSor[i], DOW = intermediaire$DOW[i], WOY = intermediaire$WOY[i], Date = intermediaire$Date[i],
-                              Voie = -1, Sens = intermediaire$Sens[i], sf = intermediaire$sf[i], Time = intermediaire$Time[i], diff =intermediaire$diff[i],
+                              TimeSor = intermediaire$TimeSor[i], DOW = intermediaire$DOW[i], WOY = intermediaire$WOY[i], DateSor = intermediaire$DateSor[i],
+                              VoieSor = -1, Sens = intermediaire$Sens[i], sf = intermediaire$sf[i], Time = intermediaire$Time[i], diff =intermediaire$diff[i],
                               indic = intermediaire$indic[i],
 															SensEntr = intermediaire$SensSor[i-1],
 															SensSor = intermediaire$SensSor[i])
@@ -247,7 +247,7 @@ SO.aux <- function(intermediaire){
                                intermediaire[(i+1):nrow(intermediaire),])
         
       }
-      intermediaire$Date <- as.character(intermediaire$Date)
+      intermediaire$DateSor <- as.character(intermediaire$DateSor)
       intermediaire$ID <- as.character(intermediaire$ID)
       i <- i-1
     }
@@ -336,7 +336,7 @@ Model.for.a.decade <- function ( Transactions, decades, units){
 Model <- function(transaction, model.decades, model.units) {
   # Run the model over the transaction set
   # Args:
-  #	  transaction:	ID, Entr, Sor, Date, DOW, WOY, TimeEntr, TimeSor, Voie
+  #	  transaction:	ID, Entr, Sor, DateSor, DOW, WOY, TimeEntr, TimeSor, VoieSor
   #   model: 0,1,2,10,11,12,20,21,22
   # Returns:
   #	  transaction:	ID, Entr, Sor, DOW, Tmin, Tmax, Model
@@ -719,21 +719,21 @@ Model <- function(transaction, model.decades, model.units) {
 GetCharacters <- function(transaction){
   # Get the necessary characters for each client
   # Args:
-  #   transaction: ID, Entr, Sor, Date, ...
+  #   transaction: ID, Entr, Sor, DateSor, ...
   # Returns:
   #   result:
   #     ID
-  #     Dmin: first transaction date
-  #     Dmax: last transaction date
+  #     Dmin: first transaction DateSor
+  #     Dmax: last transaction DateSor
   #     Day: number of active days
   #     Ddiff: span between the 1st & last trx = Dmax - Dmin + 1
   #     noPsg: total number of passages
     result <- transaction %>%
     group_by(ID) %>%
     summarise(
-      Dmin = min(Date),
-      Dmax = max(Date),
-      Day = n_distinct(Date),
+      Dmin = min(DateSor),
+      Dmax = max(DateSor),
+      Day = n_distinct(DateSor),
       Ddiff = Dmax - Dmin,
       noPsg = n()
     )
@@ -744,7 +744,7 @@ GetNoEntr <- function(transaction, inf = .5){
   # Get the number of passage for each Gare as Entr for each ID
   # and among all his active days, how many did he travail at this Gare as Entr
   # Args:
-  #   transaction: ID, Entr, SensEntr, Date, ...
+  #   transaction: ID, Entr, SensEntr, DateSor, ...
   #   inf = .5  // lower limit of percentage, e.x. inf = .5, we return all Entre that this ID does more than 50% of all his active day
   # Returns:
   #   result: 
@@ -757,13 +757,13 @@ GetNoEntr <- function(transaction, inf = .5){
 
   t1 <- transaction %>%
     group_by(ID) %>%
-    summarise(ActiveDay = n_distinct(Date)) # get the number of active day for each ID
+    summarise(ActiveDay = n_distinct(DateSor)) # get the number of active day for each ID
   
   t2 <- transaction %>%
     filter(Entr != 0) %>%
     group_by(ID, Entr, SensEntr) %>%
     summarise(noPsg = n(),            # get the number of passage of this ID at this Gare as Entr
-              Day = n_distinct(Date)) # get the number of day at which this ID passes this Gare as Entr
+              Day = n_distinct(DateSor)) # get the number of day at which this ID passes this Gare as Entr
   
   t3 <- inner_join(t2,t1) %>%
     mutate(Per = Day / ActiveDay) %>%
@@ -780,7 +780,7 @@ GetNoSor <- function(transaction, inf = .5){
   # Get the number of passage for each Gare as Sor for each ID
   # and among all his active days, how many did he travail at this Gare as Sor
   # Args:
-  #   transaction: ID, Sor, SensSor, Date, ...
+  #   transaction: ID, Sor, SensSor, DateSor, ...
   #   inf = .5  // lower limit of percentage, e.x. inf = .5, we return all Sor that this ID does more than 50% of all his active day
   # Returns:
   #   result: 
@@ -792,13 +792,13 @@ GetNoSor <- function(transaction, inf = .5){
   #     Ord: importance of this Sor, e.x. Ord = 1 means this is the most frequent Sor of this ID
   t1 <- transaction %>%
     group_by(ID) %>%
-    summarise(ActiveDay = n_distinct(Date)) # get the number of active day for each ID
+    summarise(ActiveDay = n_distinct(DateSor)) # get the number of active day for each ID
   
   t2 <- transaction %>%
     filter(Sor != 0) %>%
     group_by(ID, Sor, SensSor) %>%
     summarise(noPsg = n(),             # get the number of passage of this ID at this Gare as Sor
-              Day = n_distinct(Date))  # get the number of day at which this ID passes this Gare as Sor
+              Day = n_distinct(DateSor))  # get the number of day at which this ID passes this Gare as Sor
   
   t3 <- inner_join(t2,t1) %>%
     mutate(Per = Day / ActiveDay) %>%
@@ -813,25 +813,25 @@ GetNoSor <- function(transaction, inf = .5){
 TagFirstLast <- function(transaction){
   # Tag each transaction of a ID as:
   # Args:
-  #   transaction: ID, Date, TimeSor, ...
+  #   transaction: ID, DateSor, TimeSor, ...
   # Returns:
   #   result: 
   #     ID... 
-  #     ord: order of this transaction for this ID at this Date
-  #     Tag: type of transaction for this ID at this Date
-  #       - First: first passage of this person at that date
-  #       - Last : last passage of this person at that date
-  #       - FL: the only passage of this person at that date
+  #     ord: order of this transaction for this ID at this DateSor
+  #     Tag: type of transaction for this ID at this DateSor
+  #       - First: first passage of this person at that DateSor
+  #       - Last : last passage of this person at that DateSor
+  #       - FL: the only passage of this person at that DateSor
   #       - Others
   
   t0 <- transaction %>%
-    group_by(ID, Date) %>%
-    summarise(noByDay = n())  # get the number of passage of this ID at this Date
+    group_by(ID, DateSor) %>%
+    summarise(noByDay = n())  # get the number of passage of this ID at this DateSor
   
   t1 <- transaction %>%
-    group_by(ID, Date) %>%
+    group_by(ID, DateSor) %>%
     arrange(TimeSor) %>%
-    mutate(ord = row_number()) # order the passages of this ID at this Date by TimeSor
+    mutate(ord = row_number()) # order the passages of this ID at this DateSor by TimeSor
   
   t2 <- inner_join(t0,t1)
   # it's possible that a person has only 1 trx one day
@@ -852,7 +852,7 @@ GetNoFirstLast <- function(transaction, inf = .5){
   # Get the number of passage for each Gare as the First Entr or the Last Sor for each ID
   # and among all his active days, how many did he travail at this Gare
   # Args:
-  #   transaction: ID, Entr, Sor, SensEntr,SensSor, Date, Tag, ...
+  #   transaction: ID, Entr, Sor, SensEntr,SensSor, DateSor, Tag, ...
   # Returns:
   #   result: ID, Tag, Gare, Sens, ...
   #     noPsg: number of passage
@@ -863,7 +863,7 @@ GetNoFirstLast <- function(transaction, inf = .5){
   
   t1 <- transaction %>%
     group_by(ID) %>%
-    summarise(ActiveDay = n_distinct(Date)) # get the number of active day for each ID
+    summarise(ActiveDay = n_distinct(DateSor)) # get the number of active day for each ID
   
   t.First <- transaction %>% 
     filter(Tag == "FL" | Tag == "First") %>%
@@ -884,12 +884,12 @@ GetNoFirstLast <- function(transaction, inf = .5){
           )
   
   t.FirstLast <- rbind(t.First, t.Last) %>%
-    select(ID, Date, Tag, Gare, Sens)
+    select(ID, DateSor, Tag, Gare, Sens)
 
   t2 <- t.FirstLast %>%
     group_by(ID, Tag, Gare, Sens) %>%
     summarise(noPsg = n(), 
-              Day = n_distinct(Date) 
+              Day = n_distinct(DateSor) 
               )
 
   t3 <- inner_join(t2,t1) %>%
@@ -921,9 +921,9 @@ Dashboard <- function(transaction, t = "Dashboard of 1 client", saveImage = FALS
   t1 <- temp.OD %>% select(-n)
   temp1 <- inner_join(temp,t1)
   
-  # ggplot(temp1) + geom_point(aes(Date, TimeSor))
-  g1 <- ggplot(temp1) + geom_point(aes(Date, TimeSor, col = as.factor(ord))) + theme(legend.position = "none")
-  g2 <- ggplot(temp1 %>% filter(ord < 3)) + geom_point(aes(Date, TimeSor, col = as.factor(ord)))
+  # ggplot(temp1) + geom_point(aes(DateSor, TimeSor))
+  g1 <- ggplot(temp1) + geom_point(aes(DateSor, TimeSor, col = as.factor(ord))) + theme(legend.position = "none")
+  g2 <- ggplot(temp1 %>% filter(ord < 3)) + geom_point(aes(DateSor, TimeSor, col = as.factor(ord)))
   
   temp2 <- temp1 %>% filter(ord <3)
   g3 <- ggplot(temp2) + geom_bar(aes(DOW, fill = as.factor(ord)), binwidth = 1, position = "dodge") + theme(legend.position = "none")
@@ -948,7 +948,7 @@ Dashboard <- function(transaction, t = "Dashboard of 1 client", saveImage = FALS
 GetTimeFirstLast <- function(transaction, inf = .5){
   # Get the Mean and SD for the First Entr or the Last Sor for each ID during the day
   # Args:
-  #   transaction: ID, Entr, Sor, SensEntr,SensSor, Date, Tag, ...
+  #   transaction: ID, Entr, Sor, SensEntr,SensSor, DateSor, Tag, ...
   # Returns:
   #   result: ID, Tag,  ...
   #     Tmoy: mean of TimeSor
@@ -963,7 +963,7 @@ GetTimeFirstLast <- function(transaction, inf = .5){
     mutate(Tag = "Last")
   
   t.FirstLast <- rbind(t.First, t.Last) %>%
-    select(ID, Date, Tag, DOW, TimeSor)
+    select(ID, DateSor, Tag, DOW, TimeSor)
   
   result <- t.FirstLast %>%
     group_by(ID, Tag, DOW) %>%

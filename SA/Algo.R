@@ -48,15 +48,15 @@ if(length(Args) > 1){
 } else if (length(grep(".csv",Args[1])) > 0){
   filename.Input <- Args[1]
 } else{
-  filename.Input <- "1675.csv"
+  filename.Input <- "VIP_v20151210.csv"
   ParamRepo <- Args[1]
 }
 
 # get the other parameters from the specified repository
 if(is.na(ParamRepo)){
   # get arguments 
-  # args <- read.table("Parameters/Param_common.csv",sep = ";", header=TRUE) 
-  args <- read.table("Param_App/Param_common.csv",sep = ";", header=TRUE) 
+  args <- read.table("Parameters/Param_common.csv",sep = ";", header=TRUE) 
+  # args <- read.table("Parameters.Ete2015/Param_common.csv",sep = ";", header=TRUE) 
 } else {
   # get arguments 
   args <- read.table(paste0(ParamRepo,"/Param_common.csv"),sep = ";", header=TRUE) 
@@ -96,25 +96,25 @@ source('Algo2_Functions.R', encoding = 'UTF-8')
 ##########
 ### Step 0.2: Prepare input file
 ##########
-#   create ID from Badge + Porteur
+#   create ID from Client + Porteur
 #   correct Date type
 #   correct Sens
 trx <- input %>%
   mutate(
-    ID = as.character(Badge * 100000 + Porteur),
-    Date = as.Date(as.character(Date)),
+    ID = as.character(Client * 100000 + Porteur),
+    DateSor = as.Date(as.character(DateSor)),
     Sens = ifelse(Entr == 0,
-                  ifelse(Voie <=20, 1,2),
+                  ifelse(VoieSor <=20, 1,2),
                   0)
     ) 
 
 # construct segmentation for a summary of each client with TotalNoPsg, TotalNoActiveDay
 segmentation <- trx %>% group_by(ID) %>%
   summarize(TotalNoPsg= n(),
-            TotalNoActiveDay = n_distinct(Date),
+            TotalNoActiveDay = n_distinct(DateSor),
             TotalNoPsgPerActiveDay = TotalNoPsg / TotalNoActiveDay)
 	
-trx <- trx %>% filter(Date > day.start & Date <= day.end)
+trx <- trx %>% filter(DateSor > day.start & DateSor <= day.end)
 
 inputName <-  read.table(text = filename.Input, sep=".")$V1 %>% as.character
 if (nrow(trx) == 0) {
@@ -168,7 +168,7 @@ if (nrow(trx) == 0) {
 # add NoPsgInPeriod, NoActiveDayInPeriod to segmentation
 t <- trx %>% group_by(ID) %>% 
   summarise(NoPsgInPeriod = n(),
-            NoActiveDayInPeriod = n_distinct(Date),
+            NoActiveDayInPeriod = n_distinct(DateSor),
             NoPsgPerActiveDayInPeriod = NoPsgInPeriod / NoActiveDayInPeriod)
 
 segmentation <- left_join(segmentation, t)
@@ -184,7 +184,7 @@ if(filter == TRUE) source('Algo1_DataPreparation.R', encoding = 'UTF-8')
 if(nrow(trx) == 0) stop("Aucun trajet apres le filtrage, mettez le parametre filter = FALSE!")
 
 # add sens & create OD
-trx <- trx %>% mutate(Voie = ifelse(Entr == 0, Voie, 0))
+trx <- trx %>% mutate(VoieSor = ifelse(Entr == 0, VoieSor, 0))
 trx <- trx %>% left_join(sens)
 trx <- trx %>% mutate(SensEntr = ifelse(is.na(SensEntr), 0, SensEntr),
                       SensSor = ifelse(is.na(SensSor), 0, SensSor))
@@ -197,14 +197,14 @@ rm(trx)
 if( (day.end - day.start) <= 30 ) stop("La periode est trop courte!")
 
 # prepare period
-train.period <- data.frame(Date = seq(day.start, day.end - 30, "day"))
-train.period$DOW <- as.POSIXlt(train.period$Date)$wday
-test.period <- data.frame(Date = seq(day.end - 30, day.end, "day"))
-test.period$DOW <- as.POSIXlt(test.period$Date)$wday
+train.period <- data.frame(DateSor = seq(day.start, day.end - 30, "day"))
+train.period$DOW <- as.POSIXlt(train.period$DateSor)$wday
+test.period <- data.frame(DateSor = seq(day.end - 30, day.end, "day"))
+test.period$DOW <- as.POSIXlt(test.period$DateSor)$wday
 
 # divide the hisory into: train & test
-train <- output %>% filter(Date < day.end - 30)
-test <- output %>% filter(Date >= day.end - 30)
+train <- output %>% filter(DateSor < day.end - 30)
+test <- output %>% filter(DateSor >= day.end - 30)
 ID.list <- output %>% group_by(ID) %>% summarise()
 
 ##########
@@ -272,12 +272,12 @@ segmentation <- left_join(segmentation, t)
 ##########
 t <- input %>%
   mutate(
-    ID = as.character(Badge * 100000 + Porteur),
-    Date = as.Date(as.character(Date)),
+    ID = as.character(Client * 100000 + Porteur),
+    DateSor = as.Date(as.character(DateSor)),
     Sens = ifelse(Entr == 0,
-                  ifelse(Voie <=20, 1,2),
+                  ifelse(VoieSor <=20, 1,2),
                   0)) %>%
-  filter(Date >= day.start & Date <= day.end)
+  filter(DateSor >= day.start & DateSor <= day.end)
 
 # find trx in result.TS
 if(nrow(result.TS) > 0){
@@ -315,11 +315,11 @@ trxGrid <- trx %>% inner_join(ODtoGrid)
 # find number of active day for each ID
 t1 <- trxGrid %>%
   group_by(ID) %>%
-  summarise(ActiveDay = n_distinct(Date))
+  summarise(ActiveDay = n_distinct(DateSor))
 # find number of active day for each ID,Grid
 t2 <- trxGrid %>%
   group_by(ID, Grid) %>%
-  summarise(Day = n_distinct(Date))
+  summarise(Day = n_distinct(DateSor))
 
 # get ID,Grid with (Grid frequently visited)
 #   - ActiveDay >= limit.Algo2.ActiveDay 
