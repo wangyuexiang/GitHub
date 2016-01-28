@@ -20,10 +20,10 @@
 ##########
 if(is.na(ParamRepo)){
   # get arguments 
-  args <- read.table("Parameters/Param_Function.csv",sep = ";", header=TRUE) 
+  args <- read.table("Parameters/Param_algo1.csv",sep = ";", header=TRUE) 
 } else {
   # get arguments 
-  args <- read.table(paste0(ParamRepo,"/Param_Function.csv"),sep = ";", header=TRUE) 
+  args <- read.table(paste0(ParamRepo,"/Param_algo1.csv"),sep = ";", header=TRUE) 
 }
 
 ##########
@@ -329,6 +329,7 @@ Model.for.a.decade <- function ( Transactions, decades, units){
       result <- rbind(result,applymodel)
     }
   }
+  # return ( result %>% mutate(OD = as.character(OD)) )
   return ( result )
 }
 
@@ -435,7 +436,7 @@ Model <- function(transaction, model.decades, model.units) {
   } else 
 	if(model == 10) {
     # result <- data.frame(ID="", Entr=0, Sor=0, SensEntr = 0, SensSor = 0, Sens = 0, SD=0, T=0, Tmin=0, Tmax=0, noPsg=0)
-	  result <- data.frame(ID="", OD="", SD=0, T=0, Tmin=0, Tmax=0, noPsg=0)
+	  result <- data.frame(ID=character(), OD=character(), SD=double(), T=double(), Tmin=double(), Tmax=double(), noPsg=integer())
 
     result$ID <- as.character(result$ID)
     for (i in 1:nrow(ID.list)) {
@@ -483,7 +484,8 @@ Model <- function(transaction, model.decades, model.units) {
     
     # clustering TimeSor
     # result <- data.frame(ID="", Entr=0, Sor=0, SensEntr = 0, SensSor = 0, Sens = 0, weekday = 0, SD=0, T=0, Tmin=0, Tmax=0, noPsg=0)
-	  result <- data.frame(ID="", OD="", weekday = 0, SD=0, T=0, Tmin=0, Tmax=0, noPsg=0)
+	  # result <- data.frame(ID=character(), OD=character(), weekday = 0, SD=0, T=0, Tmin=0, Tmax=0, noPsg=0)
+		result <- data.frame(ID=character(), OD=character(), weekday = integer(), SD=double(), T=double(), Tmin=double(), Tmax=double(), noPsg=integer())
 
 		result$ID <- as.character(result$ID)
     for (i in 1:nrow(ID.list)) {
@@ -546,7 +548,7 @@ Model <- function(transaction, model.decades, model.units) {
   } else 
 	if(model == 12) {
     # result <- data.frame(ID="", Entr=0, Sor=0, SensEntr = 0, SensSor = 0, Sens = 0, DOW=0, SD=0, T=0, Tmin=0, Tmax=0, noPsg=0)
-	  result <- data.frame(ID="", OD="", DOW = 0, SD=0, T=0, Tmin=0, Tmax=0, noPsg=0)
+	  result <- data.frame(ID=character(), OD=character(), DOW = integer(), SD=double(), T=double(), Tmin=double(), Tmax=double(), noPsg=integer())
 
     result$ID <- as.character(result$ID)
     for (i in 1:nrow(ID.list)) {
@@ -602,7 +604,8 @@ Model <- function(transaction, model.decades, model.units) {
     
     if(model == 20) {
       # result <- data.frame(ID="", Entr=0, Sor=0, SensEntr = 0, SensSor = 0, Sens = 0, DOW=0, SD=0, T=0, Tmin=0, Tmax=0, noPsg=0)
-			result <- data.frame(ID="", OD="", DOW=0, SD=0, T=0, Tmin=0, Tmax=0, noPsg=0)
+			# result <- data.frame(ID=character(), OD=character(), DOW=0, SD=0, T=0, Tmin=0, Tmax=0, noPsg=0)
+			result <- data.frame(ID=character(), OD=character(), DOW=integer(),SD=double(), T=double(), Tmin=double(), Tmax=double(), noPsg=integer())
 
       result$ID <- as.character(result$ID)
       for (k in 1:nrow(OD.list)){
@@ -637,7 +640,7 @@ Model <- function(transaction, model.decades, model.units) {
       VIP2_espace[VIP2_espace$DOW %in% c(1:5), ]$weekday <- 1
       
       # result <- data.frame(ID="", Entr=0, Sor=0, SensEntr = 0, SensSor = 0, Sens = 0, DOW=0, SD=0, T=0, Tmin=0, Tmax=0, noPsg=0)
-			result <- data.frame(ID="", OD="", DOW = 0, SD=0, T=0, Tmin=0, Tmax=0, noPsg=0)
+			result <- data.frame(ID=character(), OD=character(), DOW = integer(), SD=double(), T=double(), Tmin=double(), Tmax=double(), noPsg=integer())
 
 			result$ID <- as.character(result$ID)
       for (k in 1:nrow(OD.list)){
@@ -669,7 +672,7 @@ Model <- function(transaction, model.decades, model.units) {
     } else 
 		if(model == 22) {
       # result <- data.frame(ID="", Entr=0, Sor=0, SensEntr = 0, SensSor = 0, Sens = 0, DOW=0, SD=0, T=0, Tmin=0, Tmax=0, noPsg=0)
-			result <- data.frame(ID="", OD="", DOW = 0, SD=0, T=0, Tmin=0, Tmax=0, noPsg=0)
+			result <- data.frame(ID=character(), OD=character(), DOW = integer(), SD=double(), T=double(), Tmin=double(), Tmax=double(), noPsg=integer())
 
 			result$ID <- as.character(result$ID)
       for (k in 1:nrow(OD.list)){
@@ -703,12 +706,12 @@ Model <- function(transaction, model.decades, model.units) {
     }
   } # end of if
   
-	if(nrow(result) > 0){
-    result <- tbl_df(result) %>%
+  result <- tbl_df(result) %>%
       mutate(DOW = as.integer(DOW),
-             OD = as.character(OD)) %>%
-      select(ID, OD, DOW, Tmin, Tmax, Model, noPsg)
-	}
+             OD = as.character(OD))
+# 	if(nrow(result) > 0){
+#       result <- result %>% select(ID, OD, DOW, Tmin, Tmax, Model, noPsg)
+# 	}
   return(result )
 } # end of fuction Model
 

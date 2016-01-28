@@ -22,7 +22,7 @@
 library(dplyr)
 
 # get Parameter from Parameter/Param_makeGrid
-args <- read.table("Parameters/Param_Algo2_makeGrid.csv",sep = ";", header=TRUE) 
+args <- read.table("Parameters/Param_makeGrid.csv",sep = ";", header=TRUE) 
 gridStep <- args[1,1] 
 zoneStep <- args[1,2]  
 rm(args)

@@ -6,7 +6,7 @@
 # Run Algo2_ZoneWindow over these Trx 
 #
 # Input: 
-#   Args (from Parameter/Param_Algo2_main.csv :
+#   Args (from Parameter/Param_common.csv :
 #     filename.Input: 
 #			limit.Algo1.noPsg
 #     limit.Algo2.GridPer
@@ -47,26 +47,28 @@ if(length(Args) > 1){
 } else if (length(grep(".csv",Args[1])) > 0){
   filename.Input <- Args[1]
 } else{
-  filename.Input <- "App.csv"
+  filename.Input <- "1675.csv"
   ParamRepo <- Args[1]
 }
 
 # get the other parameters from the specified repository
 if(is.na(ParamRepo)){
   # get arguments 
-  # args <- read.table("Parameters/Param_Algo.csv",sep = ";", header=TRUE) 
-  args <- read.table("Param_App/Param_Algo.csv",sep = ";", header=TRUE) 
+  # args <- read.table("Parameters/Param_common.csv",sep = ";", header=TRUE) 
+  args <- read.table("Param_App/Param_common.csv",sep = ";", header=TRUE) 
 } else {
   # get arguments 
-  args <- read.table(paste0(ParamRepo,"/Param_Algo.csv"),sep = ";", header=TRUE) 
+  args <- read.table(paste0(ParamRepo,"/Param_common.csv"),sep = ";", header=TRUE) 
 }
 
 # limit args: under which the OD or Zone are considered unimportant
 limit.Algo1.noPsg <- args$limit.Algo1.noPsg[1]
 limit.Algo2.GridPer <- args$limit.Algo2.GridPer[1]
 limit.Algo2.ActiveDay <- args$limit.Algo2.ActiveDay[1]
-limit.Algo2.Day <- args$limit.Algo2.Day[1]
-limit.Algo2.Night <- args$limit.Algo2.Night[1]
+limit.Algo2.Day <- args$limit.Algo2.Day[1]				# by default = 5
+limit.Algo2.Night <- args$limit.Algo2.Night[1] 		# by default = 3
+Algo2.DayStart <- args$Algo2.DayStart[1] 					# by default = 6
+Algo2.DayEnd <- args$Algo2.DayEnd[1]              # by default = 22
 # limit.WindowFreq <- 5
 day.start <- as.Date(as.character(args$day.start[1]))
 day.end <- as.Date(as.character(args$day.end[1]))
@@ -356,7 +358,7 @@ t <- t %>% mutate(H = round(TimeSor, digits = 0))
 # add Time: Day/Night
 if(nrow(t) > 0){
   t$Time <- "Night"
-  if(nrow(t %>% filter(H >= 6 & H <= 22)) > 0) t[t$H >= 6 & t$H <= 22,]$Time <- "Day"
+  if(nrow(t %>% filter(H >= Algo2.DayStart & H <= Algo2.DayEnd)) > 0) t[t$H >= Algo2.DayStart & t$H <= Algo2.DayEnd,]$Time <- "Day"
 }
 
 # get result
@@ -387,6 +389,7 @@ write.table(result.ZW.Zone,      paste0("Output/Algo2_ZW_",inputName,"_V",time,"
 write.table(result.ZW.Day,       paste0("Output/Algo2_ZW_",inputName,"_V",time,"_Day.csv"),sep=";",row.name=FALSE,quote=FALSE)
 write.table(result.ZW.Night,     paste0("Output/Algo2_ZW_",inputName,"_V",time,"_Night.csv"),sep=";",row.name=FALSE,quote=FALSE)
 
+# save inter-step result in .log files depending on the parameter logFile
 if (logFile){
 	write.table(result.TS.before, paste0("Output/Algo1_TS_",inputName,"_V",time,".log"),sep=";",row.name=FALSE,quote=FALSE)
 	write.table(result.ZW.Frequency, paste0("Output/Algo2_ZW_",inputName,"_V",time,"_Frequence.log"),sep=";",row.name=FALSE,quote=FALSE)
