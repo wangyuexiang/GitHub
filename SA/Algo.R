@@ -72,6 +72,7 @@ day.start <- as.Date(as.character(args$day.start[1]))
 day.end <- as.Date(as.character(args$day.end[1]))
 # filter input file: decide whether or not ID with less trx will be removed
 filter <- args$filter[1]
+logFile <- args$logFile[1]
 
 rm(args)
 rm(Args)
@@ -380,13 +381,16 @@ inputName <-  read.table(text = filename.Input, sep=".")$V1 %>% as.character
 time <- Sys.time() %>% format(format = "%Y%m%d_%H%M")
 
 # save result of Algo1_TS
-write.table(result.TS.before, paste0("Output/Algo1_TS_",inputName,"_V",time,".log"),sep=";",row.name=FALSE,quote=FALSE)
 write.table(result.TS,        paste0("Output/Algo1_TS_",inputName,"_V",time,".csv"),sep=";",row.name=FALSE,quote=FALSE)
 # save result of Algo2_ZW
 write.table(result.ZW.Zone,      paste0("Output/Algo2_ZW_",inputName,"_V",time,"_Zone.csv"),sep=";",row.name=FALSE,quote=FALSE)
 write.table(result.ZW.Day,       paste0("Output/Algo2_ZW_",inputName,"_V",time,"_Day.csv"),sep=";",row.name=FALSE,quote=FALSE)
 write.table(result.ZW.Night,     paste0("Output/Algo2_ZW_",inputName,"_V",time,"_Night.csv"),sep=";",row.name=FALSE,quote=FALSE)
-write.table(result.ZW.Frequency, paste0("Output/Algo2_ZW_",inputName,"_V",time,"_Frequence.log"),sep=";",row.name=FALSE,quote=FALSE)
+
+if (logFile){
+	write.table(result.TS.before, paste0("Output/Algo1_TS_",inputName,"_V",time,".log"),sep=";",row.name=FALSE,quote=FALSE)
+	write.table(result.ZW.Frequency, paste0("Output/Algo2_ZW_",inputName,"_V",time,"_Frequence.log"),sep=";",row.name=FALSE,quote=FALSE)
+}
 
 # save summary of Result
 segmentation[is.na(segmentation)] <- 0
