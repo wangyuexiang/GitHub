@@ -6,8 +6,9 @@
 # Run Algo2_ZoneWindow over these Trx 
 #
 # Input: 
+#     filename.Input 
+#     ParamRepo
 #   Args (from Parameter/Param_common.csv :
-#     filename.Input: 
 #			limit.Algo1.noPsg
 #     limit.Algo2.GridPer
 #     limit.Algo2.ActiveDay
