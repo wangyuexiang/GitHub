@@ -1,12 +1,12 @@
-# Index
-##1. Files
-##2. Data Structure
-##3. Parameters
-##4. Running
+## Index
+###1. Files
+###2. Data Structure
+###3. Parameters
+###4. Running
 
 
-# Details
-##1. Files in 4 Repositories
+## Details
+###1. Files in 4 Repositories
 	-Input
 		- *App.csv*: history of real users
 		- *VIP.csv*: history of beta-testers
@@ -27,7 +27,7 @@
 		- *Algo1_Functions.R*: all the functions for Algo1
 		- *Algo2_Functions.R*: all the functions for Algo2 (connecting Grid to make Zone)
 		- *MakeGrid.R*: create a Grid system according to *Param_makeGrid.csv*
-##2. Data Structure
+###2. Data Structure
 	- Input file:
 	  - EVA
 	  - Ste (5 digits): eg. 25004
@@ -41,7 +41,7 @@
 			- Zone during the "Day" period
 			- Zone during the "Night" period
 		- Algo_Summary: summary of result from Algo1 & Algo2
-##3. Parameters
+###3. Parameters
 	- For general: (got in the script) (used for *Algo.R*)
 		- filename.Input: input filename (with .csv)
 		- ParamRepo: repository of parameters
@@ -60,4 +60,4 @@
 	- *ParamRepo/Param_makeGrid.csv* (used for *MakeGrid.R*)
 		- gridStep: unit in degree, width & height of each grid rectangular, by default = 0.25 (about 35km)
 		- zoneStep: unit in degree, extension for Entr or Sor with no Lng&Lat, ex. Systeme Ouvert, by default = 0.1
-##4. Running Command example: *rscript Algo.r*
+###4. Running Command example: *rscript Algo.r*
